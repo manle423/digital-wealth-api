@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
+import { AuthError } from '../enum/error.enum';
 
 @Injectable()
 export class JwtGuard implements CanActivate {
@@ -19,7 +20,7 @@ export class JwtGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const token = this.extractToken(request);
     if (!token) {
-      throw new UnauthorizedException('TOKEN_NOT_FOUND');
+      throw new UnauthorizedException(AuthError.TOKEN_NOT_FOUND);
     }
     try {
       const payload = await this.jwtService.verifyAsync(
@@ -30,7 +31,7 @@ export class JwtGuard implements CanActivate {
       );
       request.user = payload;
     } catch {
-      throw new UnauthorizedException('INVALID_TOKEN');
+      throw new UnauthorizedException(AuthError.INVALID_TOKEN);
     }
 
     return true;

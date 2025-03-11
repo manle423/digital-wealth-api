@@ -1,13 +1,14 @@
 import { PrismaService } from '@/prisma.service';
 import { ConflictException, Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/user.dto';
+import { RegisterDto } from '@/auth/dto/register.dto';
 import { hash } from 'bcrypt';
+import { AuthError } from '@/auth/enum/error.enum';
 
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
-  async createUser(dto: CreateUserDto) {
+  async createUser(dto: RegisterDto) {
     console.info('[createUser] dto:', dto);
     const user = await this.prisma.user.findUnique({
       where: {
@@ -16,12 +17,17 @@ export class UserService {
     });
 
     if (user){
-      throw new ConflictException('EMAIL_ALREADY_EXISTS');
+      throw new ConflictException(AuthError.EMAIL_ALREADY_EXISTS);
     }
 
+    if (dto.password !== dto.confirmPassword) {
+      throw new ConflictException(AuthError.PASSWORD_NOT_MATCH);
+    }
+    
+    const { confirmPassword, ...userData } = dto;
     const newUser = await this.prisma.user.create({ 
       data: {
-        ...dto,
+        ...userData,
         password: await hash(dto.password, 10), 
       }
     });
