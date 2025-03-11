@@ -1,8 +1,9 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { LoginDto } from './dto/auth.dto';
+import { LoginDto } from './dto/login.dto';
 import { UserService } from '@/user/user.service';
 import { compare } from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import { AuthError } from './enum/error.enum';
 
 @Injectable()
 export class AuthService {
@@ -44,7 +45,7 @@ export class AuthService {
       return result;
     }
 
-    throw new UnauthorizedException('INVALID_CREDENTIALS');
+    throw new UnauthorizedException(AuthError.INVALID_CREDENTIALS);
   }
 
   async refreshToken(user: any) {
