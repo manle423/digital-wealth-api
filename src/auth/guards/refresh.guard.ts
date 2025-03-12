@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
+import { AuthError } from '../enum/error.enum';
 
 @Injectable()
 export class RefreshJwtGuard implements CanActivate {
@@ -17,10 +18,12 @@ export class RefreshJwtGuard implements CanActivate {
     context: ExecutionContext,
   ): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const token = this.extractToken(request);
+    const token = this.extractTokenFromCookieOrHeader(request);
+    
     if (!token) {
-      throw new UnauthorizedException('TOKEN_NOT_FOUND');
+      throw new UnauthorizedException(AuthError.TOKEN_NOT_FOUND);
     }
+
     try {
       const payload = await this.jwtService.verifyAsync(
         token, 
@@ -30,13 +33,20 @@ export class RefreshJwtGuard implements CanActivate {
       );
       request.user = payload;
     } catch {
-      throw new UnauthorizedException('INVALID_TOKEN');
+      throw new UnauthorizedException(AuthError.INVALID_TOKEN);
     }
 
     return true;
   }
 
-  private extractToken(request: Request) {
+  private extractTokenFromCookieOrHeader(request: Request): string | undefined {
+    // Try to get token from cookie first
+    const cookieToken = request.cookies?.refreshToken;
+    if (cookieToken) {
+      return cookieToken;
+    }
+
+    // Fallback to Authorization header
     const [type, token] = request.headers.authorization?.split(' ') ?? [];
     return type === 'Refresh' ? token : undefined;
   }
