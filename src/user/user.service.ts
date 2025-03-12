@@ -1,5 +1,5 @@
 import { PrismaService } from '@/prisma.service';
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { RegisterDto } from '@/auth/dto/register.dto';
 import { hash } from 'bcrypt';
 import { AuthError } from '@/auth/enum/error.enum';
@@ -44,10 +44,17 @@ export class UserService {
   }
 
   async findById(id: number) {
-    return this.prisma.user.findUnique({
+    const user = await this.prisma.user.findUnique({
       where: {
         id,
       },
     });
+
+    if (!user) {
+      throw new NotFoundException(AuthError.USER_NOT_FOUND);
+    }
+
+    const { password, ...result } = user;
+    return result;
   }
 }
