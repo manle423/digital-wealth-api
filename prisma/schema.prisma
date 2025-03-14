@@ -21,4 +21,128 @@ model User {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
+
+  // Relationships
+  assets         Asset[]
+  liabilities    Liability[]
+  riskProfiles   RiskProfile[]
+  investmentGoals InvestmentGoal[]
+  portfolios      Portfolio[]
+}
+
+// Tài sản
+model Asset {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  type        String   // REAL_ESTATE, CASH, STOCK, etc.
+  name        String
+  value       Float
+  currency    String   @default("VND")
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+// Nợ
+model Liability {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  type        String   // BANK_LOAN, CREDIT_CARD, etc.
+  name        String
+  amount      Float
+  currency    String   @default("VND")
+  interest    Float    // Lãi suất
+  dueDate     DateTime // Ngày đáo hạn
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+// Câu hỏi đánh giá rủi ro
+model RiskQuestion {
+  id          Int      @id @default(autoincrement())
+  question    String   // Nội dung câu hỏi
+  options     Json     // Các lựa chọn và điểm số tương ứng
+  category    String   // Phân loại câu hỏi (ví dụ: KNOWLEDGE, EXPERIENCE, RISK_TOLERANCE)
+  order       Int      // Thứ tự hiển thị
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Đánh giá khẩu vị rủi ro
+model RiskProfile {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  score           Int      // Điểm đánh giá rủi ro
+  riskLevel       String   // LOW, MEDIUM, HIGH
+  answers         Json     // Lưu câu trả lời của bảng câu hỏi dạng { questionId: answerId }
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user            User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+// Mục tiêu đầu tư
+model InvestmentGoal {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  name        String
+  targetAmount Float
+  currency    String   @default("VND")
+  deadline    DateTime
+  priority    Int      // Mức độ ưu tiên
+  status      String   // PENDING, IN_PROGRESS, ACHIEVED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+// Danh mục đầu tư
+model Portfolio {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  name            String
+  riskLevel       String   // LOW, MEDIUM, HIGH
+  targetAllocation Json    // Phân bổ tài sản mục tiêu
+  currentAllocation Json   // Phân bổ tài sản hiện tại
+  performance     Float    // Hiệu suất
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user            User     @relation(fields: [userId], references: [id])
+  transactions    Transaction[]
+
+  @@index([userId])
+}
+
+// Giao dịch trong danh mục
+model Transaction {
+  id          Int      @id @default(autoincrement())
+  portfolioId Int
+  type        String   // BUY, SELL
+  assetName   String
+  amount      Float
+  price       Float
+  currency    String   @default("VND")
+  executedAt  DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  portfolio   Portfolio @relation(fields: [portfolioId], references: [id])
+
+  @@index([portfolioId])
 }
