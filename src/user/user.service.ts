@@ -3,13 +3,18 @@ import { ConflictException, Injectable, NotFoundException } from '@nestjs/common
 import { RegisterDto } from '@/auth/dto/register.dto';
 import { hash } from 'bcrypt';
 import { AuthError } from '@/auth/enum/error.enum';
+import { LoggerService } from '@/shared/logger/logger.service';
 
 @Injectable()
 export class UserService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly logger: LoggerService,
+  ) {}
 
   async createUser(dto: RegisterDto) {
-    console.info('[createUser] dto:', dto);
+    this.logger.info('[createUser]', { email: dto.email, name: dto.name });
+    
     const user = await this.prisma.user.findUnique({
       where: {
         email: dto.email,
@@ -36,14 +41,18 @@ export class UserService {
   }
 
   async findByEmail(email: string) {
-    return this.prisma.user.findUnique({
+    this.logger.info('[findByEmail]', { email });
+    const user = await this.prisma.user.findUnique({
       where: {
         email,
       },
     });
+    return user;
   }
 
   async findById(id: number) {
+    this.logger.info('[findById]', { userId: id });
+    
     const user = await this.prisma.user.findUnique({
       where: {
         id,

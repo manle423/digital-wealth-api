@@ -7,15 +7,18 @@ import { compareSync } from 'bcrypt';
 import { AuthError } from './enum/error.enum';
 import { IAuthResponse, IJwtPayload } from './types/auth.types';
 import { generateTokens, setCookies, clearCookies } from './utils/token.utils';
+import { LoggerService } from '@/shared/logger/logger.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
+    private readonly logger: LoggerService,
   ) {}
 
   async login(dto: LoginDto, res: Response): Promise<IAuthResponse> {
+    this.logger.info('[login]');
     const user = await this.userService.findByEmail(dto.email);
     if (!user) {
       throw new UnauthorizedException(AuthError.INVALID_CREDENTIALS);
@@ -45,6 +48,7 @@ export class AuthService {
   }
 
   async refreshToken(oldPayload: IJwtPayload, res: Response): Promise<IAuthResponse> {
+    this.logger.info('refresh-token');
     if (!oldPayload || typeof oldPayload.sub !== 'number' || typeof oldPayload.email !== 'string') {
       throw new UnauthorizedException(AuthError.INVALID_TOKEN);
     }
@@ -73,6 +77,7 @@ export class AuthService {
   }
 
   async logout(res: Response) {
+    this.logger.info('[logout]');
     clearCookies(res);
     return { message: 'Logged out successfully' };
   }
