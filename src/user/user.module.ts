@@ -1,11 +1,20 @@
 import { Module } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UserController } from './user.controller';
-import { PrismaService } from '@/prisma.service';
 import { JwtService } from '@nestjs/jwt';
+import { UserRepository } from './repositories/user.repository';
+import { User } from './entities/user.entity';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { LoggerModule } from '@/shared/logger/logger.module';
+import { MysqldbConnection } from '@/shared/mysqldb/connections/db.connection';
 
 @Module({
+  imports: [
+    TypeOrmModule.forFeature([User], MysqldbConnection.name),
+    LoggerModule
+  ],
   controllers: [UserController],
-  providers: [UserService, PrismaService, JwtService],
+  providers: [UserService, JwtService, UserRepository],
+  exports: [UserService]
 })
-export class UserModule {}
+export class UserModule { }

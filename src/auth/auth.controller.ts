@@ -13,7 +13,7 @@ export class AuthController {
   constructor(
     private readonly userService: UserService,
     private readonly authService: AuthService,
-  ) {}
+  ) { }
 
   @Post('register')
   async register(@Body() dto: RegisterDto) {

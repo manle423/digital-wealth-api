@@ -2,10 +2,10 @@ import { Module } from '@nestjs/common';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
-import { PrismaService } from './prisma.service';
 import { LoggerModule } from './shared/logger/logger.module';
 import AppConfig from './config/config-maps/app.config-maps'
 import { AppConfigModule } from './config/config.module';
+import { MysqlDbModule } from './shared/mysqldb/mysqldb.module';
 
 @Module({
   imports: [
@@ -14,11 +14,12 @@ import { AppConfigModule } from './config/config.module';
       load: [AppConfig]
     }),
     AppConfigModule.load(),
-    UserModule, 
+    UserModule,
     AuthModule,
-    LoggerModule
+    LoggerModule,
+    MysqlDbModule
   ],
   controllers: [],
-  providers: [PrismaService],
+  providers: [],
 })
-export class AppModule {}
+export class AppModule { }
