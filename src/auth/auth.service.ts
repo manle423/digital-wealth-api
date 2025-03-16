@@ -15,7 +15,7 @@ export class AuthService {
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
     private readonly logger: LoggerService,
-  ) { }
+  ) {}
 
   async login(dto: LoginDto, res: Response): Promise<IAuthResponse> {
     this.logger.info('[login]');
@@ -47,9 +47,16 @@ export class AuthService {
     };
   }
 
-  async refreshToken(oldPayload: IJwtPayload, res: Response): Promise<IAuthResponse> {
+  async refreshToken(
+    oldPayload: IJwtPayload,
+    res: Response,
+  ): Promise<IAuthResponse> {
     this.logger.info('refresh-token');
-    if (!oldPayload || !oldPayload.sub || typeof oldPayload.email !== 'string') {
+    if (
+      !oldPayload ||
+      !oldPayload.sub ||
+      typeof oldPayload.email !== 'string'
+    ) {
       throw new UnauthorizedException(AuthError.INVALID_TOKEN);
     }
 

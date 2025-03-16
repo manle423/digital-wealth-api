@@ -9,4 +9,4 @@ import { UserModule } from '@/user/user.module';
   controllers: [AuthController],
   providers: [AuthService, JwtService],
 })
-export class AuthModule { }
+export class AuthModule {}

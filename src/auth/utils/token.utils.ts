@@ -2,7 +2,10 @@ import { JwtService } from '@nestjs/jwt';
 import { Response } from 'express';
 import { IJwtPayload, ITokens } from '../types/auth.types';
 
-export async function generateTokens(jwtService: JwtService, payload: IJwtPayload): Promise<ITokens> {
+export async function generateTokens(
+  jwtService: JwtService,
+  payload: IJwtPayload,
+): Promise<ITokens> {
   const accessTokenExpiresIn = Number(process.env.JWT_EXPIRES_IN);
   const refreshTokenExpiresIn = Number(process.env.JWT_REFRESH_EXPIRES_IN);
 
@@ -53,4 +56,4 @@ export function clearCookies(res: Response): void {
     maxAge: 0,
     httpOnly: true,
   });
-} 
+}

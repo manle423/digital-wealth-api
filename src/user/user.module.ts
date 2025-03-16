@@ -11,10 +11,10 @@ import { MysqldbConnection } from '@/shared/mysqldb/connections/db.connection';
 @Module({
   imports: [
     TypeOrmModule.forFeature([User], MysqldbConnection.name),
-    LoggerModule
+    LoggerModule,
   ],
   controllers: [UserController],
   providers: [UserService, JwtService, UserRepository],
-  exports: [UserService]
+  exports: [UserService],
 })
-export class UserModule { }
+export class UserModule {}

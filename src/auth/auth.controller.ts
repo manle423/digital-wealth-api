@@ -13,7 +13,7 @@ export class AuthController {
   constructor(
     private readonly userService: UserService,
     private readonly authService: AuthService,
-  ) { }
+  ) {}
 
   @Post('register')
   async register(@Body() dto: RegisterDto) {
@@ -21,13 +21,19 @@ export class AuthController {
   }
 
   @Post('login')
-  async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response): Promise<IAuthResponse> {
+  async login(
+    @Body() dto: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<IAuthResponse> {
     return this.authService.login(dto, res);
   }
 
   @UseGuards(RefreshJwtGuard)
   @Post('refresh')
-  async refreshToken(@Req() req: Request, @Res({ passthrough: true }) res: Response): Promise<IAuthResponse> {
+  async refreshToken(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<IAuthResponse> {
     const user = req?.user as IJwtPayload;
     return this.authService.refreshToken(user, res);
   }

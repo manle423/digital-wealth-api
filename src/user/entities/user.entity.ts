@@ -1,14 +1,14 @@
-import { BaseEntity } from '@/shared/mysqldb/types/base-entity.type'
-import { Column, Entity } from 'typeorm'
+import { BaseEntity } from '@/shared/mysqldb/types/base-entity.type';
+import { Column, Entity } from 'typeorm';
 
 @Entity('users')
 export class User extends BaseEntity {
   @Column({ unique: true })
-  email: string
+  email: string;
 
   @Column({ nullable: true })
-  name: string
+  name: string;
 
   @Column()
-  password: string
+  password: string;
 }

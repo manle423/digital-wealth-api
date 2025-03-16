@@ -17,4 +17,4 @@ export interface IAuthResponse {
     name: string;
   };
   tokens: ITokens;
-} 
+}

@@ -10,17 +10,18 @@ import { ResponseInterface } from '../interfaces/response.interface';
 
 @Injectable()
 export class TransformInterceptor<T>
-  implements NestInterceptor<T, ResponseInterface<T>> {
+  implements NestInterceptor<T, ResponseInterface<T>>
+{
   intercept(
     context: ExecutionContext,
     next: CallHandler,
   ): Observable<ResponseInterface<T>> {
     return next.handle().pipe(
-      map(data => ({
+      map((data) => ({
         success: true,
         data,
         message: 'Success',
       })),
     );
   }
-} 
+}

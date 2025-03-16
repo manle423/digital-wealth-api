@@ -1,9 +1,12 @@
-import { DataSourceOptions } from 'typeorm'
-import { ConfigService } from '@nestjs/config'
-import { TypeOrmModuleAsyncOptions, TypeOrmModuleOptions } from '@nestjs/typeorm'
-import { SnakeNamingStrategy } from 'typeorm-naming-strategies'
+import { DataSourceOptions } from 'typeorm';
+import { ConfigService } from '@nestjs/config';
+import {
+  TypeOrmModuleAsyncOptions,
+  TypeOrmModuleOptions,
+} from '@nestjs/typeorm';
+import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
 
-const CONNECTION_NAME = 'MYSQLDB'
+const CONNECTION_NAME = 'MYSQLDB';
 export const MysqldbConnection: TypeOrmModuleAsyncOptions = {
   name: CONNECTION_NAME,
   useFactory: (configService: ConfigService) => {
@@ -19,9 +22,9 @@ export const MysqldbConnection: TypeOrmModuleAsyncOptions = {
       synchronize: false,
       autoLoadEntities: true,
       namingStrategy: new SnakeNamingStrategy(),
-    }
+    };
 
-    return options
+    return options;
   },
   inject: [ConfigService],
-}
+};

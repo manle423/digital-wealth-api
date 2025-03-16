@@ -1,10 +1,8 @@
-import { Module } from '@nestjs/common'
-import { TypeOrmModule } from '@nestjs/typeorm'
-import { MysqldbConnection } from './connections/db.connection'
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { MysqldbConnection } from './connections/db.connection';
 
 @Module({
-  imports: [
-    TypeOrmModule.forRootAsync(MysqldbConnection),
-  ],
+  imports: [TypeOrmModule.forRootAsync(MysqldbConnection)],
 })
-export class MysqlDbModule { }
+export class MysqlDbModule {}

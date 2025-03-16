@@ -10,13 +10,9 @@ import { AuthError } from '../enum/error.enum';
 
 @Injectable()
 export class JwtGuard implements CanActivate {
-  constructor(
-    private readonly jwtService: JwtService,
-  ) { }
+  constructor(private readonly jwtService: JwtService) {}
 
-  async canActivate(
-    context: ExecutionContext,
-  ): Promise<boolean> {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const token = this.extractTokenFromCookieOrHeader(request);
 
@@ -25,12 +21,9 @@ export class JwtGuard implements CanActivate {
     }
 
     try {
-      const payload = await this.jwtService.verifyAsync(
-        token,
-        {
-          secret: process.env.JWT_SECRET_KEY,
-        }
-      );
+      const payload = await this.jwtService.verifyAsync(token, {
+        secret: process.env.JWT_SECRET_KEY,
+      });
       request.user = payload;
     } catch {
       throw new UnauthorizedException(AuthError.INVALID_TOKEN);
