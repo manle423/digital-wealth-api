@@ -10,8 +10,7 @@ import { ResponseInterface } from '../interfaces/response.interface';
 
 @Injectable()
 export class TransformInterceptor<T>
-  implements NestInterceptor<T, ResponseInterface<T>>
-{
+  implements NestInterceptor<T, ResponseInterface<T>> {
   intercept(
     context: ExecutionContext,
     next: CallHandler,

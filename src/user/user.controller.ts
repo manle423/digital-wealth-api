@@ -5,7 +5,7 @@ import { Request } from 'express';
 
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
   @UseGuards(JwtGuard)
   @Get('me')
@@ -16,7 +16,7 @@ export class UserController {
 
   @UseGuards(JwtGuard)
   @Get(':id')
-  async getUserProfile(@Param('id') id: number) {
+  async getUserProfile(@Param('id') id: string) {
     return this.userService.findById(id);
   }
 }

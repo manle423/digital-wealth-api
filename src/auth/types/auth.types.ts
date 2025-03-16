@@ -1,16 +1,18 @@
 export interface IJwtPayload {
-  sub: number;
+  sub: string;
   email: string;
 }
 
 export interface ITokens {
   accessToken: string;
   refreshToken: string;
+  accessTokenExpiresAt: number;
+  refreshTokenExpiresAt: number;
 }
 
 export interface IAuthResponse {
   user: {
-    id: number;
+    id: string;
     email: string;
     name: string;
   };

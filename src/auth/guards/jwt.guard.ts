@@ -12,21 +12,21 @@ import { AuthError } from '../enum/error.enum';
 export class JwtGuard implements CanActivate {
   constructor(
     private readonly jwtService: JwtService,
-  ) {}
+  ) { }
 
   async canActivate(
     context: ExecutionContext,
   ): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const token = this.extractTokenFromCookieOrHeader(request);
-    
+
     if (!token) {
       throw new UnauthorizedException(AuthError.TOKEN_NOT_FOUND);
     }
 
     try {
       const payload = await this.jwtService.verifyAsync(
-        token, 
+        token,
         {
           secret: process.env.JWT_SECRET_KEY,
         }
