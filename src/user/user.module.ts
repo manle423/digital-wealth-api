@@ -7,10 +7,11 @@ import { User } from './entities/user.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from '@/shared/logger/logger.module';
 import { MysqldbConnection } from '@/shared/mysqldb/connections/db.connection';
+import { UserDetail } from './entities/user-detail.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User], MysqldbConnection.name),
+    TypeOrmModule.forFeature([User, UserDetail], MysqldbConnection.name),
     LoggerModule,
   ],
   controllers: [UserController],
