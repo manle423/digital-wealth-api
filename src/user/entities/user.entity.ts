@@ -1,5 +1,6 @@
 import { BaseEntity } from '@/shared/mysqldb/types/base-entity.type';
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, OneToOne } from 'typeorm';
+import { UserDetail } from './user-detail.entity';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -11,4 +12,7 @@ export class User extends BaseEntity {
 
   @Column()
   password: string;
+
+  @OneToOne(() => UserDetail, (userDetail) => userDetail.user) 
+  userDetail: UserDetail;
 }

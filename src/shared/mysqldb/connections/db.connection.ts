@@ -5,6 +5,7 @@ import {
   TypeOrmModuleOptions,
 } from '@nestjs/typeorm';
 import { SnakeNamingStrategy } from 'typeorm-naming-strategies';
+import { join } from 'path';
 
 const CONNECTION_NAME = 'MYSQLDB';
 export const MysqldbConnection: TypeOrmModuleAsyncOptions = {
@@ -18,7 +19,7 @@ export const MysqldbConnection: TypeOrmModuleAsyncOptions = {
       username: configService.get('mysqldb.username'),
       password: configService.get('mysqldb.password'),
       database: configService.get('mysqldb.database'),
-      entities: [__dirname + 'src/*/entities/*.entity.ts'],
+      entities: [join(__dirname, '../../../**/entities/*.entity{.ts,.js}')],
       synchronize: false,
       autoLoadEntities: true,
       namingStrategy: new SnakeNamingStrategy(),
