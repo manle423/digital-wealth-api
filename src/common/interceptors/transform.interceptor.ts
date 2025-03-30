@@ -16,11 +16,15 @@ export class TransformInterceptor<T>
     context: ExecutionContext,
     next: CallHandler,
   ): Observable<ResponseInterface<T>> {
+    const httpContext = context.switchToHttp();
+    const response = httpContext.getResponse();
+
     return next.handle().pipe(
       map((data) => ({
         success: true,
         data,
         message: 'Success',
+        statusCode: response.statusCode,
       })),
     );
   }
