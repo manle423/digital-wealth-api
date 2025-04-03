@@ -3,9 +3,9 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { RegisterDto } from '@/auth/dto/register.dto';
+import { RegisterDto } from '@/modules/auth/dto/register.dto';
 import { hash } from 'bcrypt';
-import { AuthError } from '@/auth/enum/error.enum';
+import { AuthError } from '@/modules/auth/enum/error.enum';
 import { LoggerService } from '@/shared/logger/logger.service';
 import { UserRepository } from './repositories/user.repository';
 import { User } from './entities/user.entity';
