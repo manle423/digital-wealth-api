@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Response, Request } from 'express';
-import { UserService } from '@/user/user.service';
+import { UserService } from '@/modules/user/user.service';
 import { LoginDto } from './dto/login.dto';
 import { compareSync } from 'bcrypt';
 import { AuthError } from './enum/error.enum';
