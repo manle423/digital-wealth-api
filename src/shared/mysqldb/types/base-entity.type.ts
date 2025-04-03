@@ -11,12 +11,16 @@ export class BaseEntity {
 
   @CreateDateColumn({
     type: 'timestamp',
+    precision: 0,
+    name: 'created_at',
     default: () => 'CURRENT_TIMESTAMP',
   })
   readonly createdAt!: Date;
 
   @UpdateDateColumn({
     type: 'timestamp',
+    precision: 0,
+    name: 'updated_at',
     default: () => 'CURRENT_TIMESTAMP',
     onUpdate: 'CURRENT_TIMESTAMP',
   })
@@ -24,7 +28,9 @@ export class BaseEntity {
 
   @DeleteDateColumn({
     type: 'timestamp',
+    precision: 0,
     nullable: true,
+    name: 'deleted_at',
   })
   readonly deletedAt!: Date;
 }
