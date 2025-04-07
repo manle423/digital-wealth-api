@@ -6,6 +6,10 @@ import { UserService } from '../user/user.service';
 import { QuestionRepository } from './repositories/question.repository';
 import { AssessmentResultRepository } from './repositories/assessment-result.repository';
 import { RiskProfileType } from './enums/risk-profile.enum';
+import { CreateQuestionDto } from './dto/create-question.dto';
+import { GetQuestionsDto } from './dto/get-questions.dto';
+import { PgPagination } from '@/shared/mysqldb/types/pagination.type';
+import { QuestionUpdate } from './dto/update-multiple-questions.dto';
 
 @Injectable()
 export class RiskAssessmentService {
@@ -15,11 +19,29 @@ export class RiskAssessmentService {
     private readonly userService: UserService,
   ) {}
 
-  async getQuestions(): Promise<Question[]> {
-    return this.questionRepository.find(
-      { isActive: true },
-      { order: { order: 'ASC' } }
-    );
+  async getQuestions(query?: GetQuestionsDto): Promise<{ data: Question[], pagination?: PgPagination }> {
+    let pagination = null;
+    
+    if (query?.page && query?.limit) {
+      pagination = new PgPagination(query.page, query.limit);
+    }
+    
+    const questions = await this.questionRepository.findAllQuestions(query, pagination);
+    
+    if (!(questions && questions.length)) {
+      return { data: [], pagination };
+    }
+    
+    if (pagination) {
+      pagination.totalItems = questions[1];
+    }
+    
+    const result = {
+      data: questions[0],
+      pagination,
+    };
+    
+    return result;
   }
 
   async saveAssessmentResult(
@@ -139,5 +161,22 @@ export class RiskAssessmentService {
       { order: { createdAt: 'DESC' }, take: 1 }
     );
     return results[0];
+  }
+
+  async createQuestions(questionsData: CreateQuestionDto[]): Promise<Question[]> {
+    const questions = questionsData.map(questionDto => ({
+      ...questionDto,
+      isActive: questionDto.isActive ?? true,
+    }));
+    
+    return await this.questionRepository.save(questions) as Question[];
+  }
+  
+  async updateQuestions(updates: QuestionUpdate[]): Promise<Question[]> {
+    return this.questionRepository.updateMultipleQuestions(updates);
+  }
+  
+  async deleteQuestions(ids: string[]): Promise<boolean> {
+    return this.questionRepository.deleteMultipleQuestions(ids);
   }
 } 

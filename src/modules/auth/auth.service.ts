@@ -32,6 +32,7 @@ export class AuthService {
     const payload: IJwtPayload = {
       sub: user.id.toString(),
       email: user.email,
+      role: user.role,
     };
 
     const tokens = await generateTokens(this.jwtService, payload);
@@ -70,6 +71,7 @@ export class AuthService {
     const payload: IJwtPayload = {
       sub: user.id.toString(),
       email: user.email,
+      role: user.role,
     };
 
     const tokens = await generateTokens(this.jwtService, payload);
