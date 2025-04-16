@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsArray, IsBoolean, IsNotEmpty, IsNumber, IsObject, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { IsArray, IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
 
 class QuestionOptionDto {
   @IsString()
@@ -32,4 +32,12 @@ export class CreateQuestionDto {
   @ValidateNested({ each: true })
   @Type(() => QuestionOptionDto)
   options: QuestionOptionDto[];
+}
+
+export class CreateMultipleQuestionsDto {
+  @IsArray()
+  @IsNotEmpty()
+  @ValidateNested({ each: true })
+  @Type(() => CreateQuestionDto)
+  questions: CreateQuestionDto[];
 } 

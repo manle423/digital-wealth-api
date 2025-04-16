@@ -1,68 +1,68 @@
 import { Injectable } from '@nestjs/common';
-import { Question } from './entities/question.entity';
 import { AssessmentResult } from './entities/assessment-result.entity';
 import { CreateAssessmentResultDto } from './dto/create-assessment-result.dto';
-import { UserService } from '../user/user.service';
-import { QuestionRepository } from './repositories/question.repository';
 import { AssessmentResultRepository } from './repositories/assessment-result.repository';
 import { RiskProfileType } from './enums/risk-profile.enum';
-import { CreateQuestionDto } from './dto/create-question.dto';
-import { GetQuestionsDto } from './dto/get-questions.dto';
-import { PgPagination } from '@/shared/mysqldb/types/pagination.type';
-import { QuestionUpdate } from './dto/update-multiple-questions.dto';
+import { RiskProfileRepository } from './repositories/risk-profile.repository';
+import { AssetAllocationRepository } from './repositories/asset-allocation.repository';
 
 @Injectable()
 export class RiskAssessmentService {
   constructor(
-    private readonly questionRepository: QuestionRepository,
     private readonly assessmentResultRepository: AssessmentResultRepository,
-    private readonly userService: UserService,
+    private readonly riskProfileRepository: RiskProfileRepository,
+    private readonly assetAllocationRepository: AssetAllocationRepository,
   ) {}
-
-  async getQuestions(query?: GetQuestionsDto): Promise<{ data: Question[], pagination?: PgPagination }> {
-    let pagination = null;
-    
-    if (query?.page && query?.limit) {
-      pagination = new PgPagination(query.page, query.limit);
-    }
-    
-    const questions = await this.questionRepository.findAllQuestions(query, pagination);
-    
-    if (!(questions && questions.length)) {
-      return { data: [], pagination };
-    }
-    
-    if (pagination) {
-      pagination.totalItems = questions[1];
-    }
-    
-    const result = {
-      data: questions[0],
-      pagination,
-    };
-    
-    return result;
-  }
 
   async saveAssessmentResult(
     createAssessmentResultDto: CreateAssessmentResultDto,
   ): Promise<AssessmentResult> {
     const { userId, totalScore, userResponses } = createAssessmentResultDto;
     
-    // Determine risk profile based on score
-    const riskProfile = this.calculateRiskProfile(totalScore);
+    // Lấy hồ sơ rủi ro dựa trên điểm từ cơ sở dữ liệu
+    let riskProfile = await this.riskProfileRepository.findByScore(totalScore);
+    let riskProfileType: RiskProfileType;
     
-    // Generate recommended allocation
-    const recommendedAllocation = this.generateRecommendedAllocation(riskProfile);
+    // Fallback nếu không tìm thấy trong cơ sở dữ liệu
+    if (!riskProfile) {
+      riskProfileType = this.calculateRiskProfile(totalScore);
+    } else {
+      riskProfileType = riskProfile.type;
+    }
     
-    // Generate summary
-    const summary = this.generateSummary(riskProfile, recommendedAllocation);
+    // Lấy phân bổ tài sản từ cơ sở dữ liệu nếu có
+    let recommendedAllocation: { assetClass: string; percentage: number }[] = [];
     
-    // Create assessment result
+    if (riskProfile) {
+      const allocations = await this.assetAllocationRepository.findByRiskProfileId(riskProfile.id);
+      if (allocations && allocations.length > 0) {
+        recommendedAllocation = allocations.map(allocation => ({
+          assetClass: allocation.assetClass.name,
+          percentage: allocation.percentage
+        }));
+      }
+    }
+    
+    // Fallback nếu không tìm thấy phân bổ trong cơ sở dữ liệu
+    if (recommendedAllocation.length === 0) {
+      recommendedAllocation = this.generateRecommendedAllocation(riskProfileType);
+    }
+    
+    // Tạo nội dung tóm tắt
+    let summary: string;
+    if (riskProfile?.description) {
+      // Sử dụng mô tả từ database
+      summary = `${riskProfile.description} Danh mục đầu tư đề xuất của bạn gồm ${recommendedAllocation.map(item => `${item.percentage}% vào ${item.assetClass}`).join(', ')}.`;
+    } else {
+      // Fallback sử dụng phương thức cũ
+      summary = this.generateSummary(riskProfileType, recommendedAllocation);
+    }
+    
+    // Tạo kết quả đánh giá
     const assessmentResultData = {
       userId,
       totalScore,
-      riskProfile,
+      riskProfile: riskProfileType,
       userResponses,
       recommendedAllocation,
       summary,
@@ -72,6 +72,7 @@ export class RiskAssessmentService {
     return savedResults[0] as AssessmentResult;
   }
 
+  // Fallback methods - được sử dụng khi không có dữ liệu trong database
   calculateRiskProfile(totalScore: number): RiskProfileType {
     if (totalScore <= 20) {
       return RiskProfileType.CONSERVATIVE;
@@ -161,22 +162,5 @@ export class RiskAssessmentService {
       { order: { createdAt: 'DESC' }, take: 1 }
     );
     return results[0];
-  }
-
-  async createQuestions(questionsData: CreateQuestionDto[]): Promise<Question[]> {
-    const questions = questionsData.map(questionDto => ({
-      ...questionDto,
-      isActive: questionDto.isActive ?? true,
-    }));
-    
-    return await this.questionRepository.save(questions) as Question[];
-  }
-  
-  async updateQuestions(updates: QuestionUpdate[]): Promise<Question[]> {
-    return this.questionRepository.updateMultipleQuestions(updates);
-  }
-  
-  async deleteQuestions(ids: string[]): Promise<boolean> {
-    return this.questionRepository.deleteMultipleQuestions(ids);
   }
 } 

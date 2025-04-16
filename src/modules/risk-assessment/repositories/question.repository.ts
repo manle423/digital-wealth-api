@@ -4,11 +4,11 @@ import { Repository, In } from 'typeorm';
 import { Question } from '../entities/question.entity';
 import { MysqldbRepository } from '@/shared/mysqldb/mysqldb.repository';
 import { MysqldbConnection } from '@/shared/mysqldb/connections/db.connection';
-import { GetQuestionsDto } from '../dto/get-questions.dto';
+import { GetQuestionsDto } from '../dto/question/get-questions.dto';
 import { IPagination } from '@/shared/mysqldb/interfaces/pagination.interface';
-import { QuestionUpdate } from '../dto/update-multiple-questions.dto';
 import { QuestionError } from '../enums/question-error.enum';
 import { SortDirection } from '@/shared/mysqldb/enums/sort-direction.enum';
+import { QuestionUpdate } from '../dto/question/update-question.dto';
 
 @Injectable()
 export class QuestionRepository extends MysqldbRepository<Question> {
