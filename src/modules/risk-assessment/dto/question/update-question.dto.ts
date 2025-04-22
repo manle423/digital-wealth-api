@@ -4,7 +4,11 @@ import { Type } from 'class-transformer';
 class UpdateQuestionOptionDto {
   @IsString()
   @IsOptional()
-  text?: string;
+  textVi?: string;
+
+  @IsString()
+  @IsOptional()
+  textEn?: string;
 
   @IsNumber()
   @Type(() => Number)
@@ -15,7 +19,11 @@ class UpdateQuestionOptionDto {
 export class UpdateQuestionDto {
   @IsOptional()
   @IsString()
-  text?: string;
+  textVi?: string;
+
+  @IsOptional()
+  @IsString()
+  textEn?: string;
 
   @IsOptional()
   @IsNumber()

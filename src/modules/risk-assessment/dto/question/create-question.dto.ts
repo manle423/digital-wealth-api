@@ -4,7 +4,11 @@ import { IsArray, IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, Validat
 class QuestionOptionDto {
   @IsString()
   @IsNotEmpty()
-  text: string;
+  textVi: string;
+
+  @IsString()
+  @IsNotEmpty()
+  textEn: string;
 
   @IsNumber()
   @Type(() => Number)
@@ -13,8 +17,10 @@ class QuestionOptionDto {
 
 export class CreateQuestionDto {
   @IsString()
-  @IsNotEmpty()
-  text: string;
+  textVi: string;
+
+  @IsString()
+  textEn: string;
 
   @IsNumber()
   @IsNotEmpty()

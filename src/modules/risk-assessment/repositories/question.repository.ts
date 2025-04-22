@@ -9,6 +9,7 @@ import { IPagination } from '@/shared/mysqldb/interfaces/pagination.interface';
 import { QuestionError } from '../enums/question-error.enum';
 import { SortDirection } from '@/shared/mysqldb/enums/sort-direction.enum';
 import { QuestionUpdate } from '../dto/question/update-question.dto';
+import { QuestionTranslation } from '../entities/question-translation.entity';
 
 @Injectable()
 export class QuestionRepository extends MysqldbRepository<Question> {
@@ -25,7 +26,8 @@ export class QuestionRepository extends MysqldbRepository<Question> {
   ): Promise<[Question[], number]> {
     const { isActive, category, sortBy = 'order', sortDirection = SortDirection.ASC } = query || {};
     
-    const qb = this.repository.createQueryBuilder('question');
+    const qb = this.repository.createQueryBuilder('question')
+      .leftJoinAndSelect('question.translations', 'translations');
     
     if (isActive !== undefined) {
       const booleanValue = isActive === 'false' ? false : true;
@@ -99,6 +101,7 @@ export class QuestionRepository extends MysqldbRepository<Question> {
     return this.withTnx(async (manager) => {
       // Delete all questions in one operation
       await manager.softDelete(this.repository.target, { id: In(ids) });
+      await manager.softDelete(QuestionTranslation, { questionId: In(ids) });
       return true;
     });
   }

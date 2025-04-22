@@ -1,5 +1,6 @@
 import { BaseEntity } from '@/shared/mysqldb/types/base-entity.type';
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, OneToMany } from 'typeorm';
+import { QuestionTranslation } from './question-translation.entity';
 
 @Entity('risk_assessment_questions')
 export class Question extends BaseEntity {
@@ -15,9 +16,13 @@ export class Question extends BaseEntity {
   @Column({ type: 'varchar', length: 50 })
   category: string;
 
+  @OneToMany(() => QuestionTranslation, translation => translation.question)
+  translations: QuestionTranslation[];
+
   @Column({ type: 'json' })
   options: {
-    text: string;
+    textVi: string;
+    textEn: string;
     value: number;
   }[];
 } 

@@ -21,11 +21,14 @@ import { QuestionService } from './services/question.service';
 import { RiskProfileService } from './services/risk-profile.service';
 import { AssetClassService } from './services/asset-class.service';
 import { AssetAllocationService } from './services/asset-allocation.service';
+import { QuestionTranslation } from './entities/question-translation.entity';
+import { QuestionTranslationRepository } from './repositories/question-translation.repository';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       Question,
+      QuestionTranslation,
       AssessmentResult,
       RiskProfile,
       AssetClass,
@@ -45,6 +48,7 @@ import { AssetAllocationService } from './services/asset-allocation.service';
     AssetClassService,
     AssetAllocationService,
     QuestionRepository,
+    QuestionTranslationRepository,
     AssessmentResultRepository,
     JwtService,
     AssetClassRepository,
