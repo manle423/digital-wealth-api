@@ -39,6 +39,16 @@ export function handleDatabaseError(error: any, entityName: string): never {
     );
   }
   
+  // Lỗi thiếu giá trị cho trường bắt buộc
+  if (error.code === 'ER_NO_DEFAULT_FOR_FIELD') {
+    const match = error.sqlMessage.match(/Field '(.+)' doesn't have a default value/);
+    const fieldName = match ? match[1] : 'unknown';
+    
+    throw new BadRequestException(
+      `Thiếu giá trị cho trường "${fieldName}" khi thao tác với ${entityName.toLowerCase()}.`
+    );
+  }
+  
   // Log lỗi không được xử lý
   console.error('Database error:', error);
   
