@@ -16,6 +16,7 @@ export interface IAuthResponse {
     id: string;
     email: string;
     name: string;
+    role: string;
   };
   tokens: ITokens;
 }
