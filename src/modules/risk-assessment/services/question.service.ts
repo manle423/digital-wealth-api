@@ -11,7 +11,7 @@ import { In } from 'typeorm';
 import { Language } from '@/shared/enums/language.enum';
 import { QuestionError } from '../enums/question-error.enum';
 import { RedisService } from '@/shared/redis/redis.service';
-import { RedisKeyPrefix } from '@/shared/enums/redis-key.enum';
+import { RedisKeyPrefix, RedisKeyTtl } from '@/shared/enums/redis-key.enum';
 import { LoggerService } from '@/shared/logger/logger.service';
 
 @Injectable()
@@ -82,8 +82,7 @@ export class QuestionService {
       pagination,
     };
     
-    // Lưu kết quả vào cache với thời gian 10 phút
-    await this.redisService.set(cacheKey, JSON.stringify(result), 600);
+    await this.redisService.set(cacheKey, JSON.stringify(result), RedisKeyTtl.TEN_MINUTES);
     
     return result;
   }
