@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { QuestionRepository } from '../repositories/question.repository';
 import { Question } from '../entities/question.entity';
 import { CreateQuestionDto } from '../dto/question/create-question.dto';
@@ -10,20 +10,43 @@ import { QuestionTranslationRepository } from '../repositories/question-translat
 import { In } from 'typeorm';
 import { Language } from '@/shared/enums/language.enum';
 import { QuestionError } from '../enums/question-error.enum';
+import { RedisService } from '@/shared/redis/redis.service';
+import { RedisKeyPrefix } from '@/shared/enums/redis-key.enum';
+import { LoggerService } from '@/shared/logger/logger.service';
 
 @Injectable()
 export class QuestionService {
   constructor(
     private readonly questionRepository: QuestionRepository,
-    private readonly questionTranslationRepository: QuestionTranslationRepository
+    private readonly questionTranslationRepository: QuestionTranslationRepository,
+    private readonly redisService: RedisService,
+    private readonly logger: LoggerService
   ) { }
 
   /**
    * Lấy danh sách câu hỏi với phân trang và lọc
    */
   async getQuestions(query?: GetQuestionsDto) {
-    let pagination = null;
+    const page = query?.page || 1;
+    const limit = query?.limit || 10;
+    const sortBy = query?.sortBy || 'order';
+    const sortDir = query?.sortDirection || 'ASC';
+    const isActive = query?.isActive || '';
+    const category = query?.category || '';
+    
+    const cacheKey = `${RedisKeyPrefix.QUESTION}:p${page}:l${limit}:s${sortBy}:d${sortDir}:a${isActive}:c${category}`;
+    
+    console.log('Redis key:', cacheKey);
 
+    // Kiểm tra cache trước
+    const cachedData = await this.redisService.get(cacheKey);
+    if (cachedData) {
+      console.log('Cache hit:', cacheKey);
+      return JSON.parse(cachedData);
+    }
+    
+    // Nếu không có trong cache, truy vấn database như bình thường
+    let pagination = null;
     if (query?.page && query?.limit) {
       pagination = new PgPagination(query.page, query.limit);
     }
@@ -54,10 +77,15 @@ export class QuestionService {
       pagination.totalItems = totalCount;
     }
 
-    return {
+    const result = {
       data: questionsWithTranslations,
       pagination,
     };
+    
+    // Lưu kết quả vào cache với thời gian 10 phút
+    await this.redisService.set(cacheKey, JSON.stringify(result), 600);
+    
+    return result;
   }
 
   /**
@@ -98,6 +126,9 @@ export class QuestionService {
         })
       );
 
+      // Xóa cache sau khi tạo mới
+      await this.invalidateQuestionsCache();
+      
       return questions;
     } catch (error) {
       handleDatabaseError(error, 'QuestionService.createQuestions');
@@ -118,7 +149,7 @@ export class QuestionService {
       }
 
       // Use transaction to ensure atomicity
-      return this.questionRepository.withTnx(async (manager) => {
+      const result = await this.questionRepository.withTnx(async (manager) => {
         const updatedQuestions: Question[] = [];
 
         for (const update of updates) {
@@ -163,6 +194,11 @@ export class QuestionService {
 
         return updatedQuestions;
       });
+      
+      // Xóa cache sau khi cập nhật
+      await this.invalidateQuestionsCache();
+      
+      return result;
     } catch (error) {
       handleDatabaseError(error, 'QuestionService.updateQuestions');
     }
@@ -172,6 +208,18 @@ export class QuestionService {
    * Xóa nhiều câu hỏi
    */
   async deleteQuestions(ids: string[]): Promise<boolean> {
-    return this.questionRepository.deleteMultipleQuestions(ids);
+    const result = await this.questionRepository.deleteMultipleQuestions(ids);
+    
+    // Xóa cache sau khi xóa
+    await this.invalidateQuestionsCache();
+    
+    return result;
+  }
+
+  private async invalidateQuestionsCache() {
+    // Xóa tất cả cache bắt đầu với prefix QUESTION
+    const prefix = this.redisService.buildKey(RedisKeyPrefix.QUESTION);
+    await this.redisService.delWithPrefix(prefix);
+    this.logger.info('Cleared questions cache');
   }
 } 

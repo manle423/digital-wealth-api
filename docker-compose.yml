@@ -34,7 +34,7 @@ services:
     ports:
       - "8088:8081"
     environment:
-      - REDIS_HOSTS=local:dw_redis:6380
+      - REDIS_HOSTS=local:dw_redis:6379
     networks:
       - app-network
 
