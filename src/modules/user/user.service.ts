@@ -9,13 +9,17 @@ import { AuthError } from '@/modules/auth/enum/error.enum';
 import { LoggerService } from '@/shared/logger/logger.service';
 import { UserRepository } from './repositories/user.repository';
 import { User } from './entities/user.entity';
-import { FindOptionsWhere } from 'typeorm';
+import { FindOptionsWhere, DeepPartial } from 'typeorm';
+import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
+import { UserDetailRepository } from './repositories/user-detail.repository';
+import { UserDetail } from './entities/user-detail.entity';
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly logger: LoggerService,
     private readonly userRepository: UserRepository,
+    private readonly userDetailRepository: UserDetailRepository,
   ) {}
 
   async createUser(dto: RegisterDto) {
@@ -82,6 +86,120 @@ export class UserService {
       return result;
     } catch (error) {
       this.logger.error('[findById] Error finding user by id', error);
+      throw error;
+    }
+  }
+
+  async updateUserProfile(userId: string, dto: UpdateUserProfileDto) {
+    try {
+      this.logger.info('[updateUserProfile]', { userId });
+
+      // Check if user exists
+      const user = await this.userRepository.findOne({ id: userId });
+
+      if (!user) {
+        throw new NotFoundException(AuthError.USER_NOT_FOUND);
+      }
+
+      // Update user name if provided
+      if (dto.name) {
+        await this.userRepository.update({ id: userId }, { name: dto.name });
+      }
+
+      // Get existing user detail or create new one if it doesn't exist
+      let userDetail = await this.userDetailRepository.findOne({ userId });
+
+      if (!userDetail) {
+        // Create new user detail
+        const newUserDetail: DeepPartial<UserDetail> = {
+          userId,
+          dateOfBirth: dto.dateOfBirth,
+          phoneNumber: dto.phoneNumber,
+          occupation: dto.occupation,
+          annualIncome: dto.annualIncome,
+          investmentExperience: dto.investmentExperience,
+          riskTolerance: dto.riskTolerance,
+          investmentPreferences: dto.investmentPreferences,
+          totalPortfolioValue: dto.totalPortfolioValue,
+          // If kycDetails is needed in the future, add it here
+        };
+
+        // Add custom fields to investmentPreferences if they don't exist
+        if (dto.monthlyExpenses && !newUserDetail.investmentPreferences) {
+          newUserDetail.investmentPreferences = {
+            monthlyExpenses: dto.monthlyExpenses,
+          };
+        } else if (dto.monthlyExpenses && newUserDetail.investmentPreferences) {
+          newUserDetail.investmentPreferences = {
+            ...newUserDetail.investmentPreferences,
+            monthlyExpenses: dto.monthlyExpenses,
+          };
+        }
+
+        await this.userDetailRepository.save(newUserDetail);
+      } else {
+        // Update existing user detail
+        const updateData: DeepPartial<UserDetail> = {};
+        
+        if (dto.dateOfBirth) updateData.dateOfBirth = dto.dateOfBirth;
+        if (dto.phoneNumber) updateData.phoneNumber = dto.phoneNumber;
+        if (dto.occupation) updateData.occupation = dto.occupation;
+        if (dto.annualIncome) updateData.annualIncome = dto.annualIncome;
+        if (dto.investmentExperience) updateData.investmentExperience = dto.investmentExperience;
+        if (dto.riskTolerance) updateData.riskTolerance = dto.riskTolerance;
+        if (dto.totalPortfolioValue) updateData.totalPortfolioValue = dto.totalPortfolioValue;
+        
+        // Handle investment preferences update
+        if (dto.investmentPreferences || dto.monthlyExpenses) {
+          const currentPreferences = userDetail.investmentPreferences || {};
+          
+          updateData.investmentPreferences = {
+            ...currentPreferences,
+            ...(dto.investmentPreferences || {}),
+          };
+          
+          // Add monthly expenses to investment preferences
+          if (dto.monthlyExpenses) {
+            updateData.investmentPreferences.monthlyExpenses = dto.monthlyExpenses;
+          }
+        }
+        
+        if (Object.keys(updateData).length > 0) {
+          await this.userDetailRepository.update({ userId }, updateData);
+        }
+      }
+
+      // Get updated user with detail
+      const updatedUser = await this.userRepository.findOne(
+        { id: userId },
+        { relations: ['userDetail'] }
+      );
+
+      const { password, ...result } = updatedUser;
+      return result;
+    } catch (error) {
+      this.logger.error('[updateUserProfile] Error updating user profile', error);
+      throw error;
+    }
+  }
+
+  async getUserProfileComplete(userId: string) {
+    try {
+      this.logger.info('[getUserProfileComplete]', { userId });
+
+      const user = await this.userRepository.findOne(
+        { id: userId },
+        { relations: ['userDetail'] }
+      );
+
+      if (!user) {
+        throw new NotFoundException(AuthError.USER_NOT_FOUND);
+      }
+
+      const { password, ...result } = user;
+      return result;
+    } catch (error) {
+      this.logger.error('[getUserProfileComplete] Error getting complete user profile', error);
       throw error;
     }
   }

@@ -31,9 +31,10 @@ export class UserDetail extends BaseEntity {
 
   @Column({ type: 'json', nullable: true, name: 'investment_preferences' })
   investmentPreferences: {
-    investmentGoals: string[];
-    preferredInvestmentTypes: string[];
-    timeHorizon: string;
+    investmentGoals?: string[];
+    preferredInvestmentTypes?: string[];
+    timeHorizon?: string;
+    monthlyExpenses?: number;
   };
 
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true, name: 'total_portfolio_value' })

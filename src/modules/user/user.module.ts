@@ -8,6 +8,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from '@/shared/logger/logger.module';
 import { MysqldbConnection } from '@/shared/mysqldb/connections/db.connection';
 import { UserDetail } from './entities/user-detail.entity';
+import { UserDetailRepository } from './repositories/user-detail.repository';
 
 @Module({
   imports: [
@@ -15,7 +16,7 @@ import { UserDetail } from './entities/user-detail.entity';
     LoggerModule,
   ],
   controllers: [UserController],
-  providers: [UserService, JwtService, UserRepository],
+  providers: [UserService, JwtService, UserRepository, UserDetailRepository],
   exports: [UserService],
 })
 export class UserModule {}
