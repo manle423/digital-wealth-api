@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsArray, IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { IsArray, IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID, ValidateIf, ValidateNested } from 'class-validator';
 
 class QuestionOptionDto {
   @IsString()
@@ -15,6 +15,16 @@ class QuestionOptionDto {
   value: number;
 }
 
+class NewCategoryDto {
+  @IsString()
+  @IsNotEmpty()
+  name: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+}
+
 export class CreateQuestionDto {
   @IsString()
   textVi: string;
@@ -26,9 +36,21 @@ export class CreateQuestionDto {
   @IsNotEmpty()
   order: number;
 
+  @ValidateIf(o => !o.categoryId && !o.newCategory)
   @IsString()
-  @IsNotEmpty()
-  category: string;
+  @IsOptional()
+  category?: string;
+
+  @ValidateIf(o => !o.category && !o.newCategory)
+  @IsUUID()
+  @IsOptional()
+  categoryId?: string;
+
+  @ValidateIf(o => !o.category && !o.categoryId)
+  @ValidateNested()
+  @Type(() => NewCategoryDto)
+  @IsOptional()
+  newCategory?: NewCategoryDto;
 
   @IsBoolean()
   @IsOptional()

@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Question } from './entities/question.entity';
 import { AssessmentResult } from './entities/assessment-result.entity';
-import { RiskAssessmentController } from './controllers/risk-assessment.controller';
 import { RiskAssessmentService } from './risk-assessment.service';
 import { UserModule } from '../user/user.module';
 import { LoggerModule } from '@/shared/logger/logger.module';
@@ -16,19 +15,29 @@ import { RiskProfile } from './entities/risk-profile.entity';
 import { AssetClassRepository } from './repositories/asset-class.repository';
 import { AssetAllocationRepository } from './repositories/asset-allocation.repository';
 import { RiskProfileRepository } from './repositories/risk-profile.repository';
-import { RiskAssessmentAdminController } from './controllers/risk-assessment-admin.controller';
 import { QuestionService } from './services/question.service';
 import { RiskProfileService } from './services/risk-profile.service';
 import { AssetClassService } from './services/asset-class.service';
 import { AssetAllocationService } from './services/asset-allocation.service';
 import { QuestionTranslation } from './entities/question-translation.entity';
 import { QuestionTranslationRepository } from './repositories/question-translation.repository';
+import { QuestionCategory } from './entities/question-category.entity';
+import { QuestionCategoryRepository } from './repositories/question-category.repository';
+import { QuestionCategoryService } from './services/question-category.service';
+import { AdminQuestionController } from './controllers/admin/question.controller';
+import { AdminQuestionCategoryController } from './controllers/admin/question-category.controller';
+import { AdminRiskProfileController } from './controllers/admin/risk-profile.controller';
+import { AdminAssetClassController } from './controllers/admin/asset-class.controller';
+import { AdminAssetAllocationController } from './controllers/admin/asset-allocation.controller';
+import { PublicQuestionController } from './controllers/public/question.controller';
+import { PublicAssessmentController } from './controllers/public/assessment.controller';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       Question,
       QuestionTranslation,
+      QuestionCategory,
       AssessmentResult,
       RiskProfile,
       AssetClass,
@@ -38,17 +47,24 @@ import { QuestionTranslationRepository } from './repositories/question-translati
     LoggerModule
   ],
   controllers: [
-    RiskAssessmentController,
-    RiskAssessmentAdminController
+    AdminQuestionController,
+    AdminQuestionCategoryController,
+    AdminRiskProfileController,
+    AdminAssetClassController,
+    AdminAssetAllocationController,
+    PublicQuestionController,
+    PublicAssessmentController
   ],
   providers: [
     RiskAssessmentService,
     QuestionService,
+    QuestionCategoryService,
     RiskProfileService,
     AssetClassService,
     AssetAllocationService,
     QuestionRepository,
     QuestionTranslationRepository,
+    QuestionCategoryRepository,
     AssessmentResultRepository,
     JwtService,
     AssetClassRepository,

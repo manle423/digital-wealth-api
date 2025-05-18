@@ -6,31 +6,18 @@ import {
   UseGuards,
   Request,
   UnauthorizedException,
-  Query,
 } from '@nestjs/common';
-import { RiskAssessmentService } from '../risk-assessment.service';
-import { CreateAssessmentResultDto } from '../dto/create-assessment-result.dto';
-import { JwtGuard } from '../../auth/guards/jwt.guard';
-import { AssessmentResult } from '../entities/assessment-result.entity';
-import { AuthError } from '../../auth/enum/error.enum';
-import { GetQuestionsDto } from '../dto/question/get-questions.dto';
-import { QuestionService } from '../services/question.service';
+import { RiskAssessmentService } from '@/modules/risk-assessment/risk-assessment.service';
+import { CreateAssessmentResultDto } from '@/modules/risk-assessment/dto/create-assessment-result.dto';
+import { JwtGuard } from '@/modules/auth/guards/jwt.guard';
+import { AssessmentResult } from '@/modules/risk-assessment/entities/assessment-result.entity';
+import { AuthError } from '@/modules/auth/enum/error.enum';
 
 @Controller('risk-assessment')
-export class RiskAssessmentController {
+export class PublicAssessmentController {
   constructor(
     private readonly riskAssessmentService: RiskAssessmentService,
-    private readonly questionService: QuestionService
   ) {}
-
-  /**
-   * Lấy danh sách câu hỏi đánh giá rủi ro
-   * Endpoint này không yêu cầu đăng nhập, để người dùng có thể xem câu hỏi trước khi đăng ký
-   */
-  @Get('questions')
-  async getQuestions(@Query() query: GetQuestionsDto) {
-    return this.questionService.getQuestions(query);
-  }
 
   /**
    * Gửi kết quả đánh giá rủi ro

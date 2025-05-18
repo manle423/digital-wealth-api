@@ -13,12 +13,14 @@ import { QuestionError } from '../enums/question-error.enum';
 import { RedisService } from '@/shared/redis/redis.service';
 import { RedisKeyPrefix, RedisKeyTtl } from '@/shared/enums/redis-key.enum';
 import { LoggerService } from '@/shared/logger/logger.service';
+import { QuestionCategoryRepository } from '../repositories/question-category.repository';
 
 @Injectable()
 export class QuestionService {
   constructor(
     private readonly questionRepository: QuestionRepository,
     private readonly questionTranslationRepository: QuestionTranslationRepository,
+    private readonly questionCategoryRepository: QuestionCategoryRepository,
     private readonly redisService: RedisService,
     private readonly logger: LoggerService
   ) { }
@@ -32,16 +34,16 @@ export class QuestionService {
     const sortBy = query?.sortBy || 'order';
     const sortDir = query?.sortDirection || 'ASC';
     const isActive = query?.isActive || '';
-    const category = query?.category || '';
+    const categories = query?.categories || [];
     
-    const cacheKey = `${RedisKeyPrefix.QUESTION}:p${page}:l${limit}:s${sortBy}:d${sortDir}:a${isActive}:c${category}`;
+    // Tạo chuỗi categories cho cache key
+    const categoriesKey = categories.length > 0 ? categories.sort().join(',') : '';
     
-    console.log('Redis key:', cacheKey);
-
+    const cacheKey = `${RedisKeyPrefix.QUESTION}:p${page}:l${limit}:s${sortBy}:d${sortDir}:a${isActive}:c${categoriesKey}`;
     // Kiểm tra cache trước
     const cachedData = await this.redisService.get(cacheKey);
     if (cachedData) {
-      console.log('Cache hit:', cacheKey);
+      this.logger.debug(`Cache hit: ${cacheKey}`);
       return JSON.parse(cachedData);
     }
     
@@ -63,13 +65,30 @@ export class QuestionService {
       questionId: In(questionIds)
     });
 
-    // Gộp translations vào questions
+    // Lấy categories cho các câu hỏi nếu có questionCategoryId
+    const categoryIds = questions
+      .filter(q => q.questionCategoryId)
+      .map(q => q.questionCategoryId);
+    
+    let categoriesMap = {};
+    if (categoryIds.length > 0) {
+      const categoriesData = await this.questionCategoryRepository.find({
+        id: In(categoryIds)
+      });
+      categoriesMap = categoriesData.reduce((map, cat) => {
+        map[cat.id] = cat;
+        return map;
+      }, {});
+    }
+
+    // Gộp translations và categories vào questions
     const questionsWithTranslations = questions.map(question => {
       const questionTranslations = translations.filter(t => t.questionId === question.id);
       return {
         ...question,
         textVi: questionTranslations.find(t => t.language === Language.VI)?.text,
-        textEn: questionTranslations.find(t => t.language === Language.EN)?.text
+        textEn: questionTranslations.find(t => t.language === Language.EN)?.text,
+        category: question.questionCategoryId ? categoriesMap[question.questionCategoryId] : null
       };
     });
 
@@ -82,9 +101,52 @@ export class QuestionService {
       pagination,
     };
     
-    await this.redisService.set(cacheKey, JSON.stringify(result), RedisKeyTtl.TEN_MINUTES);
+    await this.redisService.set(cacheKey, JSON.stringify(result), RedisKeyTtl.THIRTY_DAYS);
     
     return result;
+  }
+
+  async getQuestionById(id: string) {
+    const cacheKey = `${RedisKeyPrefix.QUESTION}:id:${id}`;
+    
+    // Kiểm tra cache trước
+    const cachedData = await this.redisService.get(cacheKey);
+    if (cachedData) {
+      this.logger.debug(`Cache hit: ${cacheKey}`);
+      return JSON.parse(cachedData);
+    }
+    
+    // Lấy thông tin câu hỏi
+    const question = await this.questionRepository.findOne({ id });
+    if (!question) {
+      throw new NotFoundException(QuestionError.QUESTION_NOT_FOUND);
+    }
+
+    // Lấy translations của câu hỏi
+    const translations = await this.questionTranslationRepository.find({
+      questionId: id
+    });
+
+    // Lấy thông tin category nếu có
+    let category = null;
+    if (question.questionCategoryId) {
+      category = await this.questionCategoryRepository.findOne({ 
+        id: question.questionCategoryId 
+      });
+    }
+
+    // Gộp translations vào question
+    const questionWithTranslations = {
+      ...question,
+      textVi: translations.find(t => t.language === Language.VI)?.text,
+      textEn: translations.find(t => t.language === Language.EN)?.text,
+      category
+    };
+
+    // Lưu vào cache
+    await this.redisService.set(cacheKey, JSON.stringify(questionWithTranslations), RedisKeyTtl.THIRTY_DAYS);
+    
+    return questionWithTranslations;
   }
 
   /**
@@ -94,11 +156,35 @@ export class QuestionService {
     try {
       const questions = await Promise.all(
         questionsData.map(async (questionDto) => {
+          let questionCategoryId = null;
+          
+          // Xử lý category
+          if (questionDto.categoryId) {
+            // Kiểm tra xem category có tồn tại không
+            const category = await this.questionCategoryRepository.findOne({ id: questionDto.categoryId });
+            if (!category) {
+              throw new NotFoundException(`Category with id ${questionDto.categoryId} not found`);
+            }
+            questionCategoryId = questionDto.categoryId;
+          } else if (questionDto.newCategory) {
+            // Tạo category mới nếu có
+            const newCategory = await this.questionCategoryRepository.repository.save({
+              name: questionDto.newCategory.name,
+              codeName: questionDto.newCategory.name.toUpperCase().replace(/\s+/g, '_'),
+              description: questionDto.newCategory.description || '',
+              isActive: true
+            });
+            questionCategoryId = newCategory.id;
+          }
+          
           // Tạo câu hỏi
           const question = await this.questionRepository.save({
             order: questionDto.order,
             isActive: questionDto.isActive ?? true,
-            category: questionDto.category,
+            // Vẫn giữ trường category cho tương thích ngược
+            category: questionDto.category || '', 
+            // Sử dụng questionCategoryId mới
+            questionCategoryId: questionCategoryId,
             text: questionDto.textVi || questionDto.textEn,
             options: questionDto.options.map(opt => ({
               textVi: opt.textVi,
@@ -127,6 +213,12 @@ export class QuestionService {
 
       // Xóa cache sau khi tạo mới
       await this.invalidateQuestionsCache();
+      // Xóa cache categories nếu cần
+      if (questionsData.some(q => q.newCategory)) {
+        await this.redisService.delWithPrefix(
+          this.redisService.buildKey(RedisKeyPrefix.QUESTION_CATEGORY)
+        );
+      }
       
       return questions;
     } catch (error) {
@@ -153,6 +245,20 @@ export class QuestionService {
 
         for (const update of updates) {
           const question = existingQuestions.find(q => q.id === update.id)!;
+
+          // Kiểm tra categoryId nếu có
+          if (update.data.categoryId) {
+            // Kiểm tra categoryId tồn tại
+            const category = await this.questionCategoryRepository.findOne({ 
+              id: update.data.categoryId 
+            });
+            
+            if (!category) {
+              throw new NotFoundException(
+                `Category with ID ${update.data.categoryId} not found`
+              );
+            }
+          }
 
           // Update question translations if textVi or textEn is provided
           if (update.data.textVi || update.data.textEn) {
@@ -184,6 +290,7 @@ export class QuestionService {
             ...question,
             order: update.data.order ?? question.order,
             category: update.data.category ?? question.category,
+            questionCategoryId: update.data.categoryId ?? question.questionCategoryId,
             isActive: update.data.isActive ?? question.isActive
           };
 

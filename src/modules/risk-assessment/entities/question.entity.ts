@@ -1,6 +1,7 @@
 import { BaseEntity } from '@/shared/mysqldb/types/base-entity.type';
-import { Column, Entity, OneToMany } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { QuestionTranslation } from './question-translation.entity';
+import { QuestionCategory } from './question-category.entity';
 
 @Entity('risk_assessment_questions')
 export class Question extends BaseEntity {
@@ -13,8 +14,18 @@ export class Question extends BaseEntity {
   @Column({ default: true, name: 'is_active' })
   isActive: boolean;
 
-  @Column({ type: 'varchar', length: 50 })
+  @Column({ type: 'varchar', length: 50, nullable: true })
   category: string;
+
+  @ManyToOne(() => QuestionCategory, category => category.questions, { 
+    nullable: true, 
+    createForeignKeyConstraints: false 
+  })
+  @JoinColumn({ name: 'question_category_id', referencedColumnName: 'id' })
+  questionCategory: QuestionCategory;
+
+  @Column({ type: 'uuid', nullable: true, name: 'question_category_id' })
+  questionCategoryId: string;
 
   @OneToMany(() => QuestionTranslation, translation => translation.question)
   translations: QuestionTranslation[];

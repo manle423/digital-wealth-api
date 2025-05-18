@@ -35,6 +35,10 @@ export class UpdateQuestionDto {
   category?: string;
 
   @IsOptional()
+  @IsUUID()
+  categoryId?: string;
+
+  @IsOptional()
   @IsBoolean()
   isActive?: boolean;
 
@@ -43,7 +47,7 @@ export class UpdateQuestionDto {
   @ValidateNested({ each: true })
   @Type(() => UpdateQuestionOptionDto)
   options?: UpdateQuestionOptionDto[];
-} 
+}
 
 export class QuestionUpdate {
   @IsUUID()

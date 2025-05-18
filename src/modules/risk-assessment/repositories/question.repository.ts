@@ -24,7 +24,7 @@ export class QuestionRepository extends MysqldbRepository<Question> {
     query?: Partial<GetQuestionsDto>,
     pagination?: Partial<IPagination>
   ): Promise<[Question[], number]> {
-    const { isActive, category, sortBy = 'order', sortDirection = SortDirection.ASC } = query || {};
+    const { isActive, categories, sortBy = 'order', sortDirection = SortDirection.ASC } = query || {};
     
     const qb = this.repository.createQueryBuilder('question')
       .leftJoinAndSelect('question.translations', 'translations');
@@ -34,8 +34,14 @@ export class QuestionRepository extends MysqldbRepository<Question> {
       qb.andWhere('question.isActive = :isActive', { isActive: booleanValue });
     }
     
-    if (category) {
-      qb.andWhere('question.category = :category', { category });
+    if (categories && categories.length > 0) {
+      if (categories.length === 1) {
+        qb.andWhere('(question.category = :category OR question.questionCategoryId IN (SELECT id FROM risk_assessment_question_categories WHERE code_name = :category))', 
+          { category: categories[0] });
+      } else {
+        qb.andWhere('(question.category IN (:...categories) OR question.questionCategoryId IN (SELECT id FROM risk_assessment_question_categories WHERE code_name IN (:...categories)))', 
+          { categories });
+      }
     }
     
     qb.orderBy(`question.${sortBy}`, sortDirection);
@@ -53,25 +59,18 @@ export class QuestionRepository extends MysqldbRepository<Question> {
   }
   
   async updateMultipleQuestions(updates: QuestionUpdate[]): Promise<Question[]> {
-    // First check if all questions exist
     const ids = updates.map(update => update.id);
-    const existingQuestions = await this.repository.find({ where: { id: In(ids) } });
+    const existingQuestions = await this.find({ id: In(ids) });
     
     if (existingQuestions.length !== ids.length) {
-      // Find which ID is missing
-      const existingIds = existingQuestions.map(q => q.id);
-      const missingIds = ids.filter(id => !existingIds.includes(id));
       throw new NotFoundException(QuestionError.QUESTION_NOT_FOUND);
     }
     
-    // Use transaction to ensure atomicity
     return this.withTnx(async (manager) => {
       const updatedQuestions: Question[] = [];
       
-      // Process each update with existing question as base
       for (const update of updates) {
         const question = existingQuestions.find(q => q.id === update.id)!;
-        
         const updatedQuestion = {
           ...question,
           ...update.data
@@ -86,22 +85,14 @@ export class QuestionRepository extends MysqldbRepository<Question> {
   }
   
   async deleteMultipleQuestions(ids: string[]): Promise<boolean> {
-    // First check if all questions exist
-    const existingQuestions = await this.repository.find({ where: { id: In(ids) } });
+    const existingQuestions = await this.find({ id: In(ids) });
     
     if (existingQuestions.length !== ids.length) {
-      // Find which ID is missing
-      const existingIds = existingQuestions.map(q => q.id);
-      const missingIds = ids.filter(id => !existingIds.includes(id));
-      console.error(`Questions with IDs ${missingIds.join(', ')} not found`);
       throw new NotFoundException(QuestionError.QUESTION_NOT_FOUND);
     }
     
-    // Use transaction to ensure atomicity
     return this.withTnx(async (manager) => {
-      // Delete all questions in one operation
       await manager.softDelete(this.repository.target, { id: In(ids) });
-      await manager.softDelete(QuestionTranslation, { questionId: In(ids) });
       return true;
     });
   }
