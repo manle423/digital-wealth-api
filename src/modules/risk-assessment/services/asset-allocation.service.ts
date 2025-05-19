@@ -6,6 +6,7 @@ import { AssetClassService } from "./asset-class.service";
 import { RiskProfileService } from "./risk-profile.service";
 import { CreateAssetAllocationDto } from "../dto/asset-allocation/create-asset-alllocation.dto";
 import { BatchUpdateAllocationDto, UpdateAssetAllocationDto } from "../dto/asset-allocation/update-asset-allocation.dto";
+import { LoggerService } from '@/shared/logger/logger.service';
 
 @Injectable()
 export class AssetAllocationService {
@@ -13,10 +14,12 @@ export class AssetAllocationService {
     private readonly assetAllocationRepository: AssetAllocationRepository,
     private readonly assetClassService: AssetClassService,
     private readonly riskProfileService: RiskProfileService,
+    private readonly logger: LoggerService
   ) {}
 
     // Asset Allocation methods
     async createAllocation(createDto: CreateAssetAllocationDto): Promise<AssetAllocation> {
+      this.logger.info('[createAllocation]', { allocation: createDto });
       // Kiểm tra riskProfile tồn tại
       await this.riskProfileService.getRiskProfileById(createDto.riskProfileId);
       
@@ -30,11 +33,12 @@ export class AssetAllocationService {
         const allocations = await this.assetAllocationRepository.save(createDto);
         return allocations[0] as AssetAllocation;
       } catch (error) {
-        handleDatabaseError(error, 'Asset Allocation');
+        handleDatabaseError(error, 'AssetAllocationService.createAllocation');
       }
     }
   
     async updateAllocation(id: string, updateDto: UpdateAssetAllocationDto): Promise<AssetAllocation> {
+      this.logger.info('[updateAllocation]', { id, updateData: updateDto });
       const allocation = await this.assetAllocationRepository.findById(id);
       if (!allocation) {
         throw new NotFoundException(`Allocation with ID ${id} not found`);
@@ -46,11 +50,12 @@ export class AssetAllocationService {
         const result = await this.assetAllocationRepository.save(updated);
         return result[0] as AssetAllocation;
       } catch (error) {
-        handleDatabaseError(error, 'Asset Allocation');
+        handleDatabaseError(error, 'AssetAllocationService.updateAllocation');
       }
     }
   
     async batchUpdateAllocations(dto: BatchUpdateAllocationDto): Promise<AssetAllocation[]> {
+      this.logger.info('[batchUpdateAllocations]', { allocations: dto });
       // Kiểm tra profile tồn tại
       await this.riskProfileService.getRiskProfileById(dto.riskProfileId);
       
@@ -70,7 +75,7 @@ export class AssetAllocationService {
         const result = await this.assetAllocationRepository.save(allocationsToCreate);
         return result as AssetAllocation[];
       } catch (error) {
-        handleDatabaseError(error, 'Asset Allocation');
+        handleDatabaseError(error, 'AssetAllocationService.batchUpdateAllocations');
       }
     }
 }

@@ -6,11 +6,13 @@ import { RiskProfile } from '../entities/risk-profile.entity';
 import { CreateRiskProfileDto } from '../dto/risk-profile/create-profile.dto';
 import { handleDatabaseError } from '@/shared/utils/db-error-handler';
 import { UpdateRiskProfileDto } from '../dto/risk-profile/update-profile.dto';
+import { LoggerService } from '@/shared/logger/logger.service';
 
 @Injectable()
 export class RiskProfileService {
   constructor(
-    private readonly riskProfileRepository: RiskProfileRepository
+    private readonly riskProfileRepository: RiskProfileRepository,
+    private readonly logger: LoggerService
   ) {}
 
   /**
@@ -19,6 +21,7 @@ export class RiskProfileService {
    * @returns Mảng các hồ sơ rủi ro và thông tin phân trang (nếu có)
    */
   async getAllRiskProfiles(query?: GetRiskProfilesDto): Promise<{ data: RiskProfile[], pagination?: PgPagination }> {
+    this.logger.info('[getAllRiskProfiles]', { query });
     let pagination = null;
     
     if (query?.page && query?.limit) {
@@ -43,6 +46,7 @@ export class RiskProfileService {
    * @returns Mảng các hồ sơ rủi ro đã tạo
    */
   async createRiskProfiles(profilesData: CreateRiskProfileDto[]) {
+    this.logger.info('[createRiskProfiles]', { profiles: profilesData });
     const profiles = profilesData.map(profileDto => ({
       ...profileDto,
     }));
@@ -50,7 +54,7 @@ export class RiskProfileService {
     try {
       return await this.riskProfileRepository.save(profiles);
     } catch (error) {
-      handleDatabaseError(error, 'Risk Profile');
+      handleDatabaseError(error, 'RiskProfileService.createRiskProfiles');
     }
   }
 
@@ -60,6 +64,7 @@ export class RiskProfileService {
    * @returns Hồ sơ rủi ro và các phân bổ tài sản liên quan
    */
   async getRiskProfileWithAllocations(id: string): Promise<RiskProfile> {
+    this.logger.info('[getRiskProfileWithAllocations]', { id });
     const profile = await this.riskProfileRepository.findById(id, {
       relations: ['allocations', 'allocations.assetClass']
     });
@@ -78,6 +83,7 @@ export class RiskProfileService {
    * @returns Hồ sơ rủi ro đã cập nhật
    */
   async updateRiskProfile(id: string, updateDto: UpdateRiskProfileDto): Promise<RiskProfile> {
+    this.logger.info('[updateRiskProfile]', { id, updateData: updateDto });
     const profile = await this.getRiskProfileById(id);
     const updated = { ...profile, ...updateDto };
     
@@ -85,7 +91,7 @@ export class RiskProfileService {
       const result = await this.riskProfileRepository.save(updated);
       return result[0] as RiskProfile;
     } catch (error) {
-      handleDatabaseError(error, 'Risk Profile');
+      handleDatabaseError(error, 'RiskProfileService.updateRiskProfile');
     }
   }
 
@@ -95,6 +101,7 @@ export class RiskProfileService {
    * @returns true nếu xóa thành công, false nếu không tìm thấy hồ sơ rủi ro
    */
   async deleteRiskProfile(id: string): Promise<boolean> {
+    this.logger.info('[deleteRiskProfile]', { id });
     const result = await this.riskProfileRepository.deleteById(id);
     return result.affected !== 0;
   }
@@ -105,6 +112,7 @@ export class RiskProfileService {
    * @returns Hồ sơ rủi ro
    */
   async getRiskProfileById(id: string): Promise<RiskProfile> {
+    this.logger.info('[getRiskProfileById]', { id });
     const profile = await this.riskProfileRepository.findById(id);
     if (!profile) {
       throw new NotFoundException(`Risk profile with ID ${id} not found`);

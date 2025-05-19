@@ -35,13 +35,7 @@ export class QuestionRepository extends MysqldbRepository<Question> {
     }
     
     if (categories && categories.length > 0) {
-      if (categories.length === 1) {
-        qb.andWhere('(question.category = :category OR question.questionCategoryId IN (SELECT id FROM risk_assessment_question_categories WHERE code_name = :category))', 
-          { category: categories[0] });
-      } else {
-        qb.andWhere('(question.category IN (:...categories) OR question.questionCategoryId IN (SELECT id FROM risk_assessment_question_categories WHERE code_name IN (:...categories)))', 
-          { categories });
-      }
+      qb.andWhere('question.questionCategoryId IN (:...categories)', { categories });
     }
     
     qb.orderBy(`question.${sortBy}`, sortDirection);

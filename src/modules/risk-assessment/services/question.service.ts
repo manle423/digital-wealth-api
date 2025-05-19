@@ -29,6 +29,7 @@ export class QuestionService {
    * Lấy danh sách câu hỏi với phân trang và lọc
    */
   async getQuestions(query?: GetQuestionsDto) {
+    this.logger.info('[getQuestions]', { query });
     const page = query?.page || 1;
     const limit = query?.limit || 10;
     const sortBy = query?.sortBy || 'order';
@@ -106,7 +107,11 @@ export class QuestionService {
     return result;
   }
 
+  /**
+   * Lấy thông tin câu hỏi theo id
+   */
   async getQuestionById(id: string) {
+    this.logger.info('[getQuestionById]', { id });
     const cacheKey = `${RedisKeyPrefix.QUESTION}:id:${id}`;
     
     // Kiểm tra cache trước
@@ -153,6 +158,7 @@ export class QuestionService {
    * Tạo nhiều câu hỏi mới
    */
   async createQuestions(questionsData: CreateQuestionDto[]) {
+    this.logger.info('[createQuestions]', { questions: questionsData });
     try {
       const questions = await Promise.all(
         questionsData.map(async (questionDto) => {
@@ -230,6 +236,7 @@ export class QuestionService {
    * Cập nhật nhiều câu hỏi
    */
   async updateQuestions(updates: QuestionUpdate[]): Promise<Question[]> {
+    this.logger.info('[updateQuestions]', { updates });
     try {
       // First check if all questions exist
       const ids = updates.map(update => update.id);
@@ -314,6 +321,7 @@ export class QuestionService {
    * Xóa nhiều câu hỏi
    */
   async deleteQuestions(ids: string[]): Promise<boolean> {
+    this.logger.info('[deleteQuestions]', { ids });
     const result = await this.questionRepository.deleteMultipleQuestions(ids);
     
     // Xóa cache sau khi xóa

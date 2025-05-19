@@ -18,7 +18,7 @@ export class AuthService {
   ) {}
 
   async login(dto: LoginDto, res: Response): Promise<IAuthResponse> {
-    this.logger.info('[login]');
+    this.logger.info('[login]', { email: dto.email });
     const user = await this.userService.findByEmail(dto.email);
     if (!user) {
       throw new UnauthorizedException(AuthError.INVALID_CREDENTIALS);
@@ -53,7 +53,7 @@ export class AuthService {
     oldPayload: IJwtPayload,
     res: Response,
   ): Promise<IAuthResponse> {
-    this.logger.info('refresh-token');
+    this.logger.info('[refreshToken]', { userId: oldPayload?.sub });
     if (
       !oldPayload ||
       !oldPayload.sub ||
