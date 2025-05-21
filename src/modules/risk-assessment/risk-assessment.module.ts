@@ -31,6 +31,8 @@ import { AdminAssetClassController } from './controllers/admin/asset-class.contr
 import { AdminAssetAllocationController } from './controllers/admin/asset-allocation.controller';
 import { PublicQuestionController } from './controllers/public/question.controller';
 import { PublicAssessmentController } from './controllers/public/assessment.controller';
+import { RiskProfileTranslation } from './entities/risk-profile-translation.entity';
+import { RiskProfileTranslationRepository } from './repositories/risk-profile-translation.repository';
 
 @Module({
   imports: [
@@ -41,7 +43,8 @@ import { PublicAssessmentController } from './controllers/public/assessment.cont
       AssessmentResult,
       RiskProfile,
       AssetClass,
-      AssetAllocation
+      AssetAllocation,
+      RiskProfileTranslation,
     ], MysqldbConnection.name),
     UserModule,
     LoggerModule
@@ -69,7 +72,8 @@ import { PublicAssessmentController } from './controllers/public/assessment.cont
     JwtService,
     AssetClassRepository,
     AssetAllocationRepository,
-    RiskProfileRepository
+    RiskProfileRepository,
+    RiskProfileTranslationRepository
   ],
   exports: [RiskAssessmentService],
 })

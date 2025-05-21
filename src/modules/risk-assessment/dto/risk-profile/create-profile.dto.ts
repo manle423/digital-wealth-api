@@ -4,19 +4,18 @@ import { Type } from "class-transformer";
 import { Min } from "class-validator";
 import { IsInt } from "class-validator";
 import { RiskProfileType } from "../../enums/risk-profile.enum";
+import { Language } from "@/shared/enums/language.enum";
 
 export class CreateRiskProfileDto {
   @IsEnum(RiskProfileType)
   @IsNotEmpty()
   type: RiskProfileType;
   
-  @IsString()
+  @IsArray()
   @IsNotEmpty()
-  name: string;
-  
-  @IsString()
-  @IsNotEmpty()
-  description: string;
+  @ValidateNested({ each: true })
+  @Type(() => CreateRiskProfileTranslationDto)
+  translations: CreateRiskProfileTranslationDto[];
   
   @IsInt()
   @Min(0)
@@ -29,6 +28,20 @@ export class CreateRiskProfileDto {
   @Max(100)
   @Type(() => Number)
   maxScore: number;
+}
+
+export class CreateRiskProfileTranslationDto {
+  @IsEnum(Language)
+  @IsNotEmpty()
+  language: Language;
+  
+  @IsString()
+  @IsNotEmpty()
+  name: string;
+  
+  @IsString()
+  @IsNotEmpty()
+  description: string;
 }
 
 export class CreateMultipleRiskProfilesDto {

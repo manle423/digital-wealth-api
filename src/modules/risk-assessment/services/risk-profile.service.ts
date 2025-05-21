@@ -7,12 +7,17 @@ import { CreateRiskProfileDto } from '../dto/risk-profile/create-profile.dto';
 import { handleDatabaseError } from '@/shared/utils/db-error-handler';
 import { UpdateRiskProfileDto } from '../dto/risk-profile/update-profile.dto';
 import { LoggerService } from '@/shared/logger/logger.service';
+import { RiskProfileType } from '../enums/risk-profile.enum';
+import { RiskProfileTranslation } from '../entities/risk-profile-translation.entity';
+import { RedisService } from '@/shared/redis/redis.service';
+import { RedisKeyPrefix, RedisKeyTtl } from '@/shared/enums/redis-key.enum';
 
 @Injectable()
 export class RiskProfileService {
   constructor(
     private readonly riskProfileRepository: RiskProfileRepository,
-    private readonly logger: LoggerService
+    private readonly logger: LoggerService,
+    private readonly redisService: RedisService,
   ) {}
 
   /**
@@ -22,22 +27,42 @@ export class RiskProfileService {
    */
   async getAllRiskProfiles(query?: GetRiskProfilesDto): Promise<{ data: RiskProfile[], pagination?: PgPagination }> {
     this.logger.info('[getAllRiskProfiles]', { query });
-    let pagination = null;
-    
-    if (query?.page && query?.limit) {
-      pagination = new PgPagination(query.page, query.limit);
+    try {
+      const page = query?.page || 1;
+      const limit = query?.limit || 10;
+      const sortBy = query?.sortBy || 'minScore';
+      const sortDir = query?.sortDirection || 'ASC';
+      const type = query?.type || '';
+      
+      const cacheKey = `${RedisKeyPrefix.RISK_PROFILE}:p${page}:l${limit}:s${sortBy}:d${sortDir}:t${type}`;
+      const cachedData = await this.redisService.get(cacheKey);
+      if (cachedData) {
+        this.logger.debug(`Cache hit: ${cacheKey}`);
+        return JSON.parse(cachedData);
+      }
+      
+      let pagination = null;
+      if (query?.page && query?.limit) {
+        pagination = new PgPagination(query.page, query.limit);
+      }
+      
+      const [profiles, totalCount] = await this.riskProfileRepository.findAllProfiles(query, pagination);
+      
+      if (pagination) {
+        pagination.totalItems = totalCount;
+      }
+      
+      const result = {
+        data: profiles,
+        pagination,
+      };
+      
+      await this.redisService.set(cacheKey, JSON.stringify(result), RedisKeyTtl.THIRTY_DAYS);
+      
+      return result;
+    } catch (error) {
+      handleDatabaseError(error, 'RiskProfileService.getAllRiskProfiles');
     }
-    
-    const [profiles, totalCount] = await this.riskProfileRepository.findAllProfiles(query, pagination);
-    
-    if (pagination) {
-      pagination.totalItems = totalCount;
-    }
-    
-    return {
-      data: profiles,
-      pagination,
-    };
   }
 
   /**
@@ -47,12 +72,37 @@ export class RiskProfileService {
    */
   async createRiskProfiles(profilesData: CreateRiskProfileDto[]) {
     this.logger.info('[createRiskProfiles]', { profiles: profilesData });
-    const profiles = profilesData.map(profileDto => ({
-      ...profileDto,
-    }));
     
     try {
-      return await this.riskProfileRepository.save(profiles);
+      const profiles = await this.riskProfileRepository.repository.manager.transaction(async (manager) => {
+        const savedProfiles: RiskProfile[] = [];
+        
+        for (const profileData of profilesData) {
+          const { translations, ...profileInfo } = profileData;
+          
+          // Create risk profile
+          const profile = manager.create(RiskProfile, profileInfo);
+          const savedProfile = await manager.save(profile);
+          
+          // Create translations
+          const translationEntities = translations.map(translation => 
+            manager.create(RiskProfileTranslation, {
+              ...translation,
+              riskProfileId: savedProfile.id
+            })
+          );
+          
+          await manager.save(translationEntities);
+          savedProfiles.push(savedProfile);
+        }
+        
+        return savedProfiles;
+      });
+
+      // Clear cache after creating new profiles
+      await this.clearProfileCache();
+      
+      return profiles;
     } catch (error) {
       handleDatabaseError(error, 'RiskProfileService.createRiskProfiles');
     }
@@ -66,7 +116,7 @@ export class RiskProfileService {
   async getRiskProfileWithAllocations(id: string): Promise<RiskProfile> {
     this.logger.info('[getRiskProfileWithAllocations]', { id });
     const profile = await this.riskProfileRepository.findById(id, {
-      relations: ['allocations', 'allocations.assetClass']
+      relations: ['allocations', 'allocations.assetClass', 'translations']
     });
     
     if (!profile) {
@@ -82,14 +132,41 @@ export class RiskProfileService {
    * @param updateDto - Dữ liệu cập nhật
    * @returns Hồ sơ rủi ro đã cập nhật
    */
-  async updateRiskProfile(id: string, updateDto: UpdateRiskProfileDto): Promise<RiskProfile> {
+  async updateRiskProfile(id: string, updateDto: UpdateRiskProfileDto) {
     this.logger.info('[updateRiskProfile]', { id, updateData: updateDto });
     const profile = await this.getRiskProfileById(id);
-    const updated = { ...profile, ...updateDto };
     
     try {
-      const result = await this.riskProfileRepository.save(updated);
-      return result[0] as RiskProfile;
+      const result = await this.riskProfileRepository.repository.manager.transaction(async (manager) => {
+        const { translations, ...profileInfo } = updateDto;
+        
+        // Update risk profile
+        const updatedProfile = manager.merge(RiskProfile, profile, profileInfo);
+        const savedProfile = await manager.save(updatedProfile);
+        
+        // Update translations if provided
+        if (translations) {
+          // Delete existing translations
+          await manager.delete(RiskProfileTranslation, { riskProfileId: id });
+          
+          // Create new translations
+          const translationEntities = translations.map(translation => 
+            manager.create(RiskProfileTranslation, {
+              ...translation,
+              riskProfileId: id
+            })
+          );
+          
+          await manager.save(translationEntities);
+        }
+        
+        return savedProfile;
+      });
+
+      // Clear cache after updating profile
+      await this.clearProfileCache();
+      
+      return result;
     } catch (error) {
       handleDatabaseError(error, 'RiskProfileService.updateRiskProfile');
     }
@@ -102,8 +179,22 @@ export class RiskProfileService {
    */
   async deleteRiskProfile(id: string): Promise<boolean> {
     this.logger.info('[deleteRiskProfile]', { id });
-    const result = await this.riskProfileRepository.deleteById(id);
-    return result.affected !== 0;
+    try {
+      const result = await this.riskProfileRepository.repository.manager.transaction(async (manager) => {
+        // Delete translations first
+        await manager.delete(RiskProfileTranslation, { riskProfileId: id });
+        // Then delete the profile
+        const deleteResult = await manager.delete(RiskProfile, { id });
+        return deleteResult.affected !== 0;
+      });
+
+      // Clear cache after deleting profile
+      await this.clearProfileCache();
+      
+      return result;
+    } catch (error) {
+      handleDatabaseError(error, 'RiskProfileService.deleteRiskProfile');
+    }
   }
 
   /**
@@ -113,10 +204,46 @@ export class RiskProfileService {
    */
   async getRiskProfileById(id: string): Promise<RiskProfile> {
     this.logger.info('[getRiskProfileById]', { id });
-    const profile = await this.riskProfileRepository.findById(id);
+    const profile = await this.riskProfileRepository.findById(id, {
+      relations: ['translations']
+    });
     if (!profile) {
       throw new NotFoundException(`Risk profile with ID ${id} not found`);
     }
     return profile;
+  }
+
+  /**
+   * Lấy tất cả các loại hồ sơ rủi ro
+   * @returns Mảng các loại hồ sơ rủi ro
+   */
+  async getRiskProfileType(): Promise<RiskProfileType[]> {
+    this.logger.info('[getRiskProfileType]');
+    try {
+      const cacheKey = `${RedisKeyPrefix.RISK_PROFILE}:types`;
+      const cachedData = await this.redisService.get(cacheKey);
+      if (cachedData) {
+        this.logger.debug(`Cache hit: ${cacheKey}`);
+        return JSON.parse(cachedData);
+      }
+
+      const types = Object.values(RiskProfileType);
+      await this.redisService.set(cacheKey, JSON.stringify(types), RedisKeyTtl.THIRTY_DAYS);
+      
+      return types;
+    } catch (error) {
+      handleDatabaseError(error, 'RiskProfileService.getRiskProfileType');
+    }
+  }
+
+  private async clearProfileCache(): Promise<void> {
+    try {
+      const prefix = this.redisService.buildKey(`${RedisKeyPrefix.RISK_PROFILE}`);
+      await this.redisService.delWithPrefix(prefix);
+      this.logger.debug(`Cleared cache with prefix: ${prefix}`);
+    } catch (error) {
+      this.logger.error(`Error clearing profile cache: ${error.message}`, error.stack);
+      throw error;
+    }
   }
 }

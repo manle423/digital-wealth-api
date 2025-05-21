@@ -1,11 +1,15 @@
 export enum RedisKeyPrefix {
-  QUESTION = 'questions',
-  QUESTION_CATEGORY = 'question_categories',
-  USER = 'users',
-  ASSESSMENT = 'assessments'
+  QUESTION = 'question',
+  QUESTION_CATEGORY = 'question_category',
+  RISK_PROFILE = 'risk_profile',
+  ASSET_CLASS = 'asset_class',
+  ASSET_ALLOCATION = 'asset_allocation',
+  USER = 'user',
+  ASSESSMENT = 'assessment'
 }
 
 export enum RedisKeyTtl {
+  ONE_MINUTE = 60,
   FIVE_MINUTES = 300,
   TEN_MINUTES = 600,
   THIRTY_MINUTES = 1800,
@@ -15,6 +19,7 @@ export enum RedisKeyTtl {
   FOUR_HOURS = 14400,
   FIVE_HOURS = 18000,
   SIX_HOURS = 21600,
+  TWELVE_HOURS = 43200,
   ONE_DAY = 86400,
   THREE_DAYS = 259200,
   SEVEN_DAYS = 604800,

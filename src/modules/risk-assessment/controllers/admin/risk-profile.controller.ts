@@ -28,6 +28,11 @@ export class AdminRiskProfileController {
     return this.riskProfileService.getAllRiskProfiles(query);
   }
 
+  @Get('risk-profile-type')
+  async getRiskProfileType() {
+    return this.riskProfileService.getRiskProfileType();
+  }
+
   @Post()
   async createRiskProfiles(
     @Body() dto: CreateMultipleRiskProfilesDto,

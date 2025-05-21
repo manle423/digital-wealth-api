@@ -19,7 +19,10 @@ export class RiskProfileRepository extends MysqldbRepository<RiskProfile> {
   }
 
   async findByType(type: RiskProfileType): Promise<RiskProfile | null> {
-    return this.repository.findOne({ where: { type } });
+    return this.repository.findOne({ 
+      where: { type },
+      relations: ['translations']
+    });
   }
 
   async findByScore(score: number): Promise<RiskProfile | null> {
@@ -27,13 +30,14 @@ export class RiskProfileRepository extends MysqldbRepository<RiskProfile> {
       where: { 
         minScore: LessThanOrEqual(score), 
         maxScore: MoreThanOrEqual(score) 
-      } 
+      },
+      relations: ['translations']
     });
   }
 
   async getAllWithAllocations(): Promise<RiskProfile[]> {
     return this.repository.find({
-      relations: ['allocations', 'allocations.assetClass'],
+      relations: ['allocations', 'allocations.assetClass', 'translations'],
       order: { 
         minScore: 'ASC',
         allocations: { assetClass: { order: 'ASC' } }
@@ -57,7 +61,8 @@ export class RiskProfileRepository extends MysqldbRepository<RiskProfile> {
   ): Promise<[RiskProfile[], number]> {
     const { type, sortBy = 'minScore', sortDirection = SortDirection.ASC } = query || {};
     
-    const qb = this.repository.createQueryBuilder('profile');
+    const qb = this.repository.createQueryBuilder('profile')
+      .leftJoinAndSelect('profile.translations', 'translations');
     
     if (type) {
       qb.andWhere('profile.type = :type', { type });

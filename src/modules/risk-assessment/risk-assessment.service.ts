@@ -5,6 +5,7 @@ import { AssessmentResultRepository } from './repositories/assessment-result.rep
 import { RiskProfileType } from './enums/risk-profile.enum';
 import { RiskProfileRepository } from './repositories/risk-profile.repository';
 import { AssetAllocationRepository } from './repositories/asset-allocation.repository';
+import { Language } from '@/shared/enums/language.enum';
 
 @Injectable()
 export class RiskAssessmentService {
@@ -50,9 +51,15 @@ export class RiskAssessmentService {
     
     // Tạo nội dung tóm tắt
     let summary: string;
-    if (riskProfile?.description) {
-      // Sử dụng mô tả từ database
-      summary = `${riskProfile.description} Danh mục đầu tư đề xuất của bạn gồm ${recommendedAllocation.map(item => `${item.percentage}% vào ${item.assetClass}`).join(', ')}.`;
+    if (riskProfile?.translations?.length > 0) {
+      // Sử dụng mô tả từ database (lấy bản dịch tiếng Việt)
+      const viTranslation = riskProfile.translations.find(t => t.language === Language.VI);
+      if (viTranslation) {
+        summary = `${viTranslation.description} Danh mục đầu tư đề xuất của bạn gồm ${recommendedAllocation.map(item => `${item.percentage}% vào ${item.assetClass}`).join(', ')}.`;
+      } else {
+        // Fallback sử dụng bản dịch đầu tiên nếu không có tiếng Việt
+        summary = `${riskProfile.translations[0].description} Danh mục đầu tư đề xuất của bạn gồm ${recommendedAllocation.map(item => `${item.percentage}% vào ${item.assetClass}`).join(', ')}.`;
+      }
     } else {
       // Fallback sử dụng phương thức cũ
       summary = this.generateSummary(riskProfileType, recommendedAllocation);
