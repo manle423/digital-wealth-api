@@ -1,10 +1,10 @@
 import { BaseEntity } from '@/shared/mysqldb/types/base-entity.type';
 import { Column, Entity, OneToMany } from 'typeorm';
-import { RiskProfileType } from '../enums/risk-profile.enum';
 import { AssetAllocation } from './asset-allocation.entity';
 import { RiskProfileTranslation } from './risk-profile-translation.entity';
+import { RiskProfileType } from '../enums/risk-profile.enum';
 
-@Entity('risk_assessment_profiles')
+@Entity('profiles')
 export class RiskProfile extends BaseEntity {
   @Column({
     type: 'enum',

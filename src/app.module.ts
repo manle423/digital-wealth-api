@@ -9,6 +9,7 @@ import { MysqlDbModule } from './shared/mysqldb/mysqldb.module';
 import { RiskAssessmentModule } from './modules/risk-assessment/risk-assessment.module';
 import { RabbitmqModule } from './shared/rabbitmq/rabbitmq.module';
 import { RedisModule } from './shared/redis/redis.module';
+import { PortfolioManagementModule } from './modules/portfolio-management/portfolio-management.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { RedisModule } from './shared/redis/redis.module';
     RiskAssessmentModule,
     RabbitmqModule,
     RedisModule,
+    PortfolioManagementModule,
   ],
   controllers: [],
   providers: [],

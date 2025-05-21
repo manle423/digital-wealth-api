@@ -21,21 +21,21 @@ export function handleDatabaseError(error: any, entityName: string): never {
   // Lỗi không đủ tham số/tham số sai kiểu
   if (error.code === 'ER_BAD_FIELD_ERROR' || error.code === 'ER_PARSE_ERROR') {
     throw new BadRequestException(
-      `Lỗi trong dữ liệu đầu vào khi thao tác với ${entityName.toLowerCase()}.`
+      `Lỗi trong dữ liệu đầu vào khi thao tác với ${entityName.toLowerCase()}. Chi tiết: ${error.message}`
     );
   }
 
   // Các lỗi khóa ngoại
   if (error.code === 'ER_NO_REFERENCED_ROW' || error.code === 'ER_NO_REFERENCED_ROW_2') {
     throw new BadRequestException(
-      `${entityName} tham chiếu đến dữ liệu không tồn tại.`
+      `${entityName} tham chiếu đến dữ liệu không tồn tại. Chi tiết: ${error.message}`
     );
   }
   
   // Các lỗi ràng buộc
   if (error.code === 'ER_TRUNCATED_WRONG_VALUE') {
     throw new BadRequestException(
-      `Giá trị không hợp lệ khi thao tác với ${entityName.toLowerCase()}.`
+      `Giá trị không hợp lệ khi thao tác với ${entityName.toLowerCase()}. Chi tiết: ${error.message}`
     );
   }
   
@@ -45,7 +45,7 @@ export function handleDatabaseError(error: any, entityName: string): never {
     const fieldName = match ? match[1] : 'unknown';
     
     throw new BadRequestException(
-      `Thiếu giá trị cho trường "${fieldName}" khi thao tác với ${entityName.toLowerCase()}.`
+      `Thiếu giá trị cho trường "${fieldName}" khi thao tác với ${entityName.toLowerCase()}. Chi tiết: ${error.message}`
     );
   }
   
@@ -54,6 +54,6 @@ export function handleDatabaseError(error: any, entityName: string): never {
   
   // Mặc định trả về lỗi 500
   throw new InternalServerErrorException(
-    `Đã xảy ra lỗi khi thao tác với ${entityName.toLowerCase()}.`
+    `Đã xảy ra lỗi khi thao tác với ${entityName.toLowerCase()}. Chi tiết: ${error.message}`
   );
 } 

@@ -2,9 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { AssessmentResult } from './entities/assessment-result.entity';
 import { CreateAssessmentResultDto } from './dto/create-assessment-result.dto';
 import { AssessmentResultRepository } from './repositories/assessment-result.repository';
-import { RiskProfileType } from './enums/risk-profile.enum';
-import { RiskProfileRepository } from './repositories/risk-profile.repository';
-import { AssetAllocationRepository } from './repositories/asset-allocation.repository';
+import { RiskProfileType } from '../portfolio-management/enums/risk-profile.enum';
+import { RiskProfileRepository } from '../portfolio-management/repositories/risk-profile.repository';
+import { AssetAllocationRepository } from '../portfolio-management/repositories/asset-allocation.repository';
 import { Language } from '@/shared/enums/language.enum';
 
 @Injectable()
@@ -38,7 +38,7 @@ export class RiskAssessmentService {
       const allocations = await this.assetAllocationRepository.findByRiskProfileId(riskProfile.id);
       if (allocations && allocations.length > 0) {
         recommendedAllocation = allocations.map(allocation => ({
-          assetClass: allocation.assetClass.name,
+          assetClass: allocation.assetClass.translations.find(t => t.language === Language.VI)?.name,
           percentage: allocation.percentage
         }));
       }

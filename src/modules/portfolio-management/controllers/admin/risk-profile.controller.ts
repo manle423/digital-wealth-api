@@ -11,12 +11,12 @@ import {
 } from '@nestjs/common';
 import { JwtGuard } from '@/modules/auth/guards/jwt.guard';
 import { AdminGuard } from '@/modules/auth/guards/admin.guard';
-import { CreateMultipleRiskProfilesDto } from '@/modules/risk-assessment/dto/risk-profile/create-profile.dto';
-import { UpdateRiskProfileDto } from '@/modules/risk-assessment/dto/risk-profile/update-profile.dto';
-import { GetRiskProfilesDto } from '@/modules/risk-assessment/dto/risk-profile/get-profiles.dto';
-import { RiskProfileService } from '@/modules/risk-assessment/services/risk-profile.service';
+import { CreateMultipleRiskProfilesDto } from '@/modules/portfolio-management/dto/risk-profile/create-profile.dto';
+import { UpdateRiskProfileDto } from '@/modules/portfolio-management/dto/risk-profile/update-profile.dto';
+import { GetRiskProfilesDto } from '@/modules/portfolio-management/dto/risk-profile/get-profiles.dto';
+import { RiskProfileService } from '@/modules/portfolio-management/services/risk-profile.service';
 
-@Controller('admin/risk-assessment/profiles')
+@Controller('admin/portfolio-management/profiles')
 @UseGuards(JwtGuard, AdminGuard)
 export class AdminRiskProfileController {
   constructor(

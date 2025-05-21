@@ -11,12 +11,12 @@ import {
 } from '@nestjs/common';
 import { JwtGuard } from '@/modules/auth/guards/jwt.guard';
 import { AdminGuard } from '@/modules/auth/guards/admin.guard';
-import { UpdateAssetClassDto } from '@/modules/risk-assessment/dto/asset/update-asset-class.dto';
-import { CreateMultipleAssetClassesDto } from '@/modules/risk-assessment/dto/asset/create-asset-class.dto';
-import { GetAssetClassesDto } from '@/modules/risk-assessment/dto/asset/get-asset-classes.dto';
-import { AssetClassService } from '@/modules/risk-assessment/services/asset-class.service';
+import { UpdateAssetClassDto } from '@/modules/portfolio-management/dto/asset/update-asset-class.dto';
+import { CreateMultipleAssetClassesDto } from '@/modules/portfolio-management/dto/asset/create-asset-class.dto';
+import { GetAssetClassesDto } from '@/modules/portfolio-management/dto/asset/get-asset-classes.dto';
+import { AssetClassService } from '@/modules/portfolio-management/services/asset-class.service';
 
-@Controller('admin/risk-assessment/asset-classes')
+@Controller('admin/portfolio-management/asset-classes')
 @UseGuards(JwtGuard, AdminGuard)
 export class AdminAssetClassController {
   constructor(
@@ -26,6 +26,11 @@ export class AdminAssetClassController {
   @Get()
   async getAssetClasses(@Query() query: GetAssetClassesDto) {
     return this.assetClassService.getAllAssetClasses(query);
+  }
+
+  @Get(':id')
+  async getAssetClassById(@Param('id') id: string) {
+    return this.assetClassService.getAssetClassById(id);
   }
 
   @Post()

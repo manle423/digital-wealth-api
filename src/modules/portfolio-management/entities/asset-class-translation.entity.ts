@@ -1,18 +1,18 @@
 import { BaseEntity } from "@/shared/mysqldb/types/base-entity.type";
 import { Column, Entity, JoinColumn, ManyToOne } from "typeorm";
-import { RiskProfile } from "./risk-profile.entity";
 import { Language } from "@/shared/enums/language.enum";
+import { AssetClass } from "./asset-class.entity";
 
-@Entity('risk_assessment_profile_translations')
-export class RiskProfileTranslation extends BaseEntity {
-  @ManyToOne(() => RiskProfile, profile => profile.translations, { 
+@Entity('asset_class_translations')
+export class AssetClassTranslation extends BaseEntity {
+  @ManyToOne(() => AssetClass, assetClass => assetClass.translations, { 
     createForeignKeyConstraints: false
   })
-  @JoinColumn({ name: 'risk_profile_id', referencedColumnName: 'id' })
-  riskProfile: RiskProfile;
+  @JoinColumn({ name: 'asset_class_id', referencedColumnName: 'id' })
+  assetClass: AssetClass;
 
-  @Column({ name: 'risk_profile_id' })
-  riskProfileId: string;
+  @Column({ name: 'asset_class_id' })
+  assetClassId: string;
 
   @Column({ type: 'enum', enum: Language })
   language: Language;
@@ -22,4 +22,4 @@ export class RiskProfileTranslation extends BaseEntity {
 
   @Column({ type: 'text' })
   description: string;
-} 
+}

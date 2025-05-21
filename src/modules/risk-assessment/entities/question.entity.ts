@@ -3,7 +3,7 @@ import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { QuestionTranslation } from './question-translation.entity';
 import { QuestionCategory } from './question-category.entity';
 
-@Entity('risk_assessment_questions')
+@Entity('questions')
 export class Question extends BaseEntity {
   @Column()
   text: string;

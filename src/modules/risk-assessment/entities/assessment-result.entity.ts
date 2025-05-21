@@ -1,12 +1,12 @@
 import { BaseEntity } from '@/shared/mysqldb/types/base-entity.type';
 import { Column, Entity, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from '@/modules/user/entities/user.entity';
-import { RiskProfileType } from '../enums/risk-profile.enum';
+import { RiskProfileType } from '../../portfolio-management/enums/risk-profile.enum';
 
-@Entity('risk_assessment_results')
+@Entity('assessment_results')
 export class AssessmentResult extends BaseEntity {
   @ManyToOne(() => User, { nullable: true, createForeignKeyConstraints: false })
-  @JoinColumn({ referencedColumnName: 'id' })
+  @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
   user: User;
 
   @Column({ type: 'uuid', nullable: true, name: 'user_id' })

@@ -2,7 +2,7 @@ import { BaseEntity } from '@/shared/mysqldb/types/base-entity.type';
 import { Column, Entity, OneToMany } from 'typeorm';
 import { Question } from './question.entity';
 
-@Entity('risk_assessment_question_categories')
+@Entity('question_categories')
 export class QuestionCategory extends BaseEntity {
   @Column()
   name: string;

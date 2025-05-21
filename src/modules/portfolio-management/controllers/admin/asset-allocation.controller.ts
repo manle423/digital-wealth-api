@@ -8,11 +8,11 @@ import {
   UseGuards,
   Param,
 } from '@nestjs/common';
-import { AssetAllocationService } from '@/modules/risk-assessment/services/asset-allocation.service';
-import { CreateAssetAllocationDto } from '@/modules/risk-assessment/dto/asset-allocation/create-asset-alllocation.dto';
-import { BatchUpdateAllocationDto, UpdateAssetAllocationDto } from '@/modules/risk-assessment/dto/asset-allocation/update-asset-allocation.dto';
+import { AssetAllocationService } from '@/modules/portfolio-management/services/asset-allocation.service';
+import { CreateAssetAllocationDto } from '@/modules/portfolio-management/dto/asset-allocation/create-asset-alllocation.dto';
+import { BatchUpdateAllocationDto, UpdateAssetAllocationDto } from '@/modules/portfolio-management/dto/asset-allocation/update-asset-allocation.dto';
 
-@Controller('admin/risk-assessment/allocations')
+@Controller('admin/portfolio-management/asset-allocations')
 @UseGuards(JwtGuard, AdminGuard)
 export class AdminAssetAllocationController {
   constructor(

@@ -5,7 +5,7 @@ import { User } from './user.entity';
 @Entity('user_details')
 export class UserDetail extends BaseEntity {
   @OneToOne(() => User, { createForeignKeyConstraints: false })
-  @JoinColumn({ referencedColumnName: 'id' })
+  @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
   user: User;
 
   @Column({ type: 'uuid', nullable: true, name: 'user_id' })

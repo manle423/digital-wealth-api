@@ -3,7 +3,7 @@ import { Column, Entity, JoinColumn, ManyToOne } from "typeorm";
 import { Question } from "./question.entity";
 import { Language } from "@/shared/enums/language.enum";
 
-@Entity('risk_assessment_question_translations')
+@Entity('question_translations')
 export class QuestionTranslation extends BaseEntity {
   @ManyToOne(() => Question, question => question.translations, { 
     createForeignKeyConstraints: false

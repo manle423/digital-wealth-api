@@ -3,7 +3,7 @@ import { Column, Entity, ManyToOne, JoinColumn, Unique } from 'typeorm';
 import { RiskProfile } from './risk-profile.entity';
 import { AssetClass } from './asset-class.entity';
 
-@Entity('risk_assessment_allocations')
+@Entity('allocations')
 @Unique(['riskProfileId', 'assetClassId'])
 export class AssetAllocation extends BaseEntity {
   @ManyToOne(() => RiskProfile, profile => profile.allocations, { 
