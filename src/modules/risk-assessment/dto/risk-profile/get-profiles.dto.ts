@@ -27,7 +27,7 @@ export class GetRiskProfilesDto extends PaginationDto {
     // Otherwise, return empty array
     return [];
   })
-  type?: RiskProfileType[];
+  types?: RiskProfileType[];
   
   @IsOptional()
   @IsString()

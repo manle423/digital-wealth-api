@@ -32,7 +32,7 @@ export class RiskProfileService {
       const limit = query?.limit || 10;
       const sortBy = query?.sortBy || 'minScore';
       const sortDir = query?.sortDirection || 'ASC';
-      const types = query?.type || [];
+      const types = query?.types || [];
       
       // Create cache key - convert array to string for cache key
       const typesKey = Array.isArray(types) ? types.sort().join(',') : '';

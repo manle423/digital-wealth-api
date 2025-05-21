@@ -59,13 +59,13 @@ export class RiskProfileRepository extends MysqldbRepository<RiskProfile> {
     query?: Partial<GetRiskProfilesDto>,
     pagination?: Partial<IPagination>
   ): Promise<[RiskProfile[], number]> {
-    const { type, sortBy = 'minScore', sortDirection = SortDirection.ASC } = query || {};
+    const { types, sortBy = 'minScore', sortDirection = SortDirection.ASC } = query || {};
     
     const qb = this.repository.createQueryBuilder('profile')
       .leftJoinAndSelect('profile.translations', 'translations');
     
-    if (type && type.length > 0) {
-      qb.andWhere('profile.type IN (:...types)', { types: type });
+    if (types && types.length > 0) {
+      qb.andWhere('profile.type IN (:...types)', { types: types });
     }
     
     qb.orderBy(`profile.${sortBy}`, sortDirection);
