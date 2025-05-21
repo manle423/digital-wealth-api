@@ -32,9 +32,11 @@ export class RiskProfileService {
       const limit = query?.limit || 10;
       const sortBy = query?.sortBy || 'minScore';
       const sortDir = query?.sortDirection || 'ASC';
-      const type = query?.type || '';
+      const types = query?.type || [];
       
-      const cacheKey = `${RedisKeyPrefix.RISK_PROFILE}:p${page}:l${limit}:s${sortBy}:d${sortDir}:t${type}`;
+      // Create cache key - convert array to string for cache key
+      const typesKey = Array.isArray(types) ? types.sort().join(',') : '';
+      const cacheKey = `${RedisKeyPrefix.RISK_PROFILE}:p${page}:l${limit}:s${sortBy}:d${sortDir}:t${typesKey}`;
       const cachedData = await this.redisService.get(cacheKey);
       if (cachedData) {
         this.logger.debug(`Cache hit: ${cacheKey}`);

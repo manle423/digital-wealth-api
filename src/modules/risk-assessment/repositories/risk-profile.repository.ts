@@ -64,8 +64,8 @@ export class RiskProfileRepository extends MysqldbRepository<RiskProfile> {
     const qb = this.repository.createQueryBuilder('profile')
       .leftJoinAndSelect('profile.translations', 'translations');
     
-    if (type) {
-      qb.andWhere('profile.type = :type', { type });
+    if (type && type.length > 0) {
+      qb.andWhere('profile.type IN (:...types)', { types: type });
     }
     
     qb.orderBy(`profile.${sortBy}`, sortDirection);
