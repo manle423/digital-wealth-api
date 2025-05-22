@@ -9,6 +9,7 @@ import RedisConfig from './config-maps/redis.config-maps';
 import AuthConfig from './config-maps/auth.config-map';
 import MysqlDbConfig from './config-maps/mysqldb.config-maps';
 import RabbitMQConfig from './config-maps/rabbitmq.config-maps';
+import EmailConfig from './config-maps/email.config-map';
 
 @Global()
 @Module({})
@@ -27,6 +28,7 @@ export class AppConfigModule {
             AuthConfig,
             MysqlDbConfig,
             RabbitMQConfig,
+            EmailConfig,
           ],
           envFilePath,
         }),

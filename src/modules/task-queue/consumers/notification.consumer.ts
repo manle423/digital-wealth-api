@@ -2,11 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { RabbitRPC } from '@golevelup/nestjs-rabbitmq';
 import { LoggerService } from '@/shared/logger/logger.service';
 import { IWelcomeEmailData } from '../interfaces/notification.interface';
+import { renderTemplate } from '@/modules/task-queue/utils/render-template';
+import { GmailService } from '@/shared/email/gmail.service';
 
 @Injectable()
 export class NotificationConsumer {
   constructor(
     private readonly logger: LoggerService,
+    private readonly gmailService: GmailService,
   ) {}
 
   @RabbitRPC({
@@ -31,24 +34,22 @@ export class NotificationConsumer {
         throw new Error('Invalid message structure');
       }
 
-      // Simulate email sending delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Simulate email content
-      const emailContent = `
-        Dear ${message.data.name},
-
-        Welcome to Digital Wealth! We're excited to have you on board.
-
-        Your account has been successfully created with the email: ${message.data.email}
-
-        Best regards,
-        Digital Wealth Team
-      `;
+      // Render email template
+      const emailContent = renderTemplate('welcome', {
+        name: message.data.name,
+        email: message.data.email
+      }, ['email']); // Specify the folder containing the template
 
       this.logger.info('Welcome email would be sent with content:', { emailContent });
       
-      return { success: true, message: 'Welcome email processed successfully' };
+      // Gửi email sử dụng GmailService
+      await this.gmailService.sendEmail(
+        message.data.email,
+        'Welcome to Digital Wealth',
+        emailContent
+      );
+      
+      return { success: true, message: 'Welcome email sent successfully' };
     } catch (error) {
       this.logger.error('Failed to process welcome email message', { error, rawMessage });
       throw error;

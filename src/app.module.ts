@@ -11,6 +11,7 @@ import { RabbitmqModule } from './shared/rabbitmq/rabbitmq.module';
 import { RedisModule } from './shared/redis/redis.module';
 import { PortfolioManagementModule } from './modules/portfolio-management/portfolio-management.module';
 import { TaskQueueModule } from './modules/task-queue/task-queue.module';
+import { GmailModule } from './shared/email/gmail.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { TaskQueueModule } from './modules/task-queue/task-queue.module';
     RedisModule,
     PortfolioManagementModule,
     TaskQueueModule,
+    GmailModule,
   ],
   controllers: [],
   providers: [],
