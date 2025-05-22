@@ -13,6 +13,9 @@ import { FindOptionsWhere, DeepPartial } from 'typeorm';
 import { UpdateUserProfileDto } from './dto/update-user-profile.dto';
 import { UserDetailRepository } from './repositories/user-detail.repository';
 import { UserDetail } from './entities/user-detail.entity';
+import { RabbitmqService } from '@/shared/rabbitmq/rabbitmq.service';
+import { IWelcomeEmailData } from '@/modules/task-queue/interfaces/notification.interface';
+import { RoutingKey } from '@/shared/rabbitmq/constants';
 
 @Injectable()
 export class UserService {
@@ -20,6 +23,7 @@ export class UserService {
     private readonly logger: LoggerService,
     private readonly userRepository: UserRepository,
     private readonly userDetailRepository: UserDetailRepository,
+    private readonly rabbitmqService: RabbitmqService,
   ) {}
 
   async createUser(dto: RegisterDto) {
@@ -48,6 +52,20 @@ export class UserService {
       });
 
       const savedUser = savedUsers[0];
+      
+      const welcomeEmailData: IWelcomeEmailData = {
+        to: savedUser.email,
+        name: savedUser.name,
+        subject: 'Welcome to Digital Wealth',
+        template: 'welcome',
+        data: {
+          name: savedUser.name,
+          email: savedUser.email
+        }
+      };
+
+      // Push welcome email message to queue
+      await this.rabbitmqService.push(RoutingKey.sendWelcomeMail, welcomeEmailData);
 
       const { password, ...result } = savedUser;
       return result;

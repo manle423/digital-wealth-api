@@ -10,6 +10,7 @@ import { RiskAssessmentModule } from './modules/risk-assessment/risk-assessment.
 import { RabbitmqModule } from './shared/rabbitmq/rabbitmq.module';
 import { RedisModule } from './shared/redis/redis.module';
 import { PortfolioManagementModule } from './modules/portfolio-management/portfolio-management.module';
+import { TaskQueueModule } from './modules/task-queue/task-queue.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { PortfolioManagementModule } from './modules/portfolio-management/portfo
     RabbitmqModule,
     RedisModule,
     PortfolioManagementModule,
+    TaskQueueModule,
   ],
   controllers: [],
   providers: [],

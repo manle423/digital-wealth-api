@@ -1,5 +1,5 @@
 import { Global, Module } from '@nestjs/common'
-import { RabbitMQModule } from '@golevelup/nestjs-rabbitmq'
+import { defaultNackErrorHandler, RabbitMQModule } from '@golevelup/nestjs-rabbitmq'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { RabbitmqService } from './rabbitmq.service'
 
@@ -10,14 +10,31 @@ import { RabbitmqService } from './rabbitmq.service'
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
+        uri: configService.get<string>('rabbitmq.url'),
         exchanges: [
           {
             name: configService.get<string>('rabbitmq.exchange'),
             type: 'topic',
           },
         ],
-        uri: configService.get<string>('rabbitmq.url'),
-        connectionInitOptions: { wait: false },
+        handlers: {
+          sendWelcomeMail: {
+            exchange: configService.get<string>('rabbitmq.exchange'),
+            routingKey: configService.get<string>('rabbitmq.sendWelcomeMailRoutingKey'),
+            queue: configService.get<string>('rabbitmq.customerQueue'),
+            errorHandler: defaultNackErrorHandler,
+            queueOptions: {
+              durable: true,
+            },
+          },
+        },
+        connectionInitOptions: {wait: false},
+        channels: {
+          'default-channel': {
+            prefetchCount: 10,
+            default: true,
+          },
+        },
       }),
     }),
   ],
