@@ -53,7 +53,7 @@ export class QuestionCategoryRepository extends MysqldbRepository<QuestionCatego
   async updateMultipleCategories(updates: QuestionCategoryUpdate[]): Promise<QuestionCategory[]> {
     // First check if all categories exist
     const ids = updates.map(update => update.id);
-    const existingCategories = await this.repository.find({ where: { id: In(ids) } });
+    const existingCategories = await this.find({ id: In(ids) });
 
     if (existingCategories.length !== ids.length) {
       throw new NotFoundException('One or more question categories not found');
@@ -82,7 +82,7 @@ export class QuestionCategoryRepository extends MysqldbRepository<QuestionCatego
 
   async deleteMultipleCategories(ids: string[]): Promise<boolean> {
     // First check if all categories exist
-    const existingCategories = await this.repository.find({ where: { id: In(ids) } });
+    const existingCategories = await this.find({ id: In(ids) });
 
     if (existingCategories.length !== ids.length) {
       throw new NotFoundException('One or more question categories not found');

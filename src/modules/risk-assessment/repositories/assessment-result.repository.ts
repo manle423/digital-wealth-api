@@ -15,15 +15,17 @@ export class AssessmentResultRepository extends MysqldbRepository<AssessmentResu
   }
   
   async findUserAssessments(userId: string): Promise<AssessmentResult[]> {
-    return this.repository.find({
-      where: { userId },
+    return this.find({
+      userId,
+    }, {
       order: { createdAt: 'DESC' }
     });
   }
   
   async findLatestUserAssessment(userId: string): Promise<AssessmentResult> {
-    const results = await this.repository.find({
-      where: { userId },
+    const results = await this.find({
+      userId,
+    }, {
       order: { createdAt: 'DESC' },
       take: 1
     });

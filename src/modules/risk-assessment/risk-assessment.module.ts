@@ -20,6 +20,7 @@ import { AdminQuestionCategoryController } from './controllers/admin/question-ca
 import { PublicQuestionController } from './controllers/public/question.controller';
 import { PublicAssessmentController } from './controllers/public/assessment.controller';
 import { PortfolioManagementModule } from '../portfolio-management/portfolio-management.module';
+import { OptionalJwtGuard } from '../auth/guards/optional-jwt.guard';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { PortfolioManagementModule } from '../portfolio-management/portfolio-man
     QuestionCategoryRepository,
     AssessmentResultRepository,
     JwtService,
+    OptionalJwtGuard,
   ],
   exports: [RiskAssessmentService],
 })

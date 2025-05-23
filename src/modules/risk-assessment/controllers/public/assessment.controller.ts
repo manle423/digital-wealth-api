@@ -12,6 +12,7 @@ import { CreateAssessmentResultDto } from '@/modules/risk-assessment/dto/create-
 import { JwtGuard } from '@/modules/auth/guards/jwt.guard';
 import { AssessmentResult } from '@/modules/risk-assessment/entities/assessment-result.entity';
 import { AuthError } from '@/modules/auth/enum/error.enum';
+import { OptionalJwtGuard } from '@/modules/auth/guards/optional-jwt.guard';
 
 @Controller('risk-assessment')
 export class PublicAssessmentController {
@@ -24,14 +25,14 @@ export class PublicAssessmentController {
    * Người dùng có thể gửi kết quả mà không cần đăng nhập, nhưng nếu đã đăng nhập thì kết quả sẽ được lưu vào tài khoản
    */
   @Post('submit')
+  @UseGuards(OptionalJwtGuard)
   async submitAssessment(
     @Body() createAssessmentResultDto: CreateAssessmentResultDto,
     @Request() req,
   ): Promise<AssessmentResult> {
     if (req.user) {
-      createAssessmentResultDto.userId = req.user.id;
+      createAssessmentResultDto.userId = req.user.sub;
     }
-    
     return this.riskAssessmentService.saveAssessmentResult(createAssessmentResultDto);
   }
 
@@ -45,8 +46,7 @@ export class PublicAssessmentController {
     if (!req.user) {
       throw new UnauthorizedException(AuthError.USER_NOT_VERIFIED);
     }
-    
-    return this.riskAssessmentService.getUserAssessmentHistory(req.user.id);
+    return this.riskAssessmentService.getUserAssessmentHistory(req.user.sub);
   }
 
   /**
@@ -60,6 +60,6 @@ export class PublicAssessmentController {
       throw new UnauthorizedException(AuthError.USER_NOT_VERIFIED);
     }
     
-    return this.riskAssessmentService.getLatestAssessmentResult(req.user.id);
+    return this.riskAssessmentService.getLatestAssessmentResult(req.user.sub);
   }
 } 

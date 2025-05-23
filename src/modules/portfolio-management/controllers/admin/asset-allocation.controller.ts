@@ -3,13 +3,14 @@ import { JwtGuard } from '@/modules/auth/guards/jwt.guard';
 import {
   Body,
   Controller,
+  Get,
   Post,
   Put,
   UseGuards,
   Param,
 } from '@nestjs/common';
 import { AssetAllocationService } from '@/modules/portfolio-management/services/asset-allocation.service';
-import { CreateAssetAllocationDto } from '@/modules/portfolio-management/dto/asset-allocation/create-asset-alllocation.dto';
+import { CreateMultipleAssetClassesAllocationDto } from '@/modules/portfolio-management/dto/asset-allocation/create-asset-alllocation.dto';
 import { BatchUpdateAllocationDto, UpdateAssetAllocationDto } from '@/modules/portfolio-management/dto/asset-allocation/update-asset-allocation.dto';
 
 @Controller('admin/portfolio-management/asset-allocations')
@@ -19,9 +20,19 @@ export class AdminAssetAllocationController {
     private readonly assetAllocationService: AssetAllocationService,
   ) {}
 
+  @Get()
+  async getAllAllocations() {
+    return this.assetAllocationService.getAllAllocations();
+  }
+
+  @Get('risk-profile/:riskProfileId')
+  async getAllocationsByRiskProfile(@Param('riskProfileId') riskProfileId: string) {
+    return this.assetAllocationService.getAllocationsByRiskProfile(riskProfileId);
+  }
+
   @Post()
-  async createAllocation(@Body() dto: CreateAssetAllocationDto) {
-    return this.assetAllocationService.createAllocation(dto);
+  async createAllocation(@Body() dto: CreateMultipleAssetClassesAllocationDto) {
+    return this.assetAllocationService.createAllocation(dto.assetAllocations);
   }
 
   @Put(':id')

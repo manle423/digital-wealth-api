@@ -1,5 +1,5 @@
 import { Type } from "class-transformer";
-import { IsInt, IsNotEmpty, IsUUID, Max, Min } from "class-validator";
+import { IsArray, IsInt, IsNotEmpty, IsUUID, Max, Min, ValidateNested } from "class-validator";
 
 export class CreateAssetAllocationDto {
   @IsUUID()
@@ -16,3 +16,11 @@ export class CreateAssetAllocationDto {
   @Type(() => Number)
   percentage: number;
 }
+
+export class CreateMultipleAssetClassesAllocationDto {
+  @IsArray()
+  @IsNotEmpty()
+  @ValidateNested({ each: true })
+  @Type(() => CreateAssetAllocationDto)
+  assetAllocations: CreateAssetAllocationDto[];
+} 

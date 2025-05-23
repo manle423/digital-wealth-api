@@ -15,9 +15,10 @@ export class AssetAllocationRepository extends MysqldbRepository<AssetAllocation
   }
 
   async findByRiskProfileId(riskProfileId: string): Promise<AssetAllocation[]> {
-    return this.repository.find({
-      where: { riskProfileId },
-      relations: ['assetClass'],
+    return this.find({
+      riskProfileId
+    }, {
+      relations: ['assetClass.translations'],
       order: { 'assetClass': { 'order': 'ASC' } }
     });
   }
