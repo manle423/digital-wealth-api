@@ -5,7 +5,11 @@ export enum RedisKeyPrefix {
   ASSET_CLASS = 'asset_class',
   ASSET_ALLOCATION = 'asset_allocation',
   USER = 'user',
-  ASSESSMENT = 'assessment'
+  ASSESSMENT = 'assessment',
+  USER_PROFILE = 'user_profile',
+  USER_DETAIL = 'user_detail',
+  USER_EMAIL = 'user_email',
+  USER_ID = 'user_id',
 }
 
 export enum RedisKeyTtl {

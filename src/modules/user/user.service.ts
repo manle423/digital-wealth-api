@@ -16,6 +16,8 @@ import { UserDetail } from './entities/user-detail.entity';
 import { RabbitmqService } from '@/shared/rabbitmq/rabbitmq.service';
 import { IWelcomeEmailData } from '@/modules/task-queue/interfaces/notification.interface';
 import { RoutingKey } from '@/shared/rabbitmq/constants';
+import { RedisService } from '@/shared/redis/redis.service';
+import { RedisKeyPrefix, RedisKeyTtl } from '@/shared/enums/redis-key.enum';
 
 @Injectable()
 export class UserService {
@@ -24,6 +26,7 @@ export class UserService {
     private readonly userRepository: UserRepository,
     private readonly userDetailRepository: UserDetailRepository,
     private readonly rabbitmqService: RabbitmqService,
+    private readonly redisService: RedisService,
   ) {}
 
   async createUser(dto: RegisterDto) {
@@ -187,6 +190,9 @@ export class UserService {
         }
       }
 
+      // Xóa tất cả cache liên quan đến user này
+      await this.clearUserCache(userId, user.email);
+
       // Get updated user with detail
       const updatedUser = await this.userRepository.findOne(
         { id: userId },
@@ -205,6 +211,16 @@ export class UserService {
     try {
       this.logger.info('[getUserProfileComplete]', { userId });
 
+      // Kiểm tra cache
+      const cacheKey = `${RedisKeyPrefix.USER_PROFILE}:${userId}`;
+      const cachedProfile = await this.redisService.get(cacheKey);
+      
+      if (cachedProfile) {
+        this.logger.debug(`Cache hit: ${cacheKey}`);
+        return JSON.parse(cachedProfile);
+      }
+
+      // Nếu không có cache, truy vấn database
       const user = await this.userRepository.findOne(
         { id: userId },
         { relations: ['userDetail'] }
@@ -215,10 +231,40 @@ export class UserService {
       }
 
       const { password, ...result } = user;
+      
+      // Lưu kết quả vào cache
+      await this.redisService.set(
+        cacheKey, 
+        JSON.stringify(result), 
+        RedisKeyTtl.ONE_HOUR
+      );
+      
       return result;
     } catch (error) {
       this.logger.error('[getUserProfileComplete] Error getting complete user profile', error);
       throw error;
+    }
+  }
+
+  // Xóa tất cả cache liên quan đến một user
+  private async clearUserCache(userId: string, email: string): Promise<void> {
+    try {
+      // Xóa cache theo ID
+      const idCacheKey = `${RedisKeyPrefix.USER_ID}:${userId}`;
+      await this.redisService.del(idCacheKey);
+      
+      // Xóa cache theo email
+      const emailCacheKey = `${RedisKeyPrefix.USER_EMAIL}:${email}`;
+      await this.redisService.del(emailCacheKey);
+      
+      // Xóa cache profile
+      const profileCacheKey = `${RedisKeyPrefix.USER_PROFILE}:${userId}`;
+      await this.redisService.del(profileCacheKey);
+      
+      this.logger.debug(`Cleared cache for user: ${userId}`);
+    } catch (error) {
+      this.logger.error(`Error clearing user cache: ${error.message}`, error.stack);
+      // Không throw error để không ảnh hưởng đến luồng chính
     }
   }
 }
