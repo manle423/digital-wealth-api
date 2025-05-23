@@ -9,14 +9,27 @@ import { LoggerModule } from '@/shared/logger/logger.module';
 import { MysqldbConnection } from '@/shared/mysqldb/connections/db.connection';
 import { UserDetail } from './entities/user-detail.entity';
 import { UserDetailRepository } from './repositories/user-detail.repository';
+import { UserOtp } from './entities/user-otp.entity';
+import { UserAuth } from './entities/user-auth.entity';
+import { UserOtpRepository } from './repositories/user-otp.repository';
+import { UserAuthRepository } from './repositories/user-auth.repository';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, UserDetail], MysqldbConnection.name),
+    TypeOrmModule.forFeature(
+      [User, UserDetail, UserOtp, UserAuth],
+      MysqldbConnection.name),
     LoggerModule,
   ],
   controllers: [UserController],
-  providers: [UserService, JwtService, UserRepository, UserDetailRepository],
-  exports: [UserService],
+  providers: [
+    UserService,
+    JwtService,
+    UserRepository,
+    UserDetailRepository,
+    UserOtpRepository,
+    UserAuthRepository,
+  ],
+  exports: [UserService, UserOtpRepository],
 })
-export class UserModule {}
+export class UserModule { }

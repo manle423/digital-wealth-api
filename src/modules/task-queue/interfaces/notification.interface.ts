@@ -9,6 +9,17 @@ export interface IWelcomeEmailData {
   };
 }
 
+export interface IOtpEmailData {
+  to: string;
+  subject: string;
+  template: string;
+  data: {
+    otp: string;
+    expiryMinutes: number;
+    email: string;
+  };
+}
+
 // Các interface notification khác có thể được thêm ở đây trong tương lai
 export interface EmailBasePayload {
   to: string;

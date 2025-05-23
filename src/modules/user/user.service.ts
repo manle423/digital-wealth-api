@@ -267,4 +267,9 @@ export class UserService {
       // Không throw error để không ảnh hưởng đến luồng chính
     }
   }
+
+  async updatePassword(userId: string, hashedPassword: string) {
+    this.logger.info('[updatePassword]', { userId });
+    return this.userRepository.update({id: userId}, { password: hashedPassword });
+  }
 }

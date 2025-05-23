@@ -7,6 +7,7 @@ import { JwtGuard } from './guards/jwt.guard';
 import { RegisterDto } from './dto/register.dto';
 import { Response, Request } from 'express';
 import { IAuthResponse, IJwtPayload } from './types/auth.types';
+import { ForgotPasswordDto, ResetPasswordDto } from './dto/forgot-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -42,5 +43,18 @@ export class AuthController {
   @Post('logout')
   async logout(@Res({ passthrough: true }) res: Response) {
     return this.authService.logout(res);
+  }
+
+  @Post('forgot-password')
+  async forgotPassword(
+    @Body() dto: ForgotPasswordDto,
+    @Req() req: Request,
+  ) {
+    return this.authService.forgotPassword(dto.email, req);
+  }
+
+  @Post('reset-password')
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto);
   }
 }

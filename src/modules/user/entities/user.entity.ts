@@ -1,7 +1,8 @@
 import { BaseEntity } from '@/shared/mysqldb/types/base-entity.type';
-import { Column, Entity, OneToOne } from 'typeorm';
+import { Column, Entity, OneToMany, OneToOne } from 'typeorm';
 import { UserDetail } from './user-detail.entity';
 import { UserRole } from '../enums/user-role.enum';
+import { UserAuth } from './user-auth.entity';
 
 @Entity('users')
 export class User extends BaseEntity {
@@ -23,4 +24,7 @@ export class User extends BaseEntity {
 
   @OneToOne(() => UserDetail, (userDetail) => userDetail.user) 
   userDetail: UserDetail;
+
+  @OneToMany(() => UserAuth, (userAuth) => userAuth.user)
+  userAuths: UserAuth[];
 }

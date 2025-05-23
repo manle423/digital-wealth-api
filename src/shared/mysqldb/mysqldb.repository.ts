@@ -14,6 +14,10 @@ import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity
 export class MysqldbRepository<Entity> {
   constructor(public repository: Repository<Entity>) {}
 
+  async create(entityLike: DeepPartial<Entity>): Promise<Entity> {
+    return await this.repository.create(entityLike);
+  }
+
   async withTnx(
     runInTransaction: (manager: EntityManager) => any,
   ): Promise<any> {

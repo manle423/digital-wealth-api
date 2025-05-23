@@ -27,6 +27,15 @@ import { RabbitmqService } from './rabbitmq.service'
               durable: true,
             },
           },
+          sendOtpMail: {
+            exchange: configService.get<string>('rabbitmq.exchange'),
+            routingKey: configService.get<string>('rabbitmq.sendOtpMailRoutingKey'),
+            queue: configService.get<string>('rabbitmq.customerQueue'),
+            errorHandler: defaultNackErrorHandler,
+            queueOptions: {
+              durable: true,
+            },
+          },
         },
         connectionInitOptions: {wait: false},
         channels: {
