@@ -2,6 +2,7 @@ export interface IJwtPayload {
   sub: string;
   email: string;
   role?: string;
+  sessionId?: string;
 }
 
 export interface ITokens {

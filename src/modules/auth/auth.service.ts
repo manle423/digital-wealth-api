@@ -13,6 +13,7 @@ import { OtpType } from '@/modules/user/enums/otp-type.enum';
 import { ResetPasswordDto } from './dto/forgot-password.dto';
 import { OtpStatus } from '../user/enums/otp-status.enum';
 import { UserOtpRepository } from '../user/repositories/user-otp.repository';
+import { UserAuthService } from './services/user-auth.service';
 
 @Injectable()
 export class AuthService {
@@ -22,9 +23,10 @@ export class AuthService {
     private readonly logger: LoggerService,
     private readonly otpService: OtpService,
     private readonly userOtpRepository: UserOtpRepository,
+    private readonly userAuthService: UserAuthService,
   ) {}
 
-  async login(dto: LoginDto, res: Response): Promise<IAuthResponse> {
+  async login(dto: LoginDto, req: Request, res: Response): Promise<IAuthResponse> {
     this.logger.info('[login]', { email: dto.email });
     const user = await this.userService.findByEmail(dto.email);
     if (!user) {
@@ -36,10 +38,21 @@ export class AuthService {
       throw new UnauthorizedException(AuthError.INVALID_CREDENTIALS);
     }
 
+    // Tạo hoặc cập nhật session thiết bị
+    let userAuth = null;
+    if (dto.deviceInfo) {
+      userAuth = await this.userAuthService.createOrUpdateSession(
+        user.id,
+        dto.deviceInfo,
+        req,
+      );
+    }
+
     const payload: IJwtPayload = {
       sub: user.id.toString(),
       email: user.email,
       role: user.role,
+      sessionId: userAuth?.sessionId,
     };
 
     const tokens = await generateTokens(this.jwtService, payload);
@@ -58,6 +71,7 @@ export class AuthService {
 
   async refreshToken(
     oldPayload: IJwtPayload,
+    req: Request,
     res: Response,
   ): Promise<IAuthResponse> {
     this.logger.info('[refreshToken]', { userId: oldPayload?.sub });
@@ -76,10 +90,16 @@ export class AuthService {
       throw new UnauthorizedException(AuthError.USER_NOT_FOUND);
     }
 
+    // Cập nhật last access nếu có sessionId
+    if (oldPayload.sessionId) {
+      await this.userAuthService.updateLastAccess(oldPayload.sessionId, req);
+    }
+
     const payload: IJwtPayload = {
       sub: user.id.toString(),
       email: user.email,
       role: user.role,
+      sessionId: oldPayload.sessionId,
     };
 
     const tokens = await generateTokens(this.jwtService, payload);
@@ -96,9 +116,18 @@ export class AuthService {
     };
   }
 
-  async logout(res: Response) {
-    this.logger.info('[logout]');
-    clearCookies(res);
+  async logout(userId?: string, sessionId?: string, res?: Response) {
+    this.logger.info('[logout]', { userId, sessionId });
+    
+    // Deactivate session nếu có sessionId
+    if (sessionId) {
+      await this.userAuthService.deactivateSessionBySessionId(sessionId);
+    }
+    
+    if (res) {
+      clearCookies(res);
+    }
+    
     return { message: 'Logged out successfully' };
   }
 
