@@ -64,7 +64,9 @@ export class UserAuthService {
       this.logger.info('[createSession]', { sessionId });
     }
 
-    return await this.userAuthRepository.save(userAuth);
+    const savedUserAuthArray = await this.userAuthRepository.save(userAuth);
+    const savedUserAuth = savedUserAuthArray[0] as UserAuth
+    return savedUserAuth;
   }
 
   async updateLastAccess(sessionId: string, req: Request): Promise<void> {
@@ -183,6 +185,39 @@ export class UserAuthService {
     });
 
     return !!userAuth;
+  }
+
+  async canLogoutOtherDevices(sessionId: string): Promise<boolean> {
+    const session = await this.getSessionBySessionId(sessionId);
+    // Chỉ device trusted mới có thể logout device khác
+    return session?.isTrusted || false;
+  }
+
+  async validateLogoutPermission(sessionId: string, targetDeviceId: string): Promise<{
+    canLogout: boolean;
+    isCurrentDevice: boolean;
+    currentSession: UserAuth | null;
+  }> {
+    const currentSession = await this.getSessionBySessionId(sessionId);
+    const isCurrentDevice = currentSession?.deviceId === targetDeviceId;
+    
+    // User luôn có thể logout device hiện tại của mình
+    if (isCurrentDevice) {
+      return {
+        canLogout: true,
+        isCurrentDevice: true,
+        currentSession,
+      };
+    }
+    
+    // Để logout device khác, device hiện tại phải trusted
+    const canLogout = currentSession?.isTrusted || false;
+
+    return {
+      canLogout,
+      isCurrentDevice: false,
+      currentSession,
+    };
   }
 
   private getClientIp(req: Request): string {

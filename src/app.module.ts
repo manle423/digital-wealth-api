@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { UserModule } from './modules/user/user.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
@@ -12,6 +12,7 @@ import { RedisModule } from './shared/redis/redis.module';
 import { PortfolioManagementModule } from './modules/portfolio-management/portfolio-management.module';
 import { TaskQueueModule } from './modules/task-queue/task-queue.module';
 import { GmailModule } from './shared/email/gmail.module';
+import { SessionValidationMiddleware } from './modules/auth/middleware/session-validation.middleware';
 
 @Module({
   imports: [
@@ -34,4 +35,17 @@ import { GmailModule } from './shared/email/gmail.module';
   controllers: [],
   providers: [],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(SessionValidationMiddleware)
+      .exclude(
+        'auth/login',
+        'auth/register', 
+        'auth/refresh',
+        'auth/forgot-password',
+        'auth/reset-password'
+      )
+      .forRoutes('*');
+  }
+}
