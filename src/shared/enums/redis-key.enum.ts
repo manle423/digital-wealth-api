@@ -11,6 +11,25 @@ export enum RedisKeyPrefix {
   USER_EMAIL = 'user:email',
   USER_ID = 'user:id',
   OTP_RETRY = 'otp:retry',
+  SESSION = 'session',
+  
+  // Asset Management
+  USER_ASSETS = 'user:assets',
+  USER_TOTAL_ASSETS = 'user:total_assets',
+  
+  // Debt Management
+  USER_DEBTS = 'user:debts',
+  USER_TOTAL_DEBTS = 'user:total_debts',
+  
+  // Net Worth
+  NET_WORTH = 'net_worth',
+  NET_WORTH_HISTORY = 'net_worth:history',
+  
+  // Financial Analysis
+  FINANCIAL_METRICS = 'financial:metrics',
+  
+  // Recommendations
+  RECOMMENDATIONS = 'recommendations',
 }
 
 export enum RedisKeyTtl {

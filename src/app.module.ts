@@ -13,6 +13,7 @@ import { PortfolioManagementModule } from './modules/portfolio-management/portfo
 import { TaskQueueModule } from './modules/task-queue/task-queue.module';
 import { GmailModule } from './shared/email/gmail.module';
 import { SessionValidationMiddleware } from './modules/auth/middleware/session-validation.middleware';
+import { AssetManagementModule } from './modules/asset-management/asset-management.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { SessionValidationMiddleware } from './modules/auth/middleware/session-v
     PortfolioManagementModule,
     TaskQueueModule,
     GmailModule,
+    AssetManagementModule,
   ],
   controllers: [],
   providers: [],
