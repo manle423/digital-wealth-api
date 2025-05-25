@@ -1,6 +1,7 @@
 import { JwtService } from '@nestjs/jwt';
 import { Response } from 'express';
 import { IJwtPayload, ITokens } from '../types/auth.types';
+import { Request } from 'express';
 
 export async function generateTokens(
   jwtService: JwtService,
@@ -56,4 +57,27 @@ export function clearCookies(res: Response): void {
     maxAge: 0,
     httpOnly: true,
   });
+}
+
+// Utility function để extract token từ request (tái sử dụng cho JwtGuard và middleware)
+export function extractTokenFromRequest(request: Request): string | undefined {
+  // Try to get token from cookie first (ưu tiên cookie)
+  const cookieToken = request.cookies?.accessToken;
+  if (cookieToken) {
+    return cookieToken;
+  }
+
+  // Fallback to Authorization header
+  const [type, token] = request.headers.authorization?.split(' ') ?? [];
+  return type === 'Bearer' ? token : undefined;
+}
+
+// Helper function để verify access token
+export async function verifyAccessToken(
+  jwtService: JwtService,
+  token: string,
+): Promise<IJwtPayload> {
+  return await jwtService.verifyAsync(token, {
+    secret: process.env.JWT_SECRET_KEY,
+  }) as IJwtPayload;
 }

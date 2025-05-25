@@ -99,7 +99,7 @@ export class OtpService {
     this.logger.info('[verifyOtp]', { email, type });
 
     const userOtp = await this.userOtpRepository.findOne(
-      { email, type, status: OtpStatus.PENDING },
+      { email, type, status: OtpStatus.PENDING, otp },
       { order: { createdAt: 'DESC' } },
     );
 
@@ -120,6 +120,16 @@ export class OtpService {
     userOtp.status = OtpStatus.VERIFIED;
     userOtp.verifiedAt = new Date();
     await this.userOtpRepository.save(userOtp);
+
+    await this.userOtpRepository.repository
+      .createQueryBuilder()
+      .update()
+      .set({ status: OtpStatus.CANCELLED })
+      .where('email = :email', { email })
+      .andWhere('type = :type', { type })
+      .andWhere('status = :status', { status: OtpStatus.PENDING })
+      .andWhere('id != :id', { id: userOtp.id })
+      .execute();
 
     // Xóa cache retry khi verify thành công
     const retryCacheKey = `${RedisKeyPrefix.OTP_RETRY}:${email}:${type}`;
