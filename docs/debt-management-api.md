@@ -176,7 +176,7 @@ Update an existing debt.
 ```
 
 ### 5. Delete Debt
-Soft delete a debt (sets isActive to false).
+Soft delete a debt.
 
 **Endpoint:** `DELETE /debt-management/debts/:id`
 
