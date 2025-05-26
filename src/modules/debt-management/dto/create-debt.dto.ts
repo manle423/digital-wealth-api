@@ -43,11 +43,11 @@ export class CreateDebtDto {
 
   @IsDateString()
   @IsOptional()
-  startDate?: Date;
+  startDate?: string;
 
   @IsDateString()
   @IsOptional()
-  dueDate?: Date;
+  dueDate?: string;
 
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
@@ -90,11 +90,11 @@ export class CreateDebtDto {
 
   @IsDateString()
   @IsOptional()
-  lastPaymentDate?: Date;
+  lastPaymentDate?: string;
 
   @IsDateString()
   @IsOptional()
-  nextPaymentDate?: Date;
+  nextPaymentDate?: string;
 
   @IsString()
   @IsOptional()

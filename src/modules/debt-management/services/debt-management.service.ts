@@ -62,7 +62,7 @@ export class DebtManagementService {
     }
   }
 
-  async createDebt(userId: string, createDebtDto: CreateDebtDto): Promise<UserDebt> {
+  async createDebt(userId: string, createDebtDto: CreateDebtDto) {
     try {
       this.logger.info('[createDebt]', { userId, createDebtDto });
 
@@ -82,6 +82,8 @@ export class DebtManagementService {
         dueDate: createDebtDto.dueDate ? new Date(createDebtDto.dueDate) : null,
         lastPaymentDate: createDebtDto.lastPaymentDate ? new Date(createDebtDto.lastPaymentDate) : null,
         nextPaymentDate: createDebtDto.nextPaymentDate ? new Date(createDebtDto.nextPaymentDate) : null,
+        // Auto-calculate payment schedule if not provided
+        paymentSchedule: createDebtDto.paymentSchedule || this.calculatePaymentSchedule(createDebtDto),
       };
 
       const debt = await this.userDebtRepository.create(debtData);
@@ -96,31 +98,44 @@ export class DebtManagementService {
     }
   }
 
-  async updateDebt(userId: string, debtId: string, updateDebtDto: UpdateDebtDto): Promise<UserDebt> {
+  async updateDebt(userId: string, debtId: string, updateDebtDto: UpdateDebtDto) {
     try {
       this.logger.info('[updateDebt]', { userId, debtId, updateDebtDto });
-
+  
       const existingDebt = await this.getDebtById(userId, debtId);
-
+  
       if (updateDebtDto.categoryId && updateDebtDto.categoryId !== existingDebt.categoryId) {
         const categoryExists = await this.debtCategoryRepository.exists(updateDebtDto.categoryId);
         if (!categoryExists) {
           throw new BadRequestException('Invalid debt category');
         }
       }
-
+  
       // Validate business rules
       this.validateDebtData(updateDebtDto);
-
-      const updateData = {
+  
+      // Normalize dates in updateDebtDto first
+      const normalizedUpdateDto = {
         ...updateDebtDto,
         startDate: updateDebtDto.startDate ? new Date(updateDebtDto.startDate) : undefined,
         dueDate: updateDebtDto.dueDate ? new Date(updateDebtDto.dueDate) : undefined,
         lastPaymentDate: updateDebtDto.lastPaymentDate ? new Date(updateDebtDto.lastPaymentDate) : undefined,
         nextPaymentDate: updateDebtDto.nextPaymentDate ? new Date(updateDebtDto.nextPaymentDate) : undefined,
       };
-
-      const updatedDebt = await this.userDebtRepository.update(debtId, updateData);
+  
+      // Merge existing debt data with normalized update data
+      const mergedData = { ...existingDebt, ...normalizedUpdateDto };
+  
+      const updateData = {
+        ...normalizedUpdateDto,
+        // Recalculate payment schedule if relevant fields changed
+        paymentSchedule: updateDebtDto.paymentSchedule || 
+          (this.shouldRecalculatePaymentSchedule(updateDebtDto) ? 
+            this.calculatePaymentSchedule(mergedData) : 
+            existingDebt.paymentSchedule),
+      };
+  
+      const updatedDebt = await this.userDebtRepository.update({id: debtId}, updateData);
       
       // Clear cache
       await this.clearDebtCaches(userId);
@@ -138,7 +153,7 @@ export class DebtManagementService {
 
       await this.getDebtById(userId, debtId); // Validate debt exists and belongs to user
       
-      await this.userDebtRepository.softDelete(debtId);
+      await this.userDebtRepository.delete({id: debtId});
       
       // Clear cache
       await this.clearDebtCaches(userId);
@@ -148,7 +163,7 @@ export class DebtManagementService {
     }
   }
 
-  async updateDebtBalance(userId: string, debtId: string, updateBalanceDto: UpdateDebtBalanceDto): Promise<UserDebt> {
+  async updateDebtBalance(userId: string, debtId: string, updateBalanceDto: UpdateDebtBalanceDto) {
     try {
       this.logger.info('[updateDebtBalance]', { userId, debtId, updateBalanceDto });
 
@@ -173,9 +188,20 @@ export class DebtManagementService {
       // Auto-update status if debt is paid off
       if (updateBalanceDto.currentBalance === 0) {
         updateData.status = DebtStatus.PAID_OFF;
+        // Không cần nextPaymentDate nếu đã trả hết
+        updateData.nextPaymentDate = null;
+      } else {
+        // Tính nextPaymentDate nếu còn nợ
+        updateData.nextPaymentDate = this.calculateNextPaymentDate(
+          updateBalanceDto.lastPaymentDate ? new Date(updateBalanceDto.lastPaymentDate) : new Date()
+        );
       }
 
-      const updatedDebt = await this.userDebtRepository.update(debtId, updateData);
+      // Recalculate payment schedule with updated balance
+      const mergedData = { ...debt, ...updateData };
+      updateData.paymentSchedule = this.calculatePaymentSchedule(mergedData);
+
+      const updatedDebt = await this.userDebtRepository.update({id: debtId}, updateData);
       
       // Clear cache
       await this.clearDebtCaches(userId);
@@ -185,6 +211,21 @@ export class DebtManagementService {
       this.logger.error('[updateDebtBalance] Error updating debt balance', error);
       throw error;
     }
+  }
+
+  /**
+   * Tính toán ngày thanh toán tiếp theo (hiện tại chỉ hỗ trợ monthly)
+   */
+  private calculateNextPaymentDate(lastPaymentDate: Date): Date {
+    const nextPaymentDate = new Date(lastPaymentDate);
+    nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1);
+    
+    // Xử lý trường hợp cuối tháng
+    if (nextPaymentDate.getDate() !== lastPaymentDate.getDate()) {
+      nextPaymentDate.setDate(0); // Set về ngày cuối tháng
+    }
+    
+    return nextPaymentDate;
   }
 
   async getTotalDebtValue(userId: string): Promise<number> {
@@ -333,6 +374,18 @@ export class DebtManagementService {
     }
   }
 
+  /**
+   * Convert any value to number safely
+   */
+  private convertToNumber(value: any): number {
+    if (typeof value === 'number') return value;
+    if (typeof value === 'string') {
+      const parsed = parseFloat(value);
+      return isNaN(parsed) ? 0 : parsed;
+    }
+    return 0;
+  }
+
   async getDebtSummary(userId: string) {
     try {
       this.logger.info('[getDebtSummary]', { userId });
@@ -340,10 +393,10 @@ export class DebtManagementService {
       const cacheKey = `${RedisKeyPrefix.USER_DEBTS_SUMMARY}:${userId}`;
       const cached = await this.redisService.get(cacheKey);
       
-      // if (cached) {
-      //   this.logger.debug('[getDebtSummary] Cache hit', { cacheKey });
-      //   return JSON.parse(cached);
-      // }
+      if (cached) {
+        this.logger.debug('[getDebtSummary] Cache hit', { cacheKey });
+        return JSON.parse(cached);
+      }
 
       const [totalDebt, breakdown, overdueDebts, upcomingPayments] = await Promise.all([
         this.getTotalDebtValue(userId),
@@ -353,12 +406,20 @@ export class DebtManagementService {
       ]);
 
       const result = {
-        totalDebt,
+        totalDebt: Number(totalDebt.toFixed(2)), // Ensure totalDebt is also properly formatted
         breakdown,
         overdueCount: overdueDebts.length,
-        overdueAmount: overdueDebts.reduce((sum, debt) => sum + debt.currentBalance, 0),
+        overdueAmount: Number(
+          overdueDebts.reduce((sum, debt) => {
+            return sum + this.convertToNumber(debt.currentBalance);
+          }, 0).toFixed(2)
+        ),
         upcomingPaymentsCount: upcomingPayments.length,
-        upcomingPaymentsAmount: upcomingPayments.reduce((sum, debt) => sum + (debt.monthlyPayment || 0), 0),
+        upcomingPaymentsAmount: Number(
+          upcomingPayments.reduce((sum, debt) => {
+            return sum + this.convertToNumber(debt.monthlyPayment);
+          }, 0).toFixed(2)
+        ),
       };
 
       await this.redisService.set(cacheKey, JSON.stringify(result), RedisKeyTtl.FIFTEEN_MINUTES);
@@ -424,5 +485,78 @@ export class DebtManagementService {
     } catch (error) {
       this.logger.error(`[clearDebtCaches] Error clearing caches: ${error.message}`, { userId });
     }
+  }
+
+  /**
+   * Calculate payment schedule automatically
+   */
+  private calculatePaymentSchedule(debtData: Partial<CreateDebtDto | UpdateDebtDto | UserDebt>): any {
+    try {
+      // Default values
+      const frequency = 'MONTHLY';
+      const amount = debtData.monthlyPayment || 0;
+      
+      // Calculate next payment date
+      let nextPaymentDate: Date;
+      if (debtData.lastPaymentDate) {
+        nextPaymentDate = new Date(debtData.lastPaymentDate);
+        nextPaymentDate.setDate(nextPaymentDate.getDate() + 30); // Add 30 days
+      } else if (debtData.startDate) {
+        nextPaymentDate = new Date(debtData.startDate);
+        nextPaymentDate.setDate(nextPaymentDate.getDate() + 30); // Add 30 days
+      } else {
+        // If no dates available, use current date + 30 days
+        nextPaymentDate = new Date();
+        nextPaymentDate.setDate(nextPaymentDate.getDate() + 30);
+      }
+
+      // Calculate remaining payments
+      let remainingPayments: number | undefined;
+      if (amount > 0 && debtData.currentBalance && debtData.currentBalance > 0) {
+        // Basic calculation: remaining balance / monthly payment
+        remainingPayments = Math.ceil(debtData.currentBalance / amount);
+        
+        // If we have term months, use the smaller value
+        if (debtData.termMonths) {
+          const totalPaidMonths = debtData.totalPaid ? Math.floor(debtData.totalPaid / amount) : 0;
+          const remainingTermMonths = debtData.termMonths - totalPaidMonths;
+          remainingPayments = Math.min(remainingPayments, Math.max(0, remainingTermMonths));
+        }
+      } else if (debtData.termMonths && debtData.totalPaid && amount > 0) {
+        // Calculate based on term months and total paid
+        const totalPaidMonths = Math.floor(debtData.totalPaid / amount);
+        remainingPayments = Math.max(0, debtData.termMonths - totalPaidMonths);
+      }
+
+      return {
+        frequency,
+        amount,
+        nextPaymentDate,
+        remainingPayments,
+      };
+    } catch (error) {
+      this.logger.error('[calculatePaymentSchedule] Error calculating payment schedule', error);
+      // Return default schedule if calculation fails
+      return {
+        frequency: 'MONTHLY',
+        amount: debtData.monthlyPayment || 0,
+        nextPaymentDate: new Date(),
+        remainingPayments: undefined,
+      };
+    }
+  }
+
+  /**
+   * Check if payment schedule should be recalculated
+   */
+  private shouldRecalculatePaymentSchedule(updateData: UpdateDebtDto): boolean {
+    return !!(
+      updateData.monthlyPayment !== undefined ||
+      updateData.currentBalance !== undefined ||
+      updateData.lastPaymentDate !== undefined ||
+      updateData.startDate !== undefined ||
+      updateData.termMonths !== undefined ||
+      updateData.totalPaid !== undefined
+    );
   }
 } 

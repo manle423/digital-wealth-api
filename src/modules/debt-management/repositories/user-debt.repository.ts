@@ -4,17 +4,23 @@ import { Repository, SelectQueryBuilder } from 'typeorm';
 import { UserDebt } from '../entities/user-debt.entity';
 import { GetDebtsDto } from '../dto/get-debts.dto';
 import { MysqldbConnection } from '@/shared/mysqldb/connections/db.connection';
+import { MysqldbRepository } from '@/shared/mysqldb/mysqldb.repository';
+import { DeepPartial } from 'typeorm';
 
 @Injectable()
-export class UserDebtRepository {
+export class UserDebtRepository extends MysqldbRepository<UserDebt> {
   constructor(
     @InjectRepository(UserDebt, MysqldbConnection.name)
-    private readonly userDebtRepository: Repository<UserDebt>,
-  ) {}
+    repository: Repository<UserDebt>,
+  ) {
+    super(repository);
+  }
 
   async findByUserId(userId: string): Promise<UserDebt[]> {
-    return this.userDebtRepository.find({
-      where: { userId, isActive: true },
+    return this.find({
+      userId,
+      isActive: true,
+    }, {
       relations: ['category'],
       order: { createdAt: 'DESC' },
     });
@@ -41,36 +47,27 @@ export class UserDebtRepository {
     return { debts, total };
   }
 
-  async findByUserIdAndId(userId: string, debtId: string): Promise<UserDebt | null> {
-    return this.userDebtRepository.findOne({
-      where: { id: debtId, userId, isActive: true },
+  async findByUserIdAndId(userId: string, debtId: string) {
+    return this.findOne({
+      id: debtId,
+      userId,
+      isActive: true,
+    }, {
       relations: ['category'],
     });
-  }
-
-  async create(debtData: Partial<UserDebt>): Promise<UserDebt> {
-    const debt = this.userDebtRepository.create(debtData);
-    return this.userDebtRepository.save(debt);
-  }
-
-  async update(debtId: string, updateData: Partial<UserDebt>): Promise<UserDebt> {
-    await this.userDebtRepository.update(debtId, updateData);
-    return this.findById(debtId);
   }
 
   async findById(debtId: string): Promise<UserDebt | null> {
-    return this.userDebtRepository.findOne({
-      where: { id: debtId, isActive: true },
+    return this.findOne({
+      id: debtId,
+      isActive: true,
+    }, {
       relations: ['category'],
     });
   }
 
-  async softDelete(debtId: string): Promise<void> {
-    await this.userDebtRepository.update(debtId, { isActive: false });
-  }
-
   async getTotalDebtValue(userId: string): Promise<number> {
-    const result = await this.userDebtRepository
+    const result = await this.repository
       .createQueryBuilder('debt')
       .select('SUM(debt.currentBalance)', 'total')
       .where('debt.userId = :userId', { userId })
@@ -81,7 +78,7 @@ export class UserDebtRepository {
   }
 
   async getDebtBreakdown(userId: string): Promise<any[]> {
-    const result = await this.userDebtRepository
+    const result = await this.repository
       .createQueryBuilder('debt')
       .leftJoinAndSelect('debt.category', 'category')
       .select([
@@ -99,7 +96,7 @@ export class UserDebtRepository {
   }
 
   async getOverdueDebts(userId: string): Promise<UserDebt[]> {
-    const result = await this.userDebtRepository
+    const result = await this.repository
       .createQueryBuilder('debt')
       .leftJoinAndSelect('debt.category', 'category')
       .where('debt.userId = :userId', { userId })
@@ -116,9 +113,7 @@ export class UserDebtRepository {
     const now = new Date();
     const futureDate = new Date(now.getTime() + (days * 24 * 60 * 60 * 1000));
     
-    console.log('now', now);
-    console.log('futureDate', futureDate);
-    const result = await this.userDebtRepository
+    const result = await this.repository
       .createQueryBuilder('debt')
       .leftJoinAndSelect('debt.category', 'category')
       .where('debt.userId = :userId', { userId })
@@ -134,7 +129,7 @@ export class UserDebtRepository {
   }
 
   private createQueryBuilder(userId: string): SelectQueryBuilder<UserDebt> {
-    return this.userDebtRepository
+    return this.repository
       .createQueryBuilder('debt')
       .leftJoinAndSelect('debt.category', 'category')
       .where('debt.userId = :userId', { userId })
@@ -180,5 +175,10 @@ export class UserDebtRepository {
     const sortOrder = filters.sortOrder || 'DESC';
     
     queryBuilder.orderBy(`debt.${sortBy}`, sortOrder);
+  }
+
+  async create(debtData: DeepPartial<UserDebt>): Promise<UserDebt> {
+    const debt = this.repository.create(debtData);
+    return this.repository.save(debt);
   }
 } 
