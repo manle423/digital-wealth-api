@@ -331,9 +331,12 @@ export class QuestionService {
   }
 
   private async invalidateQuestionsCache() {
-    // Xóa tất cả cache bắt đầu với prefix QUESTION
-    const prefix = this.redisService.buildKey(RedisKeyPrefix.QUESTION);
-    await this.redisService.delWithPrefix(prefix);
-    this.logger.info('Cleared questions cache');
+    try {
+      // Xóa tất cả cache bắt đầu với prefix QUESTION
+      await this.redisService.delWithPrefix(`${RedisKeyPrefix.QUESTION}`);
+      this.logger.debug('[invalidateQuestionsCache] Questions cache cleared');
+    } catch (error) {
+      this.logger.error(`[invalidateQuestionsCache] Error clearing questions cache: ${error.message}`);
+    }
   }
 } 

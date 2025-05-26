@@ -1,9 +1,9 @@
-import { AssetCategory } from '../entities/asset-category.entity';
+import { AssetCategory } from '../../modules/asset-management/entities/asset-category.entity';
 
-export const assetCategoriesSeeder = [
+export const assetCategories = [
   {
     name: 'Chứng khoán',
-    codeName: 'STOCKS',
+    codeName: 'stocks',
     description: 'Cổ phiếu, trái phiếu, quỹ đầu tư',
     icon: 'trending-up',
     isActive: true,
@@ -11,7 +11,7 @@ export const assetCategoriesSeeder = [
   },
   {
     name: 'Bất động sản',
-    codeName: 'REAL_ESTATE',
+    codeName: 'real_estate',
     description: 'Nhà đất, căn hộ, đất nền',
     icon: 'home',
     isActive: true,
@@ -19,7 +19,7 @@ export const assetCategoriesSeeder = [
   },
   {
     name: 'Tiền mặt & Tiết kiệm',
-    codeName: 'CASH_SAVINGS',
+    codeName: 'cash_savings',
     description: 'Tiền mặt, tài khoản tiết kiệm, sổ tiết kiệm',
     icon: 'dollar-sign',
     isActive: true,
@@ -27,7 +27,7 @@ export const assetCategoriesSeeder = [
   },
   {
     name: 'Tài sản cá nhân',
-    codeName: 'PERSONAL_ASSETS',
+    codeName: 'personal_assets',
     description: 'Xe cộ, trang sức, đồ cổ',
     icon: 'user',
     isActive: true,
@@ -35,7 +35,7 @@ export const assetCategoriesSeeder = [
   },
   {
     name: 'Kinh doanh',
-    codeName: 'BUSINESS',
+    codeName: 'business',
     description: 'Doanh nghiệp, thiết bị kinh doanh',
     icon: 'briefcase',
     isActive: true,
@@ -43,7 +43,7 @@ export const assetCategoriesSeeder = [
   },
   {
     name: 'Bảo hiểm & Hưu trí',
-    codeName: 'INSURANCE_RETIREMENT',
+    codeName: 'insurance_retirement',
     description: 'Bảo hiểm nhân thọ, quỹ hưu trí',
     icon: 'shield',
     isActive: true,
@@ -51,7 +51,7 @@ export const assetCategoriesSeeder = [
   },
   {
     name: 'Hàng hóa & Ngoại tệ',
-    codeName: 'COMMODITIES_FOREX',
+    codeName: 'commodities_forex',
     description: 'Vàng, bạc, ngoại tệ, hàng hóa',
     icon: 'globe',
     isActive: true,
@@ -59,7 +59,7 @@ export const assetCategoriesSeeder = [
   },
   {
     name: 'Khác',
-    codeName: 'OTHERS',
+    codeName: 'others',
     description: 'Các tài sản khác',
     icon: 'more-horizontal',
     isActive: true,

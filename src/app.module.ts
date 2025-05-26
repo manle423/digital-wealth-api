@@ -14,6 +14,7 @@ import { TaskQueueModule } from './modules/task-queue/task-queue.module';
 import { GmailModule } from './shared/email/gmail.module';
 import { SessionValidationMiddleware } from './modules/auth/middleware/session-validation.middleware';
 import { AssetManagementModule } from './modules/asset-management/asset-management.module';
+import { DebtManagementModule } from './modules/debt-management/debt-management.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { AssetManagementModule } from './modules/asset-management/asset-manageme
     TaskQueueModule,
     GmailModule,
     AssetManagementModule,
+    DebtManagementModule,
   ],
   controllers: [],
   providers: [],
