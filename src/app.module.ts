@@ -15,6 +15,9 @@ import { GmailModule } from './shared/email/gmail.module';
 import { SessionValidationMiddleware } from './modules/auth/middleware/session-validation.middleware';
 import { AssetManagementModule } from './modules/asset-management/asset-management.module';
 import { DebtManagementModule } from './modules/debt-management/debt-management.module';
+import { NetWorthModule } from './modules/net-worth/net-worth.module';
+import { RecommendationModule } from './modules/recommendation/recommendation.module';
+import { FinancialAnalysisModule } from './modules/financial-analysis/financial-analysis.module';
 
 @Module({
   imports: [
@@ -35,6 +38,9 @@ import { DebtManagementModule } from './modules/debt-management/debt-management.
     GmailModule,
     AssetManagementModule,
     DebtManagementModule,
+    RecommendationModule,
+    FinancialAnalysisModule,
+    NetWorthModule
   ],
   controllers: [],
   providers: [],

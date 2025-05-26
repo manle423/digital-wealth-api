@@ -5,14 +5,14 @@ import { LoggerService } from '@/shared/logger/logger.service';
 import { RedisService } from '@/shared/redis/redis.service';
 import { RedisKeyPrefix, RedisKeyTtl } from '@/shared/enums/redis-key.enum';
 import { AssetManagementService } from '@/modules/asset-management/services/asset-management.service';
-// import { DebtManagementService } from '@/modules/debt-management/services/debt-management.service';
+import { DebtManagementService } from '@/modules/debt-management/services/debt-management.service';
 
 @Injectable()
 export class NetWorthService {
   constructor(
     private readonly netWorthSnapshotRepository: NetWorthSnapshotRepository,
     private readonly assetManagementService: AssetManagementService,
-    // private readonly debtManagementService: DebtManagementService,
+    private readonly debtManagementService: DebtManagementService,
     private readonly logger: LoggerService,
     private readonly redisService: RedisService
   ) {}
@@ -35,14 +35,12 @@ export class NetWorthService {
       }
 
       // Get data from other services
-      const [totalAssets, assetBreakdown] = await Promise.all([
+      const [totalAssets, assetBreakdown, totalDebts, debtBreakdown] = await Promise.all([
         this.assetManagementService.getTotalAssetValue(userId),
         this.assetManagementService.getAssetBreakdown(userId),
+        this.debtManagementService.getTotalDebtValue(userId),
+        this.debtManagementService.getDebtBreakdown(userId),
       ]);
-      
-      // TODO: Add debt management service when available
-      const totalDebts = 0;
-      const debtBreakdown: any[] = [];
 
       const netWorth = totalAssets - totalDebts;
 

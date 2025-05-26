@@ -39,6 +39,7 @@ export enum RedisKeyPrefix {
   NET_WORTH = 'user:networth',
   NET_WORTH_HISTORY = 'user:networth:history',
   FINANCIAL_METRICS = 'user:financial:metrics',
+  FINANCIAL_SUMMARY = 'user:financial:summary',
   
   // Recommendations
   RECOMMENDATIONS = 'user:recommendations',
