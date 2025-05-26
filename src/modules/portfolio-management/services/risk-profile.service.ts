@@ -240,11 +240,10 @@ export class RiskProfileService {
 
   private async clearProfileCache(): Promise<void> {
     try {
-      const prefix = this.redisService.buildKey(`${RedisKeyPrefix.RISK_PROFILE}`);
-      await this.redisService.delWithPrefix(prefix);
-      this.logger.debug(`Cleared cache with prefix: ${prefix}`);
+      await this.redisService.delWithPrefix(`${RedisKeyPrefix.RISK_PROFILE}`);
+      this.logger.debug('[clearProfileCache] Risk profile cache cleared');
     } catch (error) {
-      this.logger.error(`Error clearing profile cache: ${error.message}`, error.stack);
+      this.logger.error(`[clearProfileCache] Error clearing profile cache: ${error.message}`);
       throw error;
     }
   }

@@ -231,11 +231,10 @@ export class AssetClassService {
   private async invalidateAssetClassCache(): Promise<void> {
     try {
       // Xóa tất cả cache bắt đầu với prefix ASSET_CLASS
-      const prefix = this.redisService.buildKey(RedisKeyPrefix.ASSET_CLASS);
-      await this.redisService.delWithPrefix(prefix);
-      this.logger.debug('Asset class cache invalidated');
+      await this.redisService.delWithPrefix(`${RedisKeyPrefix.ASSET_CLASS}`);
+      this.logger.debug('[invalidateAssetClassCache] Asset class cache invalidated');
     } catch (error) {
-      this.logger.error(`Error invalidating asset class cache: ${error.message}`);
+      this.logger.error(`[invalidateAssetClassCache] Error invalidating cache: ${error.message}`);
     }
   }
 }

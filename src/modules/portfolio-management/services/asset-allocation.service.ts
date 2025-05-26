@@ -188,11 +188,10 @@ export class AssetAllocationService {
   private async invalidateAssetAllocationCache(): Promise<void> {
     try {
       // Xóa tất cả cache bắt đầu với prefix ASSET_ALLOCATION
-      const prefix = this.redisService.buildKey(RedisKeyPrefix.ASSET_ALLOCATION);
-      await this.redisService.delWithPrefix(prefix);
-      this.logger.debug('Asset allocation cache invalidated');
+      await this.redisService.delWithPrefix(`${RedisKeyPrefix.ASSET_ALLOCATION}`);
+      this.logger.debug('[invalidateAssetAllocationCache] Asset allocation cache invalidated');
     } catch (error) {
-      this.logger.error(`Error invalidating asset allocation cache: ${error.message}`);
+      this.logger.error(`[invalidateAssetAllocationCache] Error invalidating cache: ${error.message}`);
     }
   }
 }

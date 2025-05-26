@@ -32,14 +32,16 @@ export class UserDebt extends BaseEntity {
   @Column({
     type: 'enum',
     enum: DebtType,
-    default: DebtType.OTHER
+    default: DebtType.PERSONAL_LOAN,
+    nullable: true
   })
   type: DebtType;
 
   @Column({
     type: 'enum',
     enum: DebtStatus,
-    default: DebtStatus.ACTIVE
+    default: DebtStatus.ACTIVE,
+    nullable: true
   })
   status: DebtStatus;
 
@@ -52,10 +54,10 @@ export class UserDebt extends BaseEntity {
   @Column({ type: 'decimal', precision: 5, scale: 2, nullable: true, name: 'interest_rate' })
   interestRate: number;
 
-  @Column({ nullable: true, name: 'start_date' })
+  @Column({ type: 'date', nullable: true, name: 'start_date' })
   startDate: Date;
 
-  @Column({ nullable: true, name: 'due_date' })
+  @Column({ type: 'date', nullable: true, name: 'due_date' })
   dueDate: Date;
 
   @Column({ type: 'decimal', precision: 15, scale: 2, nullable: true, name: 'monthly_payment' })
@@ -64,28 +66,28 @@ export class UserDebt extends BaseEntity {
   @Column({ nullable: true })
   creditor: string;
 
-  @Column({ type: 'varchar', length: 10, nullable: true })
+  @Column({ default: 'VND' })
   currency: string;
 
   @Column({ type: 'int', nullable: true, name: 'term_months' })
   termMonths: number;
 
-  @Column({ type: 'decimal', precision: 15, scale: 2, nullable: true, name: 'total_paid' })
+  @Column({ type: 'decimal', precision: 15, scale: 2, default: 0, name: 'total_paid' })
   totalPaid: number;
 
-  @Column({ type: 'decimal', precision: 15, scale: 2, nullable: true, name: 'total_interest' })
+  @Column({ type: 'decimal', precision: 15, scale: 2, default: 0, name: 'total_interest' })
   totalInterest: number;
 
   @Column({ type: 'decimal', precision: 5, scale: 2, nullable: true, name: 'penalty_rate' })
   penaltyRate: number;
 
-  @Column({ nullable: true, name: 'last_payment_date' })
+  @Column({ type: 'date', nullable: true, name: 'last_payment_date' })
   lastPaymentDate: Date;
 
-  @Column({ nullable: true, name: 'next_payment_date' })
+  @Column({ type: 'date', nullable: true, name: 'next_payment_date' })
   nextPaymentDate: Date;
 
-  @Column({ type: 'varchar', length: 20, nullable: true, name: 'payment_method' })
+  @Column({ nullable: true, name: 'payment_method' })
   paymentMethod: string;
 
   @Column({ type: 'json', nullable: true, name: 'payment_schedule' })
@@ -108,9 +110,9 @@ export class UserDebt extends BaseEntity {
     [key: string]: any;
   };
 
-  @Column({ default: true, name: 'is_active' })
-  isActive: boolean;
-
   @Column({ type: 'text', nullable: true })
   notes: string;
+
+  @Column({ default: true, name: 'is_active' })
+  isActive: boolean;
 } 
