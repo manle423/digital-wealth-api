@@ -1,12 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { NetWorthSnapshot } from '../entities/net-worth-snapshot.entity';
+import { NetWorthSnapshotRepository } from '../repositories/net-worth-snapshot.repository';
 import { LoggerService } from '@/shared/logger/logger.service';
 import { RedisService } from '@/shared/redis/redis.service';
 import { RedisKeyPrefix, RedisKeyTtl } from '@/shared/enums/redis-key.enum';
+import { AssetManagementService } from '@/modules/asset-management/services/asset-management.service';
+// import { DebtManagementService } from '@/modules/debt-management/services/debt-management.service';
 
 @Injectable()
 export class NetWorthService {
   constructor(
+    private readonly netWorthSnapshotRepository: NetWorthSnapshotRepository,
+    private readonly assetManagementService: AssetManagementService,
+    // private readonly debtManagementService: DebtManagementService,
     private readonly logger: LoggerService,
     private readonly redisService: RedisService
   ) {}
@@ -28,21 +34,27 @@ export class NetWorthService {
         return JSON.parse(cached);
       }
 
-      // TODO: Implement calculation using AssetManagementService and DebtManagementService
-      // const totalAssets = await this.assetManagementService.getTotalAssetValue(userId);
-      // const totalDebts = await this.debtManagementService.getTotalDebtValue(userId);
-      // const assetBreakdown = await this.assetManagementService.getAssetBreakdown(userId);
-      // const debtBreakdown = await this.debtManagementService.getDebtBreakdown(userId);
+      // Get data from other services
+      const [totalAssets, assetBreakdown] = await Promise.all([
+        this.assetManagementService.getTotalAssetValue(userId),
+        this.assetManagementService.getAssetBreakdown(userId),
+      ]);
+      
+      // TODO: Add debt management service when available
+      const totalDebts = 0;
+      const debtBreakdown: any[] = [];
+
+      const netWorth = totalAssets - totalDebts;
 
       const result = {
-        totalAssets: 0,
-        totalDebts: 0,
-        netWorth: 0,
-        assetBreakdown: [],
-        debtBreakdown: []
+        totalAssets: Number(totalAssets.toFixed(2)),
+        totalDebts: Number(totalDebts.toFixed(2)),
+        netWorth: Number(netWorth.toFixed(2)),
+        assetBreakdown,
+        debtBreakdown
       };
 
-      // await this.redisService.setex(cacheKey, RedisKeyTtl.THIRTY_MINUTES, JSON.stringify(result));
+      await this.redisService.set(cacheKey, JSON.stringify(result), RedisKeyTtl.THIRTY_MINUTES);
       
       return result;
     } catch (error) {
@@ -57,33 +69,34 @@ export class NetWorthService {
 
       const netWorthData = await this.calculateCurrentNetWorth(userId);
 
-      // TODO: Implement snapshot creation
-      // const snapshot = new NetWorthSnapshot();
-      // snapshot.userId = userId;
-      // snapshot.snapshotDate = new Date();
-      // snapshot.totalAssets = netWorthData.totalAssets;
-      // snapshot.totalDebts = netWorthData.totalDebts;
-      // snapshot.netWorth = netWorthData.netWorth;
-      // snapshot.assetBreakdown = netWorthData.assetBreakdown;
-      // snapshot.debtBreakdown = netWorthData.debtBreakdown;
-      // snapshot.isManual = isManual;
+      // Get liquid assets
+      const liquidAssets = await this.assetManagementService.getLiquidAssets(userId);
+      const liquidAssetsValue = liquidAssets.reduce((sum, asset) => sum + asset.currentValue, 0);
 
-      // Calculate categorized assets and debts
-      // snapshot.liquidAssets = this.calculateLiquidAssets(netWorthData.assetBreakdown);
-      // snapshot.investmentAssets = this.calculateInvestmentAssets(netWorthData.assetBreakdown);
-      // snapshot.realEstateAssets = this.calculateRealEstateAssets(netWorthData.assetBreakdown);
-      // snapshot.personalAssets = this.calculatePersonalAssets(netWorthData.assetBreakdown);
-      // snapshot.shortTermDebts = this.calculateShortTermDebts(netWorthData.debtBreakdown);
-      // snapshot.longTermDebts = this.calculateLongTermDebts(netWorthData.debtBreakdown);
-
-      // const savedSnapshot = await this.netWorthSnapshotRepository.save(snapshot);
+      const snapshot = await this.netWorthSnapshotRepository.create({
+        userId,
+        snapshotDate: new Date(),
+        totalAssets: netWorthData.totalAssets,
+        totalDebts: netWorthData.totalDebts,
+        netWorth: netWorthData.netWorth,
+        assetBreakdown: netWorthData.assetBreakdown,
+        debtBreakdown: netWorthData.debtBreakdown,
+        liquidAssets: Number(liquidAssetsValue.toFixed(2)),
+        investmentAssets: this.calculateInvestmentAssets(netWorthData.assetBreakdown),
+        realEstateAssets: this.calculateRealEstateAssets(netWorthData.assetBreakdown),
+        personalAssets: this.calculatePersonalAssets(netWorthData.assetBreakdown),
+        shortTermDebts: this.calculateShortTermDebts(netWorthData.debtBreakdown),
+        longTermDebts: this.calculateLongTermDebts(netWorthData.debtBreakdown),
+        isManual
+      });
 
       // Clear cache after creating snapshot
       await this.clearNetWorthCaches(userId);
 
-      // return savedSnapshot;
+      // Clean up old snapshots (keep last 100)
+      await this.netWorthSnapshotRepository.deleteOldSnapshots(userId, 100);
 
-      throw new Error('Not implemented');
+      return snapshot;
     } catch (error) {
       this.logger.error('[createSnapshot] Error creating net worth snapshot', error);
       throw error;
@@ -101,21 +114,18 @@ export class NetWorthService {
         return JSON.parse(cached);
       }
 
-      // TODO: Implement history retrieval
-      // const fromDate = new Date();
-      // fromDate.setMonth(fromDate.getMonth() - months);
+      const fromDate = new Date();
+      fromDate.setMonth(fromDate.getMonth() - months);
 
-      // const snapshots = await this.netWorthSnapshotRepository.findByUserIdAndDateRange(
-      //   userId, 
-      //   fromDate, 
-      //   new Date()
-      // );
+      const snapshots = await this.netWorthSnapshotRepository.findByUserIdAndDateRange(
+        userId, 
+        fromDate, 
+        new Date()
+      );
 
-      // await this.redisService.setex(cacheKey, RedisKeyTtl.ONE_HOUR, JSON.stringify(snapshots));
+      await this.redisService.set(cacheKey, JSON.stringify(snapshots), RedisKeyTtl.ONE_HOUR);
 
-      // return snapshots;
-
-      return [];
+      return snapshots;
     } catch (error) {
       this.logger.error('[getNetWorthHistory] Error getting net worth history', error);
       throw error;
@@ -132,9 +142,9 @@ export class NetWorthService {
     try {
       this.logger.info('[getNetWorthTrend]', { userId });
 
-      const snapshots = await this.getNetWorthHistory(userId, 2);
+      const snapshots = await this.netWorthSnapshotRepository.findByUserIdWithLimit(userId, 2);
       
-      if (snapshots.length < 2) {
+      if (snapshots.length === 0) {
         const current = await this.calculateCurrentNetWorth(userId);
         return {
           currentNetWorth: current.netWorth,
@@ -145,20 +155,40 @@ export class NetWorthService {
         };
       }
 
-      const current = snapshots[0];
-      const previous = snapshots[1];
-      const change = current.netWorth - previous.netWorth;
-      const changePercentage = previous.netWorth !== 0 ? (change / previous.netWorth) * 100 : 0;
+      const currentNetWorth = snapshots[0]?.netWorth || 0;
+      const previousNetWorth = snapshots[1]?.netWorth || 0;
+      
+      // If only one snapshot, compare with current calculation
+      if (snapshots.length === 1) {
+        const current = await this.calculateCurrentNetWorth(userId);
+        const change = current.netWorth - currentNetWorth;
+        const changePercentage = currentNetWorth !== 0 ? (change / currentNetWorth) * 100 : 0;
+
+        let trend: 'UP' | 'DOWN' | 'STABLE' = 'STABLE';
+        if (changePercentage > 1) trend = 'UP';
+        else if (changePercentage < -1) trend = 'DOWN';
+
+        return {
+          currentNetWorth: current.netWorth,
+          previousNetWorth: currentNetWorth,
+          change,
+          changePercentage,
+          trend
+        };
+      }
+
+      const change = currentNetWorth - previousNetWorth;
+      const changePercentage = previousNetWorth !== 0 ? (change / previousNetWorth) * 100 : 0;
 
       let trend: 'UP' | 'DOWN' | 'STABLE' = 'STABLE';
       if (changePercentage > 1) trend = 'UP';
       else if (changePercentage < -1) trend = 'DOWN';
 
       return {
-        currentNetWorth: current.netWorth,
-        previousNetWorth: previous.netWorth,
-        change,
-        changePercentage,
+        currentNetWorth,
+        previousNetWorth,
+        change: Number(change.toFixed(2)),
+        changePercentage: Number(changePercentage.toFixed(2)),
         trend
       };
     } catch (error) {
@@ -167,42 +197,131 @@ export class NetWorthService {
     }
   }
 
+  async getNetWorthSummary(userId: string): Promise<{
+    current: {
+      totalAssets: number;
+      totalDebts: number;
+      netWorth: number;
+      liquidAssets: number;
+    };
+    trend: {
+      change: number;
+      changePercentage: number;
+      trend: 'UP' | 'DOWN' | 'STABLE';
+    };
+    breakdown: {
+      assets: any[];
+      debts: any[];
+    };
+  }> {
+    try {
+      this.logger.info('[getNetWorthSummary]', { userId });
+
+      const [currentNetWorth, trendData, liquidAssets] = await Promise.all([
+        this.calculateCurrentNetWorth(userId),
+        this.getNetWorthTrend(userId),
+        this.assetManagementService.getLiquidAssets(userId)
+      ]);
+
+      const liquidAssetsValue = liquidAssets.reduce((sum, asset) => sum + asset.currentValue, 0);
+
+      return {
+        current: {
+          totalAssets: currentNetWorth.totalAssets,
+          totalDebts: currentNetWorth.totalDebts,
+          netWorth: currentNetWorth.netWorth,
+          liquidAssets: Number(liquidAssetsValue.toFixed(2))
+        },
+        trend: {
+          change: trendData.change,
+          changePercentage: trendData.changePercentage,
+          trend: trendData.trend
+        },
+        breakdown: {
+          assets: currentNetWorth.assetBreakdown,
+          debts: currentNetWorth.debtBreakdown
+        }
+      };
+    } catch (error) {
+      this.logger.error('[getNetWorthSummary] Error getting net worth summary', error);
+      throw error;
+    }
+  }
+
   private calculateLiquidAssets(assetBreakdown: any[]): number {
-    // TODO: Implement liquid assets calculation
-    return 0;
+    // Calculate liquid assets based on category names or types
+    const liquidCategories = ['cash', 'savings', 'checking', 'money_market'];
+    return assetBreakdown
+      .filter(item => liquidCategories.some(cat => 
+        item.categoryName?.toLowerCase().includes(cat)
+      ))
+      .reduce((sum, item) => sum + (item.totalValue || 0), 0);
   }
 
   private calculateInvestmentAssets(assetBreakdown: any[]): number {
-    // TODO: Implement investment assets calculation
-    return 0;
+    const investmentCategories = ['stocks', 'bonds', 'mutual_funds', 'etf', 'investment'];
+    return assetBreakdown
+      .filter(item => investmentCategories.some(cat => 
+        item.categoryName?.toLowerCase().includes(cat)
+      ))
+      .reduce((sum, item) => sum + (item.totalValue || 0), 0);
   }
 
   private calculateRealEstateAssets(assetBreakdown: any[]): number {
-    // TODO: Implement real estate assets calculation
-    return 0;
+    const realEstateCategories = ['real_estate', 'property', 'house', 'apartment'];
+    return assetBreakdown
+      .filter(item => realEstateCategories.some(cat => 
+        item.categoryName?.toLowerCase().includes(cat)
+      ))
+      .reduce((sum, item) => sum + (item.totalValue || 0), 0);
   }
 
   private calculatePersonalAssets(assetBreakdown: any[]): number {
-    // TODO: Implement personal assets calculation
-    return 0;
+    const personalCategories = ['vehicle', 'jewelry', 'electronics', 'furniture'];
+    return assetBreakdown
+      .filter(item => personalCategories.some(cat => 
+        item.categoryName?.toLowerCase().includes(cat)
+      ))
+      .reduce((sum, item) => sum + (item.totalValue || 0), 0);
   }
 
   private calculateShortTermDebts(debtBreakdown: any[]): number {
-    // TODO: Implement short term debts calculation
-    return 0;
+    const shortTermCategories = ['credit_card', 'personal_loan', 'short_term'];
+    return debtBreakdown
+      .filter(item => shortTermCategories.some(cat => 
+        item.categoryName?.toLowerCase().includes(cat)
+      ))
+      .reduce((sum, item) => sum + (item.totalValue || 0), 0);
   }
 
   private calculateLongTermDebts(debtBreakdown: any[]): number {
-    // TODO: Implement long term debts calculation
-    return 0;
+    const longTermCategories = ['mortgage', 'auto_loan', 'student_loan', 'long_term'];
+    return debtBreakdown
+      .filter(item => longTermCategories.some(cat => 
+        item.categoryName?.toLowerCase().includes(cat)
+      ))
+      .reduce((sum, item) => sum + (item.totalValue || 0), 0);
   }
 
   private async clearNetWorthCaches(userId: string): Promise<void> {
-    const keys = [
-      `${RedisKeyPrefix.NET_WORTH}:${userId}`,
-      `${RedisKeyPrefix.NET_WORTH_HISTORY}:${userId}:*`
-    ];
+    try {
+      const keysToDelete = [
+        `${RedisKeyPrefix.NET_WORTH}:${userId}`,
+        `${RedisKeyPrefix.NET_WORTH_HISTORY}:${userId}:*`,
+      ];
 
-    await Promise.all(keys.map(key => this.redisService.del(key)));
+      await Promise.all(keysToDelete.map(async (pattern) => {
+        if (pattern.includes('*')) {
+          const prefix = pattern.replace(':*', '');
+          await this.redisService.delWithPrefix(prefix);
+        } else {
+          await this.redisService.del(pattern);
+        }
+      }));
+
+      this.logger.debug('[clearNetWorthCaches] Cleared net worth caches', { userId });
+    } catch (error) {
+      this.logger.error(`[clearNetWorthCaches] Error clearing caches: ${error.message}`, { userId });
+    }
   }
 } 
