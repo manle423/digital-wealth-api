@@ -249,21 +249,21 @@ export class UserService {
   // Xóa tất cả cache liên quan đến một user
   private async clearUserCache(userId: string, email: string): Promise<void> {
     try {
-      // Xóa cache theo ID
-      const idCacheKey = `${RedisKeyPrefix.USER_ID}:${userId}`;
-      await this.redisService.del(idCacheKey);
+      // Clear all user related caches
+      const keysToDelete = [
+        `${RedisKeyPrefix.USER_ID}:${userId}`,
+        `${RedisKeyPrefix.USER_EMAIL}:${email}`,
+        `${RedisKeyPrefix.USER_PROFILE}:${userId}`,
+        `${RedisKeyPrefix.USER_DETAIL}:${userId}`,
+        `${RedisKeyPrefix.NET_WORTH}:${userId}`,
+        `${RedisKeyPrefix.FINANCIAL_METRICS}:${userId}`,
+      ];
+
+      await Promise.all(keysToDelete.map(key => this.redisService.del(key)));
       
-      // Xóa cache theo email
-      const emailCacheKey = `${RedisKeyPrefix.USER_EMAIL}:${email}`;
-      await this.redisService.del(emailCacheKey);
-      
-      // Xóa cache profile
-      const profileCacheKey = `${RedisKeyPrefix.USER_PROFILE}:${userId}`;
-      await this.redisService.del(profileCacheKey);
-      
-      this.logger.debug(`Cleared cache for user: ${userId}`);
+      this.logger.debug('[clearUserCache] Cleared all user caches', { userId, email });
     } catch (error) {
-      this.logger.error(`Error clearing user cache: ${error.message}`, error.stack);
+      this.logger.error(`[clearUserCache] Error clearing user cache: ${error.message}`, { userId, email });
       // Không throw error để không ảnh hưởng đến luồng chính
     }
   }

@@ -32,12 +32,17 @@ export class RedisService {
   }
 
   async delWithPrefix(prefix: string) {
-    const keys = await this.redis.keys(`${prefix}*`)
+    // Build the prefix with Redis prefix
+    const builtPrefix = this.buildKey(prefix)
+    
+    // Find all keys matching the built prefix
+    const keys = await this.redis.keys(`${builtPrefix}*`)
 
     if (!keys.length) {
       return
     }
 
+    // Delete all found keys
     return await this.redis.del(keys)
   }
 }

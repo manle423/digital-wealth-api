@@ -35,10 +35,12 @@ export class AssetManagementService {
     try {
       this.logger.info('[getUserAssets]', { userId, query });
 
-      const cacheKey = `${RedisKeyPrefix.USER_ASSETS}:${userId}:${JSON.stringify(query || {})}`;
+      const queryHash = query ? this.hashQuery(query) : 'default';
+      const cacheKey = `${RedisKeyPrefix.USER_ASSETS_LIST}:${userId}:${queryHash}`;
       const cached = await this.redisService.get(cacheKey);
       
       if (cached) {
+        this.logger.debug('[getUserAssets] Cache hit', { cacheKey });
         return JSON.parse(cached);
       }
 
@@ -46,49 +48,9 @@ export class AssetManagementService {
 
       // Apply filters
       if (query) {
-        if (query.categoryId) {
-          assets = assets.filter(asset => asset.categoryId === query.categoryId);
-        }
-        if (query.type) {
-          assets = assets.filter(asset => asset.type === query.type);
-        }
-        if (query.liquidityLevel) {
-          assets = assets.filter(asset => asset.liquidityLevel === query.liquidityLevel);
-        }
-        if (query.minValue !== undefined) {
-          assets = assets.filter(asset => asset.currentValue >= query.minValue);
-        }
-        if (query.maxValue !== undefined) {
-          assets = assets.filter(asset => asset.currentValue <= query.maxValue);
-        }
-        if (query.currency) {
-          assets = assets.filter(asset => asset.currency === query.currency);
-        }
-        if (query.search) {
-          const searchLower = query.search.toLowerCase();
-          assets = assets.filter(asset => 
-            asset.name.toLowerCase().includes(searchLower) ||
-            asset.description?.toLowerCase().includes(searchLower)
-          );
-        }
-
-        // Apply sorting
-        if (query.sortBy) {
-          const direction = query.sortDirection === 'DESC' ? -1 : 1;
-          assets.sort((a, b) => {
-            const aValue = a[query.sortBy as keyof UserAsset];
-            const bValue = b[query.sortBy as keyof UserAsset];
-            if (aValue < bValue) return -1 * direction;
-            if (aValue > bValue) return 1 * direction;
-            return 0;
-          });
-        }
-
-        // Apply pagination
-        if (query.page && query.limit) {
-          const startIndex = (query.page - 1) * query.limit;
-          assets = assets.slice(startIndex, startIndex + query.limit);
-        }
+        assets = this.applyFilters(assets, query);
+        assets = this.applySorting(assets, query);
+        assets = this.applyPagination(assets, query);
       }
 
       // Calculate summary
@@ -107,7 +69,7 @@ export class AssetManagementService {
         }
       };
 
-      await this.redisService.set(cacheKey, JSON.stringify(result), RedisKeyTtl.THIRTY_MINUTES);
+      await this.redisService.set(cacheKey, JSON.stringify(result), RedisKeyTtl.FIFTEEN_MINUTES);
       
       return result;
     } catch (error) {
@@ -262,6 +224,7 @@ export class AssetManagementService {
       const cached = await this.redisService.get(cacheKey);
       
       if (cached) {
+        this.logger.debug('[getTotalAssetValue] Cache hit', { cacheKey });
         return parseFloat(cached);
       }
 
@@ -286,15 +249,27 @@ export class AssetManagementService {
     try {
       this.logger.info('[getAssetBreakdown]', { userId });
 
+      const cacheKey = `${RedisKeyPrefix.ASSET_BREAKDOWN}:${userId}`;
+      const cached = await this.redisService.get(cacheKey);
+      
+      if (cached) {
+        this.logger.debug('[getAssetBreakdown] Cache hit', { cacheKey });
+        return JSON.parse(cached);
+      }
+
       const breakdown = await this.userAssetRepository.getAssetBreakdownByUserId(userId);
       const totalValue = await this.getTotalAssetValue(userId);
       
-      return breakdown.map(item => ({
+      const result = breakdown.map(item => ({
         ...item,
         totalValue: parseFloat(item.totalValue.toString()),
         assetCount: parseInt(item.assetCount.toString()),
         percentage: totalValue > 0 ? (parseFloat(item.totalValue.toString()) / totalValue) * 100 : 0
       }));
+
+      await this.redisService.set(cacheKey, JSON.stringify(result), RedisKeyTtl.THIRTY_MINUTES);
+      
+      return result;
     } catch (error) {
       this.logger.error('[getAssetBreakdown] Error getting asset breakdown', error);
       throw error;
@@ -305,11 +280,11 @@ export class AssetManagementService {
     try {
       this.logger.info('[getAssetCategories]');
 
-      const cacheKey = `${RedisKeyPrefix.USER_ASSETS}:categories`;
+      const cacheKey = `${RedisKeyPrefix.ASSET_CATEGORIES}`;
       const cached = await this.redisService.get(cacheKey);
       
       if (cached) {
-        this.logger.debug(`Cache hit: ${cacheKey}`);
+        this.logger.debug('[getAssetCategories] Cache hit', { cacheKey });
         return JSON.parse(cached);
       }
 
@@ -359,34 +334,99 @@ export class AssetManagementService {
 
       const savedCategory = await this.assetCategoryRepository.create(category);
       
-      // Clear categories cache - use buildKey only for deletion
-      await this.redisService.del(this.redisService.buildKey(`${RedisKeyPrefix.USER_ASSETS}:categories`));
+      // Clear categories cache
+      await this.redisService.del(`${RedisKeyPrefix.ASSET_CATEGORIES}`);
       
       return savedCategory;
 
-    }catch (error) {
+    } catch (error) {
       this.logger.error('[createAssetCategory] Error creating asset category', error);
       handleDatabaseError(error, 'AssetManagementService.createAssetCategory');
     }
   }
 
+  // Helper methods
+  private hashQuery(query: GetAssetsDto): string {
+    return Buffer.from(JSON.stringify(query)).toString('base64').substring(0, 16);
+  }
+
+  private applyFilters(assets: UserAsset[], query: GetAssetsDto): UserAsset[] {
+    let filtered = assets;
+
+    if (query.categoryId) {
+      filtered = filtered.filter(asset => asset.categoryId === query.categoryId);
+    }
+    if (query.type) {
+      filtered = filtered.filter(asset => asset.type === query.type);
+    }
+    if (query.liquidityLevel) {
+      filtered = filtered.filter(asset => asset.liquidityLevel === query.liquidityLevel);
+    }
+    if (query.minValue !== undefined) {
+      filtered = filtered.filter(asset => asset.currentValue >= query.minValue);
+    }
+    if (query.maxValue !== undefined) {
+      filtered = filtered.filter(asset => asset.currentValue <= query.maxValue);
+    }
+    if (query.currency) {
+      filtered = filtered.filter(asset => asset.currency === query.currency);
+    }
+    if (query.search) {
+      const searchLower = query.search.toLowerCase();
+      filtered = filtered.filter(asset => 
+        asset.name.toLowerCase().includes(searchLower) ||
+        asset.description?.toLowerCase().includes(searchLower)
+      );
+    }
+
+    return filtered;
+  }
+
+  private applySorting(assets: UserAsset[], query: GetAssetsDto): UserAsset[] {
+    if (!query.sortBy) return assets;
+
+    const direction = query.sortDirection === 'DESC' ? -1 : 1;
+    return assets.sort((a, b) => {
+      const aValue = a[query.sortBy as keyof UserAsset];
+      const bValue = b[query.sortBy as keyof UserAsset];
+      if (aValue < bValue) return -1 * direction;
+      if (aValue > bValue) return 1 * direction;
+      return 0;
+    });
+  }
+
+  private applyPagination(assets: UserAsset[], query: GetAssetsDto): UserAsset[] {
+    if (!query.page || !query.limit) return assets;
+
+    const startIndex = (query.page - 1) * query.limit;
+    return assets.slice(startIndex, startIndex + query.limit);
+  }
+
   private async clearUserAssetCaches(userId: string): Promise<void> {
     try {
-      // Clear specific user asset caches - use buildKey for deletion
-      const userAssetsPrefix = this.redisService.buildKey(`${RedisKeyPrefix.USER_ASSETS}:${userId}`);
-      await this.redisService.delWithPrefix(userAssetsPrefix);
-      
-      // Clear specific keys - use buildKey for deletion
-      const specificKeys = [
-        this.redisService.buildKey(`${RedisKeyPrefix.USER_TOTAL_ASSETS}:${userId}`),
-        this.redisService.buildKey(`${RedisKeyPrefix.NET_WORTH}:${userId}`)
+      // Clear all user asset related caches
+      const keysToDelete = [
+        `${RedisKeyPrefix.USER_ASSETS_LIST}:${userId}:*`,
+        `${RedisKeyPrefix.USER_TOTAL_ASSETS}:${userId}`,
+        `${RedisKeyPrefix.ASSET_BREAKDOWN}:${userId}`,
+        `${RedisKeyPrefix.NET_WORTH}:${userId}`,
+        `${RedisKeyPrefix.FINANCIAL_METRICS}:${userId}`,
       ];
+
+      await Promise.all(keysToDelete.map(async (pattern) => {
+        if (pattern.includes('*')) {
+          // For wildcard patterns, use delWithPrefix
+          const prefix = pattern.replace(':*', '');
+          await this.redisService.delWithPrefix(prefix);
+        } else {
+          // For exact keys, use del
+          await this.redisService.del(pattern);
+        }
+      }));
       
-      await Promise.all(specificKeys.map(key => this.redisService.del(key)));
-      
-      this.logger.debug('User asset caches cleared', { userId });
+      this.logger.debug('[clearUserAssetCaches] Cleared all asset caches', { userId });
     } catch (error) {
-      this.logger.error(`Error clearing user asset caches: ${error.message}`, { userId });
+      this.logger.error(`[clearUserAssetCaches] Error clearing caches: ${error.message}`, { userId });
     }
   }
 } 

@@ -1,13 +1,16 @@
 export enum RedisKeyPrefix {
+  // Question & Assessment
   QUESTION = 'question',
-  QUESTION_CATEGORY = 'question_category',
-  RISK_PROFILE = 'risk_profile',
-  ASSET_CLASS = 'asset_class',
+  QUESTION_CATEGORY = 'question:category',
+  RISK_PROFILE = 'risk:profile',
+  ASSET_CLASS = 'asset:class',
   ASSET_ALLOCATION = 'asset:allocation',
-  USER = 'user',
   ASSESSMENT = 'assessment',
+  
+  // User Management
+  USER = 'user',
   USER_PROFILE = 'user:profile',
-  USER_DETAIL = 'user_detail',
+  USER_DETAIL = 'user:detail',
   USER_EMAIL = 'user:email',
   USER_ID = 'user:id',
   OTP_RETRY = 'otp:retry',
@@ -15,21 +18,30 @@ export enum RedisKeyPrefix {
   
   // Asset Management
   USER_ASSETS = 'user:assets',
-  USER_TOTAL_ASSETS = 'user:total_assets',
+  USER_ASSETS_LIST = 'user:assets:list',
+  USER_ASSETS_SUMMARY = 'user:assets:summary',
+  USER_TOTAL_ASSETS = 'user:assets:total',
+  ASSET_CATEGORIES = 'asset:categories',
+  ASSET_BREAKDOWN = 'user:assets:breakdown',
   
   // Debt Management
   USER_DEBTS = 'user:debts',
-  USER_TOTAL_DEBTS = 'user:total_debts',
+  USER_DEBTS_LIST = 'user:debts:list',
+  USER_DEBTS_SUMMARY = 'user:debts:summary',
+  USER_TOTAL_DEBTS = 'user:debts:total',
+  TOTAL_DEBT_VALUE = 'user:debts:total:value',
+  DEBT_BREAKDOWN = 'user:debts:breakdown',
+  DEBT_CATEGORIES = 'debt:categories',
+  DEBT_OVERDUE = 'user:debts:overdue',
+  DEBT_UPCOMING = 'user:debts:upcoming',
   
-  // Net Worth
-  NET_WORTH = 'net_worth',
-  NET_WORTH_HISTORY = 'net_worth:history',
-  
-  // Financial Analysis
-  FINANCIAL_METRICS = 'financial:metrics',
+  // Net Worth & Financial Analysis
+  NET_WORTH = 'user:networth',
+  NET_WORTH_HISTORY = 'user:networth:history',
+  FINANCIAL_METRICS = 'user:financial:metrics',
   
   // Recommendations
-  RECOMMENDATIONS = 'recommendations',
+  RECOMMENDATIONS = 'user:recommendations',
 }
 
 export enum RedisKeyTtl {

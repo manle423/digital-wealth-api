@@ -179,11 +179,10 @@ export class QuestionCategoryService {
   
   private async clearCategoryCache(): Promise<void> {
     try {
-      const prefix = this.redisService.buildKey(`${RedisKeyPrefix.QUESTION_CATEGORY}`);
-      await this.redisService.delWithPrefix(prefix);
-      this.logger.debug(`Cleared cache with prefix: ${prefix}`);
+      await this.redisService.delWithPrefix(`${RedisKeyPrefix.QUESTION_CATEGORY}`);
+      this.logger.debug('[clearCategoryCache] Question category cache cleared');
     } catch (error) {
-      this.logger.error(`Error clearing category cache: ${error.message}`, error.stack);
+      this.logger.error(`[clearCategoryCache] Error clearing category cache: ${error.message}`);
       throw error;
     }
   }
