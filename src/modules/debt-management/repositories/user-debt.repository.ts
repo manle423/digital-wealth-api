@@ -73,7 +73,6 @@ export class UserDebtRepository extends MysqldbRepository<UserDebt> {
       .where('debt.userId = :userId', { userId })
       .andWhere('debt.isActive = :isActive', { isActive: true })
       .getRawOne();
-    console.log('getTotalDebtValue', result);
     return parseFloat(result?.total || '0');
   }
 
@@ -91,7 +90,6 @@ export class UserDebtRepository extends MysqldbRepository<UserDebt> {
       .andWhere('debt.isActive = :isActive', { isActive: true })
       .groupBy('category.id')
       .getRawMany();
-    console.log('getDebtBreakdown', result);
     return result;
   }
 
@@ -105,7 +103,6 @@ export class UserDebtRepository extends MysqldbRepository<UserDebt> {
       .andWhere('debt.status != :paidOff', { paidOff: 'PAID_OFF' })
       .orderBy('debt.dueDate', 'ASC')
       .getMany();
-    console.log('getOverdueDebts', result);
     return result;
   }
 
@@ -124,7 +121,6 @@ export class UserDebtRepository extends MysqldbRepository<UserDebt> {
       })
       .orderBy('debt.nextPaymentDate', 'ASC')
       .getMany();
-    console.log('getUpcomingPayments', result);
     return result;
   }
 

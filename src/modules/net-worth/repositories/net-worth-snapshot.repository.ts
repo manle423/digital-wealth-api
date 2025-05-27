@@ -85,21 +85,35 @@ export class NetWorthSnapshotRepository extends MysqldbRepository<NetWorthSnapsh
   }
 
   async deleteOldSnapshots(userId: string, keepCount: number = 100): Promise<void> {
-    const snapshots = await this.repository
+    // First get the total count of snapshots for this user
+    const totalCount = await this.repository
       .createQueryBuilder('snapshot')
       .where('snapshot.userId = :userId', { userId })
-      .orderBy('snapshot.snapshotDate', 'DESC')
-      .skip(keepCount)
-      .getMany();
+      .getCount();
 
-    if (snapshots.length > 0) {
-      const idsToDelete = snapshots.map(s => s.id);
-      await this.repository
-        .createQueryBuilder()
-        .delete()
-        .from(NetWorthSnapshot)
-        .whereInIds(idsToDelete)
-        .execute();
+    // If we have more snapshots than we want to keep
+    if (totalCount > keepCount) {
+      // Calculate how many to delete
+      const deleteCount = totalCount - keepCount;
+
+      // Get the IDs of snapshots to delete
+      const snapshotsToDelete = await this.repository
+        .createQueryBuilder('snapshot')
+        .select('snapshot.id')
+        .where('snapshot.userId = :userId', { userId })
+        .orderBy('snapshot.snapshotDate', 'ASC')
+        .limit(deleteCount)
+        .getMany();
+
+      if (snapshotsToDelete.length > 0) {
+        const idsToDelete = snapshotsToDelete.map(s => s.id);
+        await this.repository
+          .createQueryBuilder()
+          .delete()
+          .from(NetWorthSnapshot)
+          .whereInIds(idsToDelete)
+          .execute();
+      }
     }
   }
 } 

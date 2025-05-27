@@ -18,9 +18,9 @@ export class FinancialAnalysisService {
     private readonly redisService: RedisService
   ) {}
 
-  async calculateAllMetrics(userId: string): Promise<FinancialMetric[]> {
+  async getMetrics(userId: string): Promise<FinancialMetric[]> {
     try {
-      this.logger.info('[calculateAllMetrics]', { userId });
+      this.logger.info('[getMetrics]', { userId });
 
       const cacheKey = `${RedisKeyPrefix.FINANCIAL_METRICS}:${userId}`;
       const cached = await this.redisService.get(cacheKey);
@@ -28,6 +28,22 @@ export class FinancialAnalysisService {
       if (cached) {
         return JSON.parse(cached);
       }
+
+      return await this.calculateAllMetrics(userId);
+    } catch (error) {
+      this.logger.error('[getMetrics] Error getting metrics', error);
+      throw error;
+    }
+  }
+
+  async calculateAllMetrics(userId: string): Promise<FinancialMetric[]> {
+    try {
+      this.logger.info('[calculateAllMetrics] Force recalculating metrics', { userId });
+
+      const cacheKey = `${RedisKeyPrefix.FINANCIAL_METRICS}:${userId}`;
+      
+      // Clear existing cache
+      await this.redisService.del(cacheKey);
 
       // Get base data
       const [netWorthData, assetData] = await Promise.all([
@@ -49,6 +65,7 @@ export class FinancialAnalysisService {
         metrics.map(metric => this.financialMetricRepository.create(metric))
       );
 
+      // Cache the new results
       await this.redisService.set(cacheKey, JSON.stringify(savedMetrics), RedisKeyTtl.ONE_HOUR);
 
       return savedMetrics;
@@ -185,20 +202,25 @@ export class FinancialAnalysisService {
 
   private async calculateLiquidityRatio(userId: string, netWorthData: any, assetData: any): Promise<Partial<FinancialMetric>> {
     const liquidAssets = await this.assetManagementService.getLiquidAssets(userId);
-    const totalLiquidValue = liquidAssets.reduce((sum, asset) => sum + asset.currentValue, 0);
-    const liquidityRatio = netWorthData.totalAssets > 0 ? (totalLiquidValue / netWorthData.totalAssets) * 100 : 0;
+    const totalLiquidValue = liquidAssets.reduce((sum, asset) => {
+      const value = Number(asset?.currentValue || 0);
+      return sum + (isNaN(value) ? 0 : value);
+    }, 0);
+    
+    const totalAssets = Number(netWorthData.totalAssets || 0);
+    const liquidityRatio = totalAssets > 0 ? (totalLiquidValue / totalAssets) * 100 : 0;
 
     return {
       userId,
       type: MetricType.LIQUIDITY_RATIO,
-      value: Number(liquidityRatio.toFixed(2)),
+      value: Number(liquidityRatio.toFixed(2)) || 0,
       calculationDate: new Date(),
       category: 'liquidity',
       calculationDetails: {
         formula: '(Liquid Assets / Total Assets) * 100',
         inputs: {
           liquidAssets: totalLiquidValue,
-          totalAssets: netWorthData.totalAssets
+          totalAssets: totalAssets
         }
       },
       isCurrent: true
@@ -226,10 +248,23 @@ export class FinancialAnalysisService {
   }
 
   private async calculateInvestmentRatio(userId: string, netWorthData: any, assetData: any): Promise<Partial<FinancialMetric>> {
+    const investmentTypes = [
+      'STOCK',
+      'BOND',
+      'MUTUAL_FUND',
+      'ETF',
+      'CRYPTO'
+    ];
+    
     const investmentAssets = assetData.assets.filter((asset: any) => 
-      asset.type === 'INVESTMENT' || asset.category?.name?.toLowerCase().includes('investment')
+      investmentTypes.includes(asset.type) || 
+      asset.category?.name?.toLowerCase().includes('investment') ||
+      asset.category?.name?.toLowerCase().includes('stock') ||
+      asset.category?.name?.toLowerCase().includes('bond') ||
+      asset.category?.name?.toLowerCase().includes('fund')
     );
-    const totalInvestmentValue = investmentAssets.reduce((sum: number, asset: any) => sum + asset.currentValue, 0);
+    
+    const totalInvestmentValue = investmentAssets.reduce((sum: number, asset: any) => sum + (Number(asset.currentValue) || 0), 0);
     const investmentRatio = netWorthData.totalAssets > 0 ? (totalInvestmentValue / netWorthData.totalAssets) * 100 : 0;
 
     return {

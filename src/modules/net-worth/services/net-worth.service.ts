@@ -31,6 +31,7 @@ export class NetWorthService {
       const cached = await this.redisService.get(cacheKey);
       
       if (cached) {
+        this.logger.debug('[calculateCurrentNetWorth] Cache hit', { cacheKey });
         return JSON.parse(cached);
       }
 
@@ -69,7 +70,14 @@ export class NetWorthService {
 
       // Get liquid assets
       const liquidAssets = await this.assetManagementService.getLiquidAssets(userId);
-      const liquidAssetsValue = liquidAssets.reduce((sum, asset) => sum + asset.currentValue, 0);
+      
+      // Add null check and ensure numeric values
+      const liquidAssetsValue = Array.isArray(liquidAssets) 
+        ? liquidAssets.reduce((sum, asset) => {
+            const value = Number(asset?.currentValue || 0);
+            return sum + (isNaN(value) ? 0 : value);
+          }, 0)
+        : 0;
 
       const snapshot = await this.netWorthSnapshotRepository.create({
         userId,
@@ -221,7 +229,13 @@ export class NetWorthService {
         this.assetManagementService.getLiquidAssets(userId)
       ]);
 
-      const liquidAssetsValue = liquidAssets.reduce((sum, asset) => sum + asset.currentValue, 0);
+      // Add null check and ensure numeric values
+      const liquidAssetsValue = Array.isArray(liquidAssets) 
+        ? liquidAssets.reduce((sum, asset) => {
+            const value = Number(asset?.currentValue || 0);
+            return sum + (isNaN(value) ? 0 : value);
+          }, 0)
+        : 0;
 
       return {
         current: {
@@ -257,12 +271,15 @@ export class NetWorthService {
   }
 
   private calculateInvestmentAssets(assetBreakdown: any[]): number {
-    const investmentCategories = ['stocks', 'bonds', 'mutual_funds', 'etf', 'investment'];
+    const investmentTypes = ['stocks', 'bonds', 'mutual_funds', 'etf', 'crypto'];
     return assetBreakdown
-      .filter(item => investmentCategories.some(cat => 
-        item.categoryName?.toLowerCase().includes(cat)
-      ))
-      .reduce((sum, item) => sum + (item.totalValue || 0), 0);
+      .filter(item => 
+        // Check by category name
+        investmentTypes.some(type => item.categoryName?.toLowerCase().includes(type)) ||
+        // Check by asset type if available
+        (item.type && ['STOCK', 'BOND', 'MUTUAL_FUND', 'ETF', 'CRYPTO'].includes(item.type))
+      )
+      .reduce((sum, item) => sum + (Number(item.totalValue) || 0), 0);
   }
 
   private calculateRealEstateAssets(assetBreakdown: any[]): number {

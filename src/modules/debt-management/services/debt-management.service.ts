@@ -404,9 +404,9 @@ export class DebtManagementService {
         this.getOverdueDebts(userId),
         this.getUpcomingPayments(userId),
       ]);
-
+      console.log('overdueDebts', overdueDebts);
       const result = {
-        totalDebt: Number(totalDebt.toFixed(2)), // Ensure totalDebt is also properly formatted
+        totalDebt: Number(totalDebt.toFixed(2)),
         breakdown,
         overdueCount: overdueDebts.length,
         overdueAmount: Number(

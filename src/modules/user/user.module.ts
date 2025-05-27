@@ -30,6 +30,6 @@ import { UserAuthRepository } from './repositories/user-auth.repository';
     UserOtpRepository,
     UserAuthRepository,
   ],
-  exports: [UserService, UserOtpRepository, UserAuthRepository],
+  exports: [UserService, UserOtpRepository, UserAuthRepository, UserRepository],
 })
 export class UserModule { }
