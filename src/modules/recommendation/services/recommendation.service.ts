@@ -72,9 +72,9 @@ export class RecommendationService {
       const cacheKey = `${RedisKeyPrefix.RECOMMENDATIONS}:${userId}`;
       const cached = await this.redisService.get(cacheKey);
       
-      if (cached) {
-        return JSON.parse(cached);
-      }
+      // if (cached) {
+      //   return JSON.parse(cached);
+      // }
 
       // Bước 1: Thu thập dữ liệu tài chính
       const financialProfile = await this.buildFinancialProfile(userId);
@@ -201,6 +201,16 @@ export class RecommendationService {
     }
   }
 
+  async getRecommendationsByStatus(userId: string, status: RecommendationStatus): Promise<Recommendation[]> {
+    try {
+      this.logger.info('[getRecommendationsByStatus]', { userId, status });
+
+      return await this.recommendationRepository.findByUserIdAndStatus(userId, status);
+    } catch (error) {
+      this.logger.error('[getRecommendationsByStatus] Error getting recommendations by status', error);
+      throw error;
+    }
+  }
   /**
    * Xây dựng profile tài chính từ các module khác
    */
@@ -500,7 +510,7 @@ export class RecommendationService {
         `${RedisKeyPrefix.RECOMMENDATIONS}:${userId}`,
       ];
 
-      await Promise.all(keysToDelete.map(key => this.redisService.del(key)));
+      await Promise.all(keysToDelete.map(key => this.redisService.delWithPrefix(key)));
 
       this.logger.debug('[clearRecommendationCaches] Cleared recommendation caches', { userId });
     } catch (error) {

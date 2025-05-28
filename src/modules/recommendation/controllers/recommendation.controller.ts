@@ -2,7 +2,7 @@ import {
   Controller,
   Get,
   Post,
-  Patch,
+  Put,
   Param,
   Body,
   Query,
@@ -14,6 +14,7 @@ import { JwtGuard } from '@/modules/auth/guards/jwt.guard';
 import { CurrentUser } from '@/modules/auth/decorators/track-session.decorator';
 import { RecommendationType } from '../enums/recommendation-type.enum';
 import { SubmitFeedbackDto } from '../dto/submit-feedback.dto';
+import { RecommendationStatus } from '../enums/recommendation-status.enum';
 
 @UseGuards(JwtGuard)
 @Controller('recommendations')
@@ -25,9 +26,17 @@ export class RecommendationController {
     return await this.recommendationService.generateRecommendations(user.sub);
   }
 
-  @Get()
-  async getActiveRecommendations(@CurrentUser() user: any) {
-    return await this.recommendationService.getActiveRecommendations(user.sub);
+  // @Get()
+  // async getActiveRecommendations(@CurrentUser() user: any) {
+  //   return await this.recommendationService.getActiveRecommendations(user.sub);
+  // }
+
+  @Get('by-status')
+  async getRecommendationsByStatus(
+    @CurrentUser() user: any,
+    @Query('status', new ParseEnumPipe(RecommendationStatus)) status: RecommendationStatus
+  ) {
+    return await this.recommendationService.getRecommendationsByStatus(user.sub, status);
   }
 
   @Get('by-type')
@@ -43,7 +52,7 @@ export class RecommendationController {
     return await this.recommendationService.getRecommendationStats(user.sub);
   }
 
-  @Patch(':id/view')
+  @Put(':id/view')
   async markAsViewed(
     @CurrentUser() user: any,
     @Param('id') recommendationId: string
@@ -52,7 +61,7 @@ export class RecommendationController {
     return { message: 'Recommendation marked as viewed' };
   }
 
-  @Patch(':id/dismiss')
+  @Put(':id/dismiss')
   async markAsDismissed(
     @CurrentUser() user: any,
     @Param('id') recommendationId: string
@@ -61,7 +70,7 @@ export class RecommendationController {
     return { message: 'Recommendation dismissed' };
   }
 
-  @Patch(':id/complete')
+  @Put(':id/complete')
   async markAsCompleted(
     @CurrentUser() user: any,
     @Param('id') recommendationId: string
