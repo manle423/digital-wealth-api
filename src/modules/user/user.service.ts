@@ -127,70 +127,46 @@ export class UserService {
         await this.userRepository.update({ id: userId }, { name: dto.name });
       }
 
-      // Get existing user detail or create new one if it doesn't exist
-      let userDetail = await this.userDetailRepository.findOne({ userId });
+      // Update user detail if provided
+      if (dto.userDetail) {
+        const userDetail = await this.userDetailRepository.findOne({ userId });
 
-      if (!userDetail) {
-        // Create new user detail
-        const newUserDetail: DeepPartial<UserDetail> = {
-          userId,
-          dateOfBirth: dto.dateOfBirth,
-          phoneNumber: dto.phoneNumber,
-          occupation: dto.occupation,
-          annualIncome: dto.annualIncome,
-          investmentExperience: dto.investmentExperience,
-          riskTolerance: dto.riskTolerance,
-          investmentPreferences: dto.investmentPreferences,
-          totalPortfolioValue: dto.totalPortfolioValue,
-          // If kycDetails is needed in the future, add it here
+        // Prepare user detail data
+        const userDetailData = {
+          ...dto.userDetail,
+          // Ensure riskTolerance is a number
+          riskTolerance: dto.userDetail.riskTolerance || 1,
+          // Handle investment preferences
+          investmentPreferences: typeof dto.userDetail.investmentPreferences === 'string' 
+            ? { monthlyExpenses: Number(dto.userDetail.investmentPreferences) }
+            : dto.userDetail.investmentPreferences || {}
         };
 
-        // Add custom fields to investmentPreferences if they don't exist
-        if (dto.monthlyExpenses && !newUserDetail.investmentPreferences) {
-          newUserDetail.investmentPreferences = {
-            monthlyExpenses: dto.monthlyExpenses,
-          };
-        } else if (dto.monthlyExpenses && newUserDetail.investmentPreferences) {
-          newUserDetail.investmentPreferences = {
-            ...newUserDetail.investmentPreferences,
-            monthlyExpenses: dto.monthlyExpenses,
-          };
-        }
+        // Remove any undefined values
+        Object.keys(userDetailData).forEach(key => 
+          userDetailData[key] === undefined && delete userDetailData[key]
+        );
 
-        await this.userDetailRepository.save(newUserDetail);
-      } else {
-        // Update existing user detail
-        const updateData: DeepPartial<UserDetail> = {};
-        
-        if (dto.dateOfBirth) updateData.dateOfBirth = dto.dateOfBirth;
-        if (dto.phoneNumber) updateData.phoneNumber = dto.phoneNumber;
-        if (dto.occupation) updateData.occupation = dto.occupation;
-        if (dto.annualIncome) updateData.annualIncome = dto.annualIncome;
-        if (dto.investmentExperience) updateData.investmentExperience = dto.investmentExperience;
-        if (dto.riskTolerance) updateData.riskTolerance = dto.riskTolerance;
-        if (dto.totalPortfolioValue) updateData.totalPortfolioValue = dto.totalPortfolioValue;
-        
-        // Handle investment preferences update
-        if (dto.investmentPreferences || dto.monthlyExpenses) {
-          const currentPreferences = userDetail.investmentPreferences || {};
-          
-          updateData.investmentPreferences = {
-            ...currentPreferences,
-            ...(dto.investmentPreferences || {}),
-          };
-          
-          // Add monthly expenses to investment preferences
-          if (dto.monthlyExpenses) {
-            updateData.investmentPreferences.monthlyExpenses = dto.monthlyExpenses;
-          }
-        }
-        
-        if (Object.keys(updateData).length > 0) {
-          await this.userDetailRepository.update({ userId }, updateData);
+        if (!userDetail) {
+          // Create new user detail
+          await this.userDetailRepository.save({
+            userId,
+            ...userDetailData,
+            riskTolerance: userDetailData.riskTolerance || 1 // Ensure default value
+          } as DeepPartial<UserDetail>);
+        } else {
+          // Update existing user detail
+          await this.userDetailRepository.update(
+            { userId }, 
+            {
+              ...userDetailData,
+              riskTolerance: userDetailData.riskTolerance || userDetail.riskTolerance || 1
+            } as DeepPartial<UserDetail>
+          );
         }
       }
 
-      // Xóa tất cả cache liên quan đến user này
+      // Xóa cache
       await this.clearUserCache(userId, user.email);
 
       // Get updated user with detail
@@ -205,6 +181,16 @@ export class UserService {
       this.logger.error('[updateUserProfile] Error updating user profile', error);
       throw error;
     }
+  }
+
+  // Helper method to convert risk tolerance string to number
+  private convertRiskToleranceToNumber(riskTolerance: string): number {
+    const riskToleranceMap = {
+      'CONSERVATIVE': 1,
+      'MODERATE': 2,
+      'AGGRESSIVE': 3
+    };
+    return riskToleranceMap[riskTolerance] || 1;
   }
 
   async getUserProfileComplete(userId: string) {

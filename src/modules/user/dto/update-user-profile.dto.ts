@@ -1,4 +1,4 @@
-import { IsArray, IsDate, IsEnum, IsNumber, IsObject, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsBoolean, IsDate, IsEnum, IsNumber, IsObject, IsOptional, IsString } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 
 export enum InvestmentExperience {
@@ -15,6 +15,12 @@ export enum TimeHorizon {
   LONG_TERM = 'LONG_TERM', // 5+ years
 }
 
+export enum RiskTolerance {
+  CONSERVATIVE = 'CONSERVATIVE',
+  MODERATE = 'MODERATE',
+  AGGRESSIVE = 'AGGRESSIVE'
+}
+
 export class InvestmentPreferencesDto {
   @IsArray()
   @IsOptional()
@@ -29,47 +35,77 @@ export class InvestmentPreferencesDto {
   timeHorizon?: TimeHorizon;
 }
 
-export class UpdateUserProfileDto {
-  @IsString()
-  @IsOptional()
-  name?: string;
-
+export class UserDetailDto {
   @IsDate()
-  @IsOptional()
   @Type(() => Date)
   @Transform(({ value }) => new Date(value))
   dateOfBirth?: Date;
 
   @IsString()
-  @IsOptional()
   phoneNumber?: string;
 
   @IsString()
-  @IsOptional()
   occupation?: string;
 
   @IsNumber()
-  @IsOptional()
+  @Transform(({ value }) => Number(value))
   annualIncome?: number;
 
   @IsEnum(InvestmentExperience)
-  @IsOptional()
   investmentExperience?: InvestmentExperience;
 
   @IsNumber()
-  @IsOptional()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      if (value === 'CONSERVATIVE') return 1;
+      if (value === 'MODERATE') return 2;
+      if (value === 'AGGRESSIVE') return 3;
+      return Number(value);
+    }
+    return value || 1; // default to 1 (CONSERVATIVE) if undefined
+  })
   riskTolerance?: number;
+
+  @IsNumber()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return Number(value);
+    }
+    return value;
+  })
+  monthlyExpenses?: number;
 
   @IsObject()
   @IsOptional()
-  @Type(() => InvestmentPreferencesDto)
+  @Transform(({ value }) => {
+    if (typeof value === 'string') {
+      return {
+        monthlyExpenses: Number(value)
+      };
+    }
+    return value;
+  })
   investmentPreferences?: InvestmentPreferencesDto;
 
   @IsNumber()
-  @IsOptional()
+  @Transform(({ value }) => Number(value))
   totalPortfolioValue?: number;
-  
-  @IsNumber()
+
+  @IsBoolean()
   @IsOptional()
-  monthlyExpenses?: number;
+  isVerified?: boolean;
+
+  @IsObject()
+  @IsOptional()
+  kycDetails?: any;
+}
+
+export class UpdateUserProfileDto {
+  @IsString()
+  @IsOptional()
+  name?: string;
+
+  @IsObject()
+  @Type(() => UserDetailDto)
+  userDetail?: UserDetailDto;
 } 

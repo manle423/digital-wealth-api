@@ -13,6 +13,7 @@ import { JwtGuard } from '@/modules/auth/guards/jwt.guard';
 import { AssessmentResult } from '@/modules/risk-assessment/entities/assessment-result.entity';
 import { AuthError } from '@/modules/auth/enum/error.enum';
 import { OptionalJwtGuard } from '@/modules/auth/guards/optional-jwt.guard';
+import { CurrentUser } from '@/modules/auth/decorators/track-session.decorator';
 
 @Controller('risk-assessment')
 export class PublicAssessmentController {
@@ -42,11 +43,11 @@ export class PublicAssessmentController {
    */
   @UseGuards(JwtGuard)
   @Get('history')
-  async getAssessmentHistory(@Request() req): Promise<AssessmentResult[]> {
-    if (!req.user) {
+  async getAssessmentHistory(@CurrentUser() user): Promise<AssessmentResult[]> {
+    if (!user) {
       throw new UnauthorizedException(AuthError.USER_NOT_VERIFIED);
     }
-    return this.riskAssessmentService.getUserAssessmentHistory(req.user.sub);
+    return this.riskAssessmentService.getUserAssessmentHistory(user.sub);
   }
 
   /**
@@ -55,11 +56,11 @@ export class PublicAssessmentController {
    */
   @UseGuards(JwtGuard)
   @Get('latest')
-  async getLatestAssessment(@Request() req): Promise<AssessmentResult> {
-    if (!req.user) {
+  async getLatestAssessment(@CurrentUser() user): Promise<AssessmentResult> {
+    if (!user) {
       throw new UnauthorizedException(AuthError.USER_NOT_VERIFIED);
     }
     
-    return this.riskAssessmentService.getLatestAssessmentResult(req.user.sub);
+    return this.riskAssessmentService.getLatestAssessmentResult(user.sub);
   }
 } 
