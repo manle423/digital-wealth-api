@@ -15,6 +15,9 @@ import { RabbitmqService } from './rabbitmq.service'
           {
             name: configService.get<string>('rabbitmq.exchange'),
             type: 'topic',
+            options: {
+              durable: true
+            }
           },
         ],
         handlers: {
@@ -25,6 +28,7 @@ import { RabbitmqService } from './rabbitmq.service'
             errorHandler: defaultNackErrorHandler,
             queueOptions: {
               durable: true,
+              autoDelete: false
             },
           },
           sendOtpMail: {
@@ -34,6 +38,7 @@ import { RabbitmqService } from './rabbitmq.service'
             errorHandler: defaultNackErrorHandler,
             queueOptions: {
               durable: true,
+              autoDelete: false
             },
           },
           calculateMetrics: {
@@ -46,12 +51,22 @@ import { RabbitmqService } from './rabbitmq.service'
             },
           },
         },
-        connectionInitOptions: {wait: false},
+        connectionInitOptions: { 
+          wait: true,
+          timeout: 20000,
+          reject: true
+        },
         channels: {
           'default-channel': {
             prefetchCount: 10,
             default: true,
           },
+        },
+        reconnectTimeInSeconds: 5,
+        heartbeatIntervalInSeconds: 5,
+        connectionManagerOptions: {
+          heartbeatIntervalInSeconds: 5,
+          reconnectTimeInSeconds: 5,
         },
       }),
     }),
