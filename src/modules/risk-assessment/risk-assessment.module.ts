@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Question } from './entities/question.entity';
 import { AssessmentResult } from './entities/assessment-result.entity';
@@ -30,7 +30,7 @@ import { OptionalJwtGuard } from '../auth/guards/optional-jwt.guard';
       QuestionCategory,
       QuestionTranslation,
     ], MysqldbConnection.name),
-    UserModule,
+    forwardRef(() => UserModule),
     LoggerModule,
     PortfolioManagementModule
   ],

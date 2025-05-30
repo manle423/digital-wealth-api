@@ -18,6 +18,7 @@ import { DebtManagementModule } from './modules/debt-management/debt-management.
 import { NetWorthModule } from './modules/net-worth/net-worth.module';
 import { RecommendationModule } from './modules/recommendation/recommendation.module';
 import { FinancialAnalysisModule } from './modules/financial-analysis/financial-analysis.module';
+import { GeminiModule } from './shared/gemini/gemini.module';
 
 @Module({
   imports: [
@@ -26,9 +27,10 @@ import { FinancialAnalysisModule } from './modules/financial-analysis/financial-
       load: [AppConfig],
     }),
     AppConfigModule.load(),
+    LoggerModule,
+    GeminiModule,
     UserModule,
     AuthModule,
-    LoggerModule,
     MysqlDbModule,
     RiskAssessmentModule,
     RabbitmqModule,

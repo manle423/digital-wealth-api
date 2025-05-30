@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { FinancialMetric } from './entities/financial-metric.entity';
 import { FinancialMetricRepository } from './repositories/financial-metric.repository';
@@ -20,7 +20,7 @@ import { JwtService } from '@nestjs/jwt';
     NetWorthModule,
     LoggerModule,
     RedisModule,
-    UserModule,
+    forwardRef(() => UserModule),
   ],
   controllers: [FinancialAnalysisController],
   providers: [
