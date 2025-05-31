@@ -30,7 +30,7 @@ export class FinancialAnalysisController {
   @Get('metrics')
   async getMetricsByType(
     @CurrentUser() user: any,
-    @Query('type', new ParseEnumPipe(MetricType)) type: MetricType
+    @Query('type', new ParseEnumPipe(MetricType)) type: MetricType,
   ) {
     return await this.financialAnalysisService.getMetricsByType(user.sub, type);
   }
@@ -43,7 +43,7 @@ export class FinancialAnalysisController {
   @Get('metrics/latest')
   async getLatestMetric(
     @CurrentUser() user: any,
-    @Query('type', new ParseEnumPipe(MetricType)) type: MetricType
+    @Query('type', new ParseEnumPipe(MetricType)) type: MetricType,
   ) {
     return await this.financialAnalysisService.getLatestMetric(user.sub, type);
   }
@@ -52,16 +52,18 @@ export class FinancialAnalysisController {
   async getMetricTrend(
     @CurrentUser() user: any,
     @Query('type', new ParseEnumPipe(MetricType)) type: MetricType,
-    @Query('months', new ParseIntPipe({ optional: true })) months?: number
+    @Query('months', new ParseIntPipe({ optional: true })) months?: number,
   ) {
-    return await this.financialAnalysisService.getMetricTrend(user.sub, type, months);
+    return await this.financialAnalysisService.getMetricTrend(
+      user.sub,
+      type,
+      months,
+    );
   }
 
   @Post('test-metrics')
-  async testCalculateMetrics(
-    @CurrentUser() user: any
-  ) {
+  async testCalculateMetrics(@CurrentUser() user: any) {
     await this.financialAnalysisJobService.calculateMetricsForUser(user.sub);
     return { message: 'Metrics calculation queued successfully' };
   }
-} 
+}

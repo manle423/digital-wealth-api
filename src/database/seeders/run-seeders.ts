@@ -9,11 +9,11 @@ export const runSeeders = async (dataSource: DataSource) => {
     // Seed Asset Categories
     console.log('\nSeeding Asset Categories...');
     const assetCategoryRepository = dataSource.getRepository(AssetCategory);
-    
+
     for (const categoryData of assetCategories) {
       // Check if category already exists by codeName
       const existingCategory = await assetCategoryRepository.findOne({
-        where: { codeName: categoryData.codeName }
+        where: { codeName: categoryData.codeName },
       });
 
       if (!existingCategory) {
@@ -28,11 +28,11 @@ export const runSeeders = async (dataSource: DataSource) => {
     // Seed Debt Categories
     console.log('\nSeeding Debt Categories...');
     const debtCategoryRepository = dataSource.getRepository(DebtCategory);
-    
+
     for (const categoryData of debtCategories) {
       // Check if category already exists by codeName
       const existingCategory = await debtCategoryRepository.findOne({
-        where: { codeName: categoryData.codeName }
+        where: { codeName: categoryData.codeName },
       });
 
       if (!existingCategory) {
@@ -49,4 +49,4 @@ export const runSeeders = async (dataSource: DataSource) => {
     console.error('\n✗ Error during seeding:', error);
     throw error;
   }
-}; 
+};

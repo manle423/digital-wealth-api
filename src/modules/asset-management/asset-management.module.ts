@@ -15,7 +15,7 @@ import { JwtService } from '@nestjs/jwt';
   imports: [
     TypeOrmModule.forFeature(
       [UserAsset, AssetCategory],
-      MysqldbConnection.name
+      MysqldbConnection.name,
     ),
     LoggerModule,
     RedisModule,
@@ -33,4 +33,4 @@ import { JwtService } from '@nestjs/jwt';
     AssetCategoryRepository,
   ],
 })
-export class AssetManagementModule {} 
+export class AssetManagementModule {}

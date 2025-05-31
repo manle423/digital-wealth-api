@@ -15,17 +15,16 @@ export class AssetCategoryRepository extends MysqldbRepository<AssetCategory> {
   }
 
   async findAllActive(): Promise<AssetCategory[]> {
-    return this.find(
-      { isActive: true },
-      { order: { order: 'ASC' } }
-    );
+    return this.find({ isActive: true }, { order: { order: 'ASC' } });
   }
 
   async findByCodeName(codeName: string): Promise<AssetCategory | null> {
     return this.findOne({ codeName });
   }
 
-  async findWithAssetCount(): Promise<(AssetCategory & { assetCount: number })[]> {
+  async findWithAssetCount(): Promise<
+    (AssetCategory & { assetCount: number })[]
+  > {
     return this.repository
       .createQueryBuilder('category')
       .leftJoin('category.userAssets', 'assets')
@@ -34,10 +33,10 @@ export class AssetCategoryRepository extends MysqldbRepository<AssetCategory> {
       .groupBy('category.id')
       .orderBy('category.order', 'ASC')
       .getRawAndEntities()
-      .then(result => {
+      .then((result) => {
         return result.entities.map((entity, index) => ({
           ...entity,
-          assetCount: parseInt(result.raw[index].assetCount) || 0
+          assetCount: parseInt(result.raw[index].assetCount) || 0,
         }));
       });
   }
@@ -45,4 +44,4 @@ export class AssetCategoryRepository extends MysqldbRepository<AssetCategory> {
   async create(category: AssetCategory): Promise<AssetCategory> {
     return this.repository.save(category);
   }
-} 
+}

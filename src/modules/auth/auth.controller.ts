@@ -1,5 +1,16 @@
 import { UserService } from '@/modules/user/user.service';
-import { Body, Controller, Post, Req, Res, UseGuards, Get, Param, Delete, UnauthorizedException } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  Req,
+  Res,
+  UseGuards,
+  Get,
+  Param,
+  Delete,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { LoginDto } from './dto/login.dto';
 import { AuthService } from './auth.service';
 import { RefreshJwtGuard } from './guards/refresh.guard';
@@ -53,10 +64,7 @@ export class AuthController {
   }
 
   @Post('forgot-password')
-  async forgotPassword(
-    @Body() dto: ForgotPasswordDto,
-    @Req() req: Request,
-  ) {
+  async forgotPassword(@Body() dto: ForgotPasswordDto, @Req() req: Request) {
     return this.authService.forgotPassword(dto.email, req);
   }
 
@@ -69,11 +77,15 @@ export class AuthController {
   @UseGuards(JwtGuard)
   @Get('devices')
   async getDevices(@SessionInfo() session: any) {
-    const devices = await this.userAuthService.getActiveSessions(session.userId);
-    const currentSession = await this.userAuthService.getSessionBySessionId(session.sessionId);
-    
+    const devices = await this.userAuthService.getActiveSessions(
+      session.userId,
+    );
+    const currentSession = await this.userAuthService.getSessionBySessionId(
+      session.sessionId,
+    );
+
     return {
-      devices: devices.map(device => ({
+      devices: devices.map((device) => ({
         deviceId: device.deviceId,
         deviceType: device.deviceType,
         deviceName: device.deviceName,
@@ -99,12 +111,18 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     // Kiểm tra quyền logout other devices
-    const canLogout = await this.userAuthService.canLogoutOtherDevices(session.sessionId);
+    const canLogout = await this.userAuthService.canLogoutOtherDevices(
+      session.sessionId,
+    );
     if (!canLogout) {
-      throw new UnauthorizedException('Only trusted devices can logout other devices');
+      throw new UnauthorizedException(
+        'Only trusted devices can logout other devices',
+      );
     }
 
-    const currentSession = await this.userAuthService.getSessionBySessionId(session.sessionId);
+    const currentSession = await this.userAuthService.getSessionBySessionId(
+      session.sessionId,
+    );
 
     if (dto.includeCurrentDevice) {
       // Logout tất cả device bao gồm cả device hiện tại
@@ -114,7 +132,10 @@ export class AuthController {
       res.clearCookie('refreshToken');
     } else {
       // Mặc định: Logout tất cả device khác trừ device hiện tại
-      await this.userAuthService.deactivateAllSessions(session.userId, currentSession?.deviceId);
+      await this.userAuthService.deactivateAllSessions(
+        session.userId,
+        currentSession?.deviceId,
+      );
     }
 
     return { message: 'Logged out from devices successfully' };
@@ -128,13 +149,16 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     // Validate quyền logout
-    const { canLogout, isCurrentDevice } = await this.userAuthService.validateLogoutPermission(
-      session.sessionId,
-      deviceId,
-    );
+    const { canLogout, isCurrentDevice } =
+      await this.userAuthService.validateLogoutPermission(
+        session.sessionId,
+        deviceId,
+      );
 
     if (!canLogout) {
-      throw new UnauthorizedException('Only trusted devices can logout other devices');
+      throw new UnauthorizedException(
+        'Only trusted devices can logout other devices',
+      );
     }
 
     await this.userAuthService.deactivateSession(session.userId, deviceId);

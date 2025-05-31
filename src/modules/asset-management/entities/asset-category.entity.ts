@@ -22,6 +22,6 @@ export class AssetCategory extends BaseEntity {
   @Column({ type: 'int', default: 0 })
   order: number;
 
-  @OneToMany(() => UserAsset, asset => asset.category)
+  @OneToMany(() => UserAsset, (asset) => asset.category)
   userAssets: UserAsset[];
-} 
+}

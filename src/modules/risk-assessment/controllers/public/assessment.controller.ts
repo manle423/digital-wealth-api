@@ -17,9 +17,7 @@ import { CurrentUser } from '@/modules/auth/decorators/track-session.decorator';
 
 @Controller('risk-assessment')
 export class PublicAssessmentController {
-  constructor(
-    private readonly riskAssessmentService: RiskAssessmentService,
-  ) {}
+  constructor(private readonly riskAssessmentService: RiskAssessmentService) {}
 
   /**
    * Gửi kết quả đánh giá rủi ro
@@ -34,7 +32,9 @@ export class PublicAssessmentController {
     if (req.user) {
       createAssessmentResultDto.userId = req.user.sub;
     }
-    return this.riskAssessmentService.saveAssessmentResult(createAssessmentResultDto);
+    return this.riskAssessmentService.saveAssessmentResult(
+      createAssessmentResultDto,
+    );
   }
 
   /**
@@ -60,7 +60,7 @@ export class PublicAssessmentController {
     if (!user) {
       throw new UnauthorizedException(AuthError.USER_NOT_VERIFIED);
     }
-    
+
     return this.riskAssessmentService.getLatestAssessmentResult(user.sub);
   }
-} 
+}

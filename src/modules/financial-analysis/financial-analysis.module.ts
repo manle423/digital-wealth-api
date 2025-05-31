@@ -29,9 +29,6 @@ import { JwtService } from '@nestjs/jwt';
     FinancialAnalysisJobService,
     JwtService,
   ],
-  exports: [
-    FinancialAnalysisService,
-    FinancialAnalysisJobService
-  ],
+  exports: [FinancialAnalysisService, FinancialAnalysisJobService],
 })
-export class FinancialAnalysisModule {} 
+export class FinancialAnalysisModule {}

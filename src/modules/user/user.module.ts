@@ -24,7 +24,8 @@ import { RiskAssessmentModule } from '../risk-assessment/risk-assessment.module'
   imports: [
     TypeOrmModule.forFeature(
       [User, UserDetail, UserOtp, UserAuth],
-      MysqldbConnection.name),
+      MysqldbConnection.name,
+    ),
     LoggerModule,
     AssetManagementModule,
     DebtManagementModule,
@@ -44,4 +45,4 @@ import { RiskAssessmentModule } from '../risk-assessment/risk-assessment.module'
   ],
   exports: [UserService, UserOtpRepository, UserAuthRepository, UserRepository],
 })
-export class UserModule { }
+export class UserModule {}

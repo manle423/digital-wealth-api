@@ -19,9 +19,7 @@ import { AssetClassService } from '@/modules/portfolio-management/services/asset
 @Controller('admin/portfolio-management/asset-classes')
 @UseGuards(JwtGuard, AdminGuard)
 export class AdminAssetClassController {
-  constructor(
-    private readonly assetClassService: AssetClassService,
-  ) {}
+  constructor(private readonly assetClassService: AssetClassService) {}
 
   @Get()
   async getAssetClasses(@Query() query: GetAssetClassesDto) {
@@ -50,4 +48,4 @@ export class AdminAssetClassController {
   async deleteAssetClass(@Param('id') id: string) {
     return this.assetClassService.deleteAssetClass(id);
   }
-} 
+}

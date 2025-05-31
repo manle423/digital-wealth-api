@@ -14,7 +14,7 @@ export class FinancialMetric extends BaseEntity {
 
   @Column({
     type: 'enum',
-    enum: MetricType
+    enum: MetricType,
   })
   type: MetricType;
 
@@ -54,4 +54,4 @@ export class FinancialMetric extends BaseEntity {
 
   @Column({ default: true, name: 'is_current' })
   isCurrent: boolean;
-} 
+}

@@ -24,11 +24,11 @@ export class AssessmentResult extends BaseEntity {
       id: string;
       text: string;
       category: string;
-    },
+    };
     answer: {
       text: string;
       value: number;
-    }
+    };
   }[];
 
   @Column({ type: 'json', name: 'recommended_allocation' })
@@ -39,4 +39,4 @@ export class AssessmentResult extends BaseEntity {
 
   @Column({ type: 'text', nullable: true })
   summary: string;
-} 
+}

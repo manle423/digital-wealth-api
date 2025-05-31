@@ -19,9 +19,7 @@ import { RiskProfileService } from '@/modules/portfolio-management/services/risk
 @Controller('admin/portfolio-management/profiles')
 @UseGuards(JwtGuard, AdminGuard)
 export class AdminRiskProfileController {
-  constructor(
-    private readonly riskProfileService: RiskProfileService,
-  ) {}
+  constructor(private readonly riskProfileService: RiskProfileService) {}
 
   @Get()
   async getRiskProfiles(@Query() query: GetRiskProfilesDto) {
@@ -34,9 +32,7 @@ export class AdminRiskProfileController {
   }
 
   @Post()
-  async createRiskProfiles(
-    @Body() dto: CreateMultipleRiskProfilesDto,
-  ) {
+  async createRiskProfiles(@Body() dto: CreateMultipleRiskProfilesDto) {
     return this.riskProfileService.createRiskProfiles(dto.profiles);
   }
 
@@ -57,4 +53,4 @@ export class AdminRiskProfileController {
   async deleteRiskProfile(@Param('id') id: string) {
     return this.riskProfileService.deleteRiskProfile(id);
   }
-} 
+}

@@ -4,4 +4,4 @@ export class DeleteRiskProfilesDto {
   @IsArray()
   @IsUUID(undefined, { each: true })
   ids: string[];
-} 
+}

@@ -3,5 +3,5 @@ export enum OtpStatus {
   VERIFIED = 'VERIFIED',
   EXPIRED = 'EXPIRED',
   USED = 'USED',
-  CANCELLED = 'CANCELLED'
-} 
+  CANCELLED = 'CANCELLED',
+}

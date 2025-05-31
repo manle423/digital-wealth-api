@@ -1,6 +1,16 @@
-import { Language } from "@/shared/enums/language.enum";
-import { Type } from "class-transformer";
-import { IsArray, IsBoolean, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Min, ValidateNested } from "class-validator";
+import { Language } from '@/shared/enums/language.enum';
+import { Type } from 'class-transformer';
+import {
+  IsArray,
+  IsBoolean,
+  IsEnum,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Min,
+  ValidateNested,
+} from 'class-validator';
 
 export class UpdateAssetClassTranslationDto {
   @IsEnum(Language)
@@ -10,7 +20,7 @@ export class UpdateAssetClassTranslationDto {
   @IsString()
   @IsNotEmpty()
   name: string;
-  
+
   @IsString()
   @IsOptional()
   description?: string;
@@ -43,7 +53,7 @@ export class UpdateAssetClassDto {
   @IsOptional()
   @Type(() => Number)
   order?: number;
-  
+
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;

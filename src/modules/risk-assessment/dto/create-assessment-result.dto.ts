@@ -1,13 +1,21 @@
-import { IsArray, IsInt, IsObject, IsOptional, IsString, IsUUID, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsInt,
+  IsObject,
+  IsOptional,
+  IsString,
+  IsUUID,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 class QuestionDto {
   @IsUUID()
   id: string;
-  
+
   @IsString()
   text: string;
-  
+
   @IsString()
   category: string;
 }
@@ -15,7 +23,7 @@ class QuestionDto {
 class AnswerDto {
   @IsString()
   text: string;
-  
+
   @IsInt()
   value: number;
 }
@@ -44,4 +52,4 @@ export class CreateAssessmentResultDto {
   @ValidateNested({ each: true })
   @Type(() => UserResponseDto)
   userResponses: UserResponseDto[];
-} 
+}

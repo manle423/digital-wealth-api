@@ -1,4 +1,15 @@
-import { IsString, IsNotEmpty, IsOptional, IsEnum, IsNumber, IsDateString, IsObject, Min, Max, IsUUID } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsEnum,
+  IsNumber,
+  IsDateString,
+  IsObject,
+  Min,
+  Max,
+  IsUUID,
+} from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { AssetType } from '../enums/asset-type.enum';
 
@@ -77,4 +88,4 @@ export class CreateAssetDto {
   @IsString()
   @IsOptional()
   notes?: string;
-} 
+}

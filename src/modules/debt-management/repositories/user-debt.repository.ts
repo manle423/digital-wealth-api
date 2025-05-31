@@ -17,53 +17,65 @@ export class UserDebtRepository extends MysqldbRepository<UserDebt> {
   }
 
   async findByUserId(userId: string): Promise<UserDebt[]> {
-    return this.find({
-      userId,
-      isActive: true,
-    }, {
-      relations: ['category'],
-      order: { createdAt: 'DESC' },
-    });
+    return this.find(
+      {
+        userId,
+        isActive: true,
+      },
+      {
+        relations: ['category'],
+        order: { createdAt: 'DESC' },
+      },
+    );
   }
 
-  async findByUserIdWithFilters(userId: string, filters: GetDebtsDto): Promise<{
+  async findByUserIdWithFilters(
+    userId: string,
+    filters: GetDebtsDto,
+  ): Promise<{
     debts: UserDebt[];
     total: number;
   }> {
     const queryBuilder = this.createQueryBuilder(userId);
-    
+
     this.applyFilters(queryBuilder, filters);
     this.applySorting(queryBuilder, filters);
-    
+
     const total = await queryBuilder.getCount();
-    
+
     if (filters.page && filters.limit) {
       const skip = (filters.page - 1) * filters.limit;
       queryBuilder.skip(skip).take(filters.limit);
     }
 
     const debts = await queryBuilder.getMany();
-    
+
     return { debts, total };
   }
 
   async findByUserIdAndId(userId: string, debtId: string) {
-    return this.findOne({
-      id: debtId,
-      userId,
-      isActive: true,
-    }, {
-      relations: ['category'],
-    });
+    return this.findOne(
+      {
+        id: debtId,
+        userId,
+        isActive: true,
+      },
+      {
+        relations: ['category'],
+      },
+    );
   }
 
   async findById(debtId: string): Promise<UserDebt | null> {
-    return this.findOne({
-      id: debtId,
-      isActive: true,
-    }, {
-      relations: ['category'],
-    });
+    return this.findOne(
+      {
+        id: debtId,
+        isActive: true,
+      },
+      {
+        relations: ['category'],
+      },
+    );
   }
 
   async getTotalDebtValue(userId: string): Promise<number> {
@@ -84,7 +96,7 @@ export class UserDebtRepository extends MysqldbRepository<UserDebt> {
         'category.id as categoryId',
         'category.name as categoryName',
         'SUM(debt.currentBalance) as totalValue',
-        'COUNT(debt.id) as count'
+        'COUNT(debt.id) as count',
       ])
       .where('debt.userId = :userId', { userId })
       .andWhere('debt.isActive = :isActive', { isActive: true })
@@ -106,10 +118,13 @@ export class UserDebtRepository extends MysqldbRepository<UserDebt> {
     return result;
   }
 
-  async getUpcomingPayments(userId: string, days: number = 30): Promise<UserDebt[]> {
+  async getUpcomingPayments(
+    userId: string,
+    days: number = 30,
+  ): Promise<UserDebt[]> {
     const now = new Date();
-    const futureDate = new Date(now.getTime() + (days * 24 * 60 * 60 * 1000));
-    
+    const futureDate = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+
     const result = await this.repository
       .createQueryBuilder('debt')
       .leftJoinAndSelect('debt.category', 'category')
@@ -117,7 +132,7 @@ export class UserDebtRepository extends MysqldbRepository<UserDebt> {
       .andWhere('debt.isActive = :isActive', { isActive: true })
       .andWhere('debt.nextPaymentDate BETWEEN :now AND :futureDate', {
         now: new Date(),
-        futureDate
+        futureDate,
       })
       .orderBy('debt.nextPaymentDate', 'ASC')
       .getMany();
@@ -132,44 +147,64 @@ export class UserDebtRepository extends MysqldbRepository<UserDebt> {
       .andWhere('debt.isActive = :isActive', { isActive: true });
   }
 
-  private applyFilters(queryBuilder: SelectQueryBuilder<UserDebt>, filters: GetDebtsDto): void {
+  private applyFilters(
+    queryBuilder: SelectQueryBuilder<UserDebt>,
+    filters: GetDebtsDto,
+  ): void {
     if (filters.type) {
       queryBuilder.andWhere('debt.type = :type', { type: filters.type });
     }
 
     if (filters.status) {
-      queryBuilder.andWhere('debt.status = :status', { status: filters.status });
+      queryBuilder.andWhere('debt.status = :status', {
+        status: filters.status,
+      });
     }
 
     if (filters.categoryId) {
-      queryBuilder.andWhere('debt.categoryId = :categoryId', { categoryId: filters.categoryId });
+      queryBuilder.andWhere('debt.categoryId = :categoryId', {
+        categoryId: filters.categoryId,
+      });
     }
 
     if (filters.creditor) {
-      queryBuilder.andWhere('debt.creditor LIKE :creditor', { creditor: `%${filters.creditor}%` });
+      queryBuilder.andWhere('debt.creditor LIKE :creditor', {
+        creditor: `%${filters.creditor}%`,
+      });
     }
 
     if (filters.dueDateFrom) {
-      queryBuilder.andWhere('debt.dueDate >= :dueDateFrom', { dueDateFrom: filters.dueDateFrom });
+      queryBuilder.andWhere('debt.dueDate >= :dueDateFrom', {
+        dueDateFrom: filters.dueDateFrom,
+      });
     }
 
     if (filters.dueDateTo) {
-      queryBuilder.andWhere('debt.dueDate <= :dueDateTo', { dueDateTo: filters.dueDateTo });
+      queryBuilder.andWhere('debt.dueDate <= :dueDateTo', {
+        dueDateTo: filters.dueDateTo,
+      });
     }
 
     if (filters.minAmount) {
-      queryBuilder.andWhere('debt.currentBalance >= :minAmount', { minAmount: filters.minAmount });
+      queryBuilder.andWhere('debt.currentBalance >= :minAmount', {
+        minAmount: filters.minAmount,
+      });
     }
 
     if (filters.maxAmount) {
-      queryBuilder.andWhere('debt.currentBalance <= :maxAmount', { maxAmount: filters.maxAmount });
+      queryBuilder.andWhere('debt.currentBalance <= :maxAmount', {
+        maxAmount: filters.maxAmount,
+      });
     }
   }
 
-  private applySorting(queryBuilder: SelectQueryBuilder<UserDebt>, filters: GetDebtsDto): void {
+  private applySorting(
+    queryBuilder: SelectQueryBuilder<UserDebt>,
+    filters: GetDebtsDto,
+  ): void {
     const sortBy = filters.sortBy || 'createdAt';
     const sortOrder = filters.sortOrder || 'DESC';
-    
+
     queryBuilder.orderBy(`debt.${sortBy}`, sortOrder);
   }
 
@@ -177,4 +212,4 @@ export class UserDebtRepository extends MysqldbRepository<UserDebt> {
     const debt = this.repository.create(debtData);
     return this.repository.save(debt);
   }
-} 
+}

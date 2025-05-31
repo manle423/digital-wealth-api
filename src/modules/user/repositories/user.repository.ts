@@ -16,6 +16,6 @@ export class UserRepository extends MysqldbRepository<User> {
   }
 
   async findActiveUsers(): Promise<User[]> {
-    return this.find({ role: UserRole.CUSTOMER});
+    return this.find({ role: UserRole.CUSTOMER });
   }
 }

@@ -37,7 +37,13 @@ export class UserDetail extends BaseEntity {
     monthlyExpenses?: number;
   };
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true, name: 'total_portfolio_value' })
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    nullable: true,
+    name: 'total_portfolio_value',
+  })
   totalPortfolioValue: number;
 
   @Column({ default: false, name: 'is_verified' })

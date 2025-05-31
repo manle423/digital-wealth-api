@@ -34,17 +34,25 @@ export class RecommendationController {
   @Get('by-status')
   async getRecommendationsByStatus(
     @CurrentUser() user: any,
-    @Query('status', new ParseEnumPipe(RecommendationStatus)) status: RecommendationStatus
+    @Query('status', new ParseEnumPipe(RecommendationStatus))
+    status: RecommendationStatus,
   ) {
-    return await this.recommendationService.getRecommendationsByStatus(user.sub, status);
+    return await this.recommendationService.getRecommendationsByStatus(
+      user.sub,
+      status,
+    );
   }
 
   @Get('by-type')
   async getRecommendationsByType(
     @CurrentUser() user: any,
-    @Query('type', new ParseEnumPipe(RecommendationType)) type: RecommendationType
+    @Query('type', new ParseEnumPipe(RecommendationType))
+    type: RecommendationType,
   ) {
-    return await this.recommendationService.getRecommendationsByType(user.sub, type);
+    return await this.recommendationService.getRecommendationsByType(
+      user.sub,
+      type,
+    );
   }
 
   @Get('stats')
@@ -55,7 +63,7 @@ export class RecommendationController {
   @Put(':id/view')
   async markAsViewed(
     @CurrentUser() user: any,
-    @Param('id') recommendationId: string
+    @Param('id') recommendationId: string,
   ) {
     await this.recommendationService.markAsViewed(user.sub, recommendationId);
     return { message: 'Recommendation marked as viewed' };
@@ -64,18 +72,24 @@ export class RecommendationController {
   @Put(':id/dismiss')
   async markAsDismissed(
     @CurrentUser() user: any,
-    @Param('id') recommendationId: string
+    @Param('id') recommendationId: string,
   ) {
-    await this.recommendationService.markAsDismissed(user.sub, recommendationId);
+    await this.recommendationService.markAsDismissed(
+      user.sub,
+      recommendationId,
+    );
     return { message: 'Recommendation dismissed' };
   }
 
   @Put(':id/complete')
   async markAsCompleted(
     @CurrentUser() user: any,
-    @Param('id') recommendationId: string
+    @Param('id') recommendationId: string,
   ) {
-    await this.recommendationService.markAsCompleted(user.sub, recommendationId);
+    await this.recommendationService.markAsCompleted(
+      user.sub,
+      recommendationId,
+    );
     return { message: 'Recommendation marked as completed' };
   }
 
@@ -83,14 +97,14 @@ export class RecommendationController {
   async submitFeedback(
     @CurrentUser() user: any,
     @Param('id') recommendationId: string,
-    @Body() feedbackDto: SubmitFeedbackDto
+    @Body() feedbackDto: SubmitFeedbackDto,
   ) {
     await this.recommendationService.submitFeedback(
       user.sub,
       recommendationId,
       feedbackDto.feedback,
-      feedbackDto.rating
+      feedbackDto.rating,
     );
     return { message: 'Feedback submitted successfully' };
   }
-} 
+}

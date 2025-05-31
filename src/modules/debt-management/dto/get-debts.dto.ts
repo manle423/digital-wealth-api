@@ -1,4 +1,11 @@
-import { IsOptional, IsEnum, IsString, IsNumber, IsDateString, Min } from 'class-validator';
+import {
+  IsOptional,
+  IsEnum,
+  IsString,
+  IsNumber,
+  IsDateString,
+  Min,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { DebtType } from '../enums/debt-type.enum';
 import { DebtStatus } from '../enums/debt-status.enum';
@@ -80,4 +87,4 @@ export class UpdateDebtBalanceDto {
   @IsOptional()
   @IsString()
   notes?: string;
-} 
+}

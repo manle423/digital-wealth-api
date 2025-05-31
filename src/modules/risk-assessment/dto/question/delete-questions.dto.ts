@@ -4,4 +4,4 @@ export class DeleteQuestionsDto {
   @IsArray()
   @IsUUID(undefined, { each: true })
   ids: string[];
-} 
+}

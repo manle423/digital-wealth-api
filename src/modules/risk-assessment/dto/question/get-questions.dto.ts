@@ -15,17 +15,17 @@ export class GetQuestionsDto extends PaginationDto {
     if (Array.isArray(value)) {
       return value;
     }
-    
+
     // Nếu là chuỗi ngăn cách bởi dấu phẩy, tách thành mảng
     if (typeof value === 'string' && value.includes(',')) {
-      return value.split(',').map(item => item.trim());
+      return value.split(',').map((item) => item.trim());
     }
-    
+
     // Nếu là chuỗi đơn, chuyển thành mảng một phần tử
     if (typeof value === 'string') {
       return [value];
     }
-    
+
     // Trường hợp khác, trả về mảng rỗng
     return [];
   })
@@ -34,4 +34,4 @@ export class GetQuestionsDto extends PaginationDto {
   @IsOptional()
   @IsString()
   sortBy?: string = 'order';
-} 
+}

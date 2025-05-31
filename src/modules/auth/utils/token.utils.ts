@@ -77,7 +77,7 @@ export async function verifyAccessToken(
   jwtService: JwtService,
   token: string,
 ): Promise<IJwtPayload> {
-  return await jwtService.verifyAsync(token, {
+  return (await jwtService.verifyAsync(token, {
     secret: process.env.JWT_SECRET_KEY,
-  }) as IJwtPayload;
+  })) as IJwtPayload;
 }

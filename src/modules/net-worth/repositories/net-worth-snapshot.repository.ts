@@ -15,7 +15,9 @@ export class NetWorthSnapshotRepository extends MysqldbRepository<NetWorthSnapsh
     super(repository);
   }
 
-  async create(snapshotData: DeepPartial<NetWorthSnapshot>): Promise<NetWorthSnapshot> {
+  async create(
+    snapshotData: DeepPartial<NetWorthSnapshot>,
+  ): Promise<NetWorthSnapshot> {
     const snapshot = this.repository.create(snapshotData);
     return this.repository.save(snapshot);
   }
@@ -29,16 +31,16 @@ export class NetWorthSnapshotRepository extends MysqldbRepository<NetWorthSnapsh
   }
 
   async findByUserIdAndDateRange(
-    userId: string, 
-    startDate: Date, 
-    endDate: Date
+    userId: string,
+    startDate: Date,
+    endDate: Date,
   ): Promise<NetWorthSnapshot[]> {
     return this.repository
       .createQueryBuilder('snapshot')
       .where('snapshot.userId = :userId', { userId })
       .andWhere('snapshot.snapshotDate BETWEEN :startDate AND :endDate', {
         startDate,
-        endDate
+        endDate,
       })
       .orderBy('snapshot.snapshotDate', 'DESC')
       .getMany();
@@ -52,7 +54,10 @@ export class NetWorthSnapshotRepository extends MysqldbRepository<NetWorthSnapsh
       .getOne();
   }
 
-  async findByUserIdWithLimit(userId: string, limit: number): Promise<NetWorthSnapshot[]> {
+  async findByUserIdWithLimit(
+    userId: string,
+    limit: number,
+  ): Promise<NetWorthSnapshot[]> {
     return this.repository
       .createQueryBuilder('snapshot')
       .where('snapshot.userId = :userId', { userId })
@@ -61,12 +66,17 @@ export class NetWorthSnapshotRepository extends MysqldbRepository<NetWorthSnapsh
       .getMany();
   }
 
-  async getNetWorthTrend(userId: string, months: number = 12): Promise<{
-    date: Date;
-    netWorth: number;
-    totalAssets: number;
-    totalDebts: number;
-  }[]> {
+  async getNetWorthTrend(
+    userId: string,
+    months: number = 12,
+  ): Promise<
+    {
+      date: Date;
+      netWorth: number;
+      totalAssets: number;
+      totalDebts: number;
+    }[]
+  > {
     const fromDate = new Date();
     fromDate.setMonth(fromDate.getMonth() - months);
 
@@ -76,7 +86,7 @@ export class NetWorthSnapshotRepository extends MysqldbRepository<NetWorthSnapsh
         'snapshot.snapshotDate as date',
         'snapshot.netWorth as netWorth',
         'snapshot.totalAssets as totalAssets',
-        'snapshot.totalDebts as totalDebts'
+        'snapshot.totalDebts as totalDebts',
       ])
       .where('snapshot.userId = :userId', { userId })
       .andWhere('snapshot.snapshotDate >= :fromDate', { fromDate })
@@ -84,7 +94,10 @@ export class NetWorthSnapshotRepository extends MysqldbRepository<NetWorthSnapsh
       .getRawMany();
   }
 
-  async deleteOldSnapshots(userId: string, keepCount: number = 100): Promise<void> {
+  async deleteOldSnapshots(
+    userId: string,
+    keepCount: number = 100,
+  ): Promise<void> {
     // First get the total count of snapshots for this user
     const totalCount = await this.repository
       .createQueryBuilder('snapshot')
@@ -106,7 +119,7 @@ export class NetWorthSnapshotRepository extends MysqldbRepository<NetWorthSnapsh
         .getMany();
 
       if (snapshotsToDelete.length > 0) {
-        const idsToDelete = snapshotsToDelete.map(s => s.id);
+        const idsToDelete = snapshotsToDelete.map((s) => s.id);
         await this.repository
           .createQueryBuilder()
           .delete()
@@ -116,4 +129,4 @@ export class NetWorthSnapshotRepository extends MysqldbRepository<NetWorthSnapsh
       }
     }
   }
-} 
+}

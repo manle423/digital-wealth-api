@@ -1,11 +1,6 @@
-import {
-  Entity,
-  Column,
-  ManyToOne,
-  JoinColumn,
-} from 'typeorm'
-import { User } from './user.entity'
-import { BaseEntity } from '@/shared/mysqldb/types/base-entity.type'
+import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { User } from './user.entity';
+import { BaseEntity } from '@/shared/mysqldb/types/base-entity.type';
 
 @Entity({ name: 'user_auths' })
 export class UserAuth extends BaseEntity {
@@ -17,41 +12,41 @@ export class UserAuth extends BaseEntity {
   userId: string;
 
   @Column({ name: 'session_id', type: 'varchar', nullable: true })
-  sessionId: string
+  sessionId: string;
 
   @Column({ name: 'device_id', type: 'varchar', nullable: true })
-  deviceId: string
+  deviceId: string;
 
   @Column({ name: 'device_type', type: 'varchar', nullable: true })
-  deviceType: string
+  deviceType: string;
 
   @Column({ name: 'device_name', type: 'varchar', nullable: true })
-  deviceName: string
+  deviceName: string;
 
   @Column({ name: 'device_model', type: 'varchar', nullable: true })
-  deviceModel: string
+  deviceModel: string;
 
   @Column({ name: 'os_version', type: 'varchar', nullable: true })
-  osVersion: string
+  osVersion: string;
 
   @Column({ name: 'app_version', type: 'varchar', nullable: true })
-  appVersion: string
+  appVersion: string;
 
   @Column({ name: 'ip_address', type: 'varchar', nullable: true })
-  ipAddress: string
+  ipAddress: string;
 
   @Column({ type: 'varchar', nullable: true })
-  location: string
+  location: string;
 
   @Column({ name: 'last_access_at', type: 'timestamp', nullable: true })
-  lastAccessAt: Date
+  lastAccessAt: Date;
 
   @Column({ name: 'is_active', type: 'boolean', default: true })
-  isActive: boolean
+  isActive: boolean;
 
   @Column({ name: 'is_trusted', type: 'boolean', default: false })
-  isTrusted: boolean
+  isTrusted: boolean;
 
   @Column({ name: 'trusted_at', type: 'timestamp', nullable: true })
-  trustedAt: Date
+  trustedAt: Date;
 }

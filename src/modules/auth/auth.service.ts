@@ -26,7 +26,11 @@ export class AuthService {
     private readonly userAuthService: UserAuthService,
   ) {}
 
-  async login(dto: LoginDto, req: Request, res: Response): Promise<IAuthResponse> {
+  async login(
+    dto: LoginDto,
+    req: Request,
+    res: Response,
+  ): Promise<IAuthResponse> {
     this.logger.info('[login]', { email: dto.email });
     const user = await this.userService.findByEmail(dto.email);
     if (!user) {
@@ -118,31 +122,45 @@ export class AuthService {
 
   async logout(userId?: string, sessionId?: string, res?: Response) {
     this.logger.info('[logout]', { userId, sessionId });
-    
+
     // Deactivate session nếu có sessionId
     if (sessionId) {
       await this.userAuthService.deactivateSessionBySessionId(sessionId);
     }
-    
+
     if (res) {
       clearCookies(res);
     }
-    
+
     return { message: 'Logged out successfully' };
   }
 
-  async forgotPassword(email: string, req: Request): Promise<{ message: string }> {
+  async forgotPassword(
+    email: string,
+    req: Request,
+  ): Promise<{ message: string }> {
     this.logger.info('[forgotPassword]', { email });
-    
+
     const user = await this.userService.findByEmail(email);
     if (!user) {
       // Vẫn trả về thành công để tránh leak thông tin
-      return { message: 'If your email exists in our system, you will receive a password reset OTP.' };
+      return {
+        message:
+          'If your email exists in our system, you will receive a password reset OTP.',
+      };
     }
 
-    await this.otpService.generateOtp(email, OtpType.RESET_PASSWORD, user.id, req);
+    await this.otpService.generateOtp(
+      email,
+      OtpType.RESET_PASSWORD,
+      user.id,
+      req,
+    );
 
-    return { message: 'If your email exists in our system, you will receive a password reset OTP.' };
+    return {
+      message:
+        'If your email exists in our system, you will receive a password reset OTP.',
+    };
   }
 
   async resetPassword(dto: ResetPasswordDto): Promise<{ message: string }> {

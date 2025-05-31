@@ -18,7 +18,9 @@ export class RecommendationRepository extends MysqldbRepository<Recommendation> 
     super(repository);
   }
 
-  async create(recommendationData: DeepPartial<Recommendation>): Promise<Recommendation> {
+  async create(
+    recommendationData: DeepPartial<Recommendation>,
+  ): Promise<Recommendation> {
     const recommendation = this.repository.create(recommendationData);
     return this.repository.save(recommendation);
   }
@@ -36,14 +38,22 @@ export class RecommendationRepository extends MysqldbRepository<Recommendation> 
     return this.repository
       .createQueryBuilder('recommendation')
       .where('recommendation.userId = :userId', { userId })
-      .andWhere('recommendation.status = :status', { status: RecommendationStatus.ACTIVE })
-      .andWhere('(recommendation.expiresAt IS NULL OR recommendation.expiresAt > :now)', { now: new Date() })
+      .andWhere('recommendation.status = :status', {
+        status: RecommendationStatus.ACTIVE,
+      })
+      .andWhere(
+        '(recommendation.expiresAt IS NULL OR recommendation.expiresAt > :now)',
+        { now: new Date() },
+      )
       .orderBy('recommendation.priority', 'DESC')
       .addOrderBy('recommendation.createdAt', 'DESC')
       .getMany();
   }
 
-  async findByUserIdAndType(userId: string, type: RecommendationType): Promise<Recommendation[]> {
+  async findByUserIdAndType(
+    userId: string,
+    type: RecommendationType,
+  ): Promise<Recommendation[]> {
     return this.repository
       .createQueryBuilder('recommendation')
       .where('recommendation.userId = :userId', { userId })
@@ -52,7 +62,10 @@ export class RecommendationRepository extends MysqldbRepository<Recommendation> 
       .getMany();
   }
 
-  async findByUserIdAndStatus(userId: string, status: RecommendationStatus): Promise<Recommendation[]> {
+  async findByUserIdAndStatus(
+    userId: string,
+    status: RecommendationStatus,
+  ): Promise<Recommendation[]> {
     return this.repository
       .createQueryBuilder('recommendation')
       .where('recommendation.userId = :userId', { userId })
@@ -61,12 +74,17 @@ export class RecommendationRepository extends MysqldbRepository<Recommendation> 
       .getMany();
   }
 
-  async findByUserIdAndPriority(userId: string, priority: RecommendationPriority): Promise<Recommendation[]> {
+  async findByUserIdAndPriority(
+    userId: string,
+    priority: RecommendationPriority,
+  ): Promise<Recommendation[]> {
     return this.repository
       .createQueryBuilder('recommendation')
       .where('recommendation.userId = :userId', { userId })
       .andWhere('recommendation.priority = :priority', { priority })
-      .andWhere('recommendation.status = :status', { status: RecommendationStatus.ACTIVE })
+      .andWhere('recommendation.status = :status', {
+        status: RecommendationStatus.ACTIVE,
+      })
       .orderBy('recommendation.createdAt', 'DESC')
       .getMany();
   }
@@ -75,7 +93,9 @@ export class RecommendationRepository extends MysqldbRepository<Recommendation> 
     return this.repository
       .createQueryBuilder('recommendation')
       .where('recommendation.expiresAt < :now', { now: new Date() })
-      .andWhere('recommendation.status = :status', { status: RecommendationStatus.ACTIVE })
+      .andWhere('recommendation.status = :status', {
+        status: RecommendationStatus.ACTIVE,
+      })
       .getMany();
   }
 
@@ -83,9 +103,9 @@ export class RecommendationRepository extends MysqldbRepository<Recommendation> 
     await this.repository
       .createQueryBuilder()
       .update(Recommendation)
-      .set({ 
+      .set({
         status: RecommendationStatus.VIEWED,
-        viewedAt: new Date()
+        viewedAt: new Date(),
       })
       .where('id = :id', { id })
       .execute();
@@ -95,9 +115,9 @@ export class RecommendationRepository extends MysqldbRepository<Recommendation> 
     await this.repository
       .createQueryBuilder()
       .update(Recommendation)
-      .set({ 
+      .set({
         status: RecommendationStatus.DISMISSED,
-        dismissedAt: new Date()
+        dismissedAt: new Date(),
       })
       .where('id = :id', { id })
       .execute();
@@ -107,9 +127,9 @@ export class RecommendationRepository extends MysqldbRepository<Recommendation> 
     await this.repository
       .createQueryBuilder()
       .update(Recommendation)
-      .set({ 
+      .set({
         status: RecommendationStatus.COMPLETED,
-        completedAt: new Date()
+        completedAt: new Date(),
       })
       .where('id = :id', { id })
       .execute();
@@ -124,7 +144,11 @@ export class RecommendationRepository extends MysqldbRepository<Recommendation> 
       .execute();
   }
 
-  async updateUserFeedback(id: string, feedback: string, rating?: number): Promise<void> {
+  async updateUserFeedback(
+    id: string,
+    feedback: string,
+    rating?: number,
+  ): Promise<void> {
     const updateData: any = { userFeedback: feedback };
     if (rating !== undefined) {
       updateData.userRating = rating;
@@ -156,63 +180,70 @@ export class RecommendationRepository extends MysqldbRepository<Recommendation> 
     byPriority: { priority: RecommendationPriority; count: number }[];
     byType: { type: RecommendationType; count: number }[];
   }> {
-    const [
-      total,
-      active,
-      completed,
-      dismissed,
-      byPriority,
-      byType
-    ] = await Promise.all([
-      this.repository.count({ where: { userId } }),
-      this.repository.count({ where: { userId, status: RecommendationStatus.ACTIVE } }),
-      this.repository.count({ where: { userId, status: RecommendationStatus.COMPLETED } }),
-      this.repository.count({ where: { userId, status: RecommendationStatus.DISMISSED } }),
-      this.repository
-        .createQueryBuilder('recommendation')
-        .select('recommendation.priority', 'priority')
-        .addSelect('COUNT(*)', 'count')
-        .where('recommendation.userId = :userId', { userId })
-        .groupBy('recommendation.priority')
-        .getRawMany(),
-      this.repository
-        .createQueryBuilder('recommendation')
-        .select('recommendation.type', 'type')
-        .addSelect('COUNT(*)', 'count')
-        .where('recommendation.userId = :userId', { userId })
-        .groupBy('recommendation.type')
-        .getRawMany()
-    ]);
+    const [total, active, completed, dismissed, byPriority, byType] =
+      await Promise.all([
+        this.repository.count({ where: { userId } }),
+        this.repository.count({
+          where: { userId, status: RecommendationStatus.ACTIVE },
+        }),
+        this.repository.count({
+          where: { userId, status: RecommendationStatus.COMPLETED },
+        }),
+        this.repository.count({
+          where: { userId, status: RecommendationStatus.DISMISSED },
+        }),
+        this.repository
+          .createQueryBuilder('recommendation')
+          .select('recommendation.priority', 'priority')
+          .addSelect('COUNT(*)', 'count')
+          .where('recommendation.userId = :userId', { userId })
+          .groupBy('recommendation.priority')
+          .getRawMany(),
+        this.repository
+          .createQueryBuilder('recommendation')
+          .select('recommendation.type', 'type')
+          .addSelect('COUNT(*)', 'count')
+          .where('recommendation.userId = :userId', { userId })
+          .groupBy('recommendation.type')
+          .getRawMany(),
+      ]);
 
     return {
       total,
       active,
       completed,
       dismissed,
-      byPriority: byPriority.map(item => ({
+      byPriority: byPriority.map((item) => ({
         priority: item.priority,
-        count: parseInt(item.count)
+        count: parseInt(item.count),
       })),
-      byType: byType.map(item => ({
+      byType: byType.map((item) => ({
         type: item.type,
-        count: parseInt(item.count)
-      }))
+        count: parseInt(item.count),
+      })),
     };
   }
 
-  async deleteOldRecommendations(userId: string, keepCount: number = 100): Promise<void> {
+  async deleteOldRecommendations(
+    userId: string,
+    keepCount: number = 100,
+  ): Promise<void> {
     const recommendations = await this.repository
       .createQueryBuilder('recommendation')
       .where('recommendation.userId = :userId', { userId })
-      .andWhere('recommendation.status IN (:...statuses)', { 
-        statuses: [RecommendationStatus.COMPLETED, RecommendationStatus.DISMISSED, RecommendationStatus.EXPIRED] 
+      .andWhere('recommendation.status IN (:...statuses)', {
+        statuses: [
+          RecommendationStatus.COMPLETED,
+          RecommendationStatus.DISMISSED,
+          RecommendationStatus.EXPIRED,
+        ],
       })
       .orderBy('recommendation.createdAt', 'DESC')
       .skip(keepCount)
       .getMany();
 
     if (recommendations.length > 0) {
-      const idsToDelete = recommendations.map(r => r.id);
+      const idsToDelete = recommendations.map((r) => r.id);
       await this.repository
         .createQueryBuilder()
         .delete()
@@ -223,9 +254,9 @@ export class RecommendationRepository extends MysqldbRepository<Recommendation> 
   }
 
   async findSimilarRecommendations(
-    userId: string, 
-    type: RecommendationType, 
-    days: number = 30
+    userId: string,
+    type: RecommendationType,
+    days: number = 30,
   ): Promise<Recommendation[]> {
     const fromDate = new Date();
     fromDate.setDate(fromDate.getDate() - days);

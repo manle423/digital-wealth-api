@@ -5,7 +5,10 @@ import { AssetClassTranslation } from './asset-class-translation.entity';
 
 @Entity('asset_classes')
 export class AssetClass extends BaseEntity {
-  @OneToMany(() => AssetClassTranslation, translation => translation.assetClass)
+  @OneToMany(
+    () => AssetClassTranslation,
+    (translation) => translation.assetClass,
+  )
   translations: AssetClassTranslation[];
 
   @Column({ default: true, name: 'is_active' })
@@ -23,6 +26,6 @@ export class AssetClass extends BaseEntity {
   @Column({ nullable: true, name: 'expected_return' })
   expectedReturn: number;
 
-  @OneToMany(() => AssetAllocation, allocation => allocation.assetClass)
+  @OneToMany(() => AssetAllocation, (allocation) => allocation.assetClass)
   allocations: AssetAllocation[];
-} 
+}

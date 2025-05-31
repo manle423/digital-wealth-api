@@ -19,72 +19,85 @@ export class QuestionRepository extends MysqldbRepository<Question> {
   ) {
     super(repository);
   }
-  
+
   async findAllQuestions(
     query?: Partial<GetQuestionsDto>,
-    pagination?: Partial<IPagination>
+    pagination?: Partial<IPagination>,
   ): Promise<[Question[], number]> {
-    const { isActive, categories, sortBy = 'order', sortDirection = SortDirection.ASC } = query || {};
-    
-    const qb = this.repository.createQueryBuilder('question')
+    const {
+      isActive,
+      categories,
+      sortBy = 'order',
+      sortDirection = SortDirection.ASC,
+    } = query || {};
+
+    const qb = this.repository
+      .createQueryBuilder('question')
       .leftJoinAndSelect('question.translations', 'translations');
-    
+
     if (isActive !== undefined) {
       const booleanValue = isActive === 'false' ? false : true;
       qb.andWhere('question.isActive = :isActive', { isActive: booleanValue });
     }
-    
+
     if (categories && categories.length > 0) {
-      qb.andWhere('question.questionCategoryId IN (:...categories)', { categories });
+      qb.andWhere('question.questionCategoryId IN (:...categories)', {
+        categories,
+      });
     }
-    
+
     qb.orderBy(`question.${sortBy}`, sortDirection);
-    
+
     if (!pagination) {
       return qb.getManyAndCount();
     }
-    
+
     const results = await qb
       .take(pagination.limit)
       .skip(pagination.offset)
       .getManyAndCount();
-      
+
     return results;
   }
-  
-  async updateMultipleQuestions(updates: QuestionUpdate[]): Promise<Question[]> {
-    const ids = updates.map(update => update.id);
+
+  async updateMultipleQuestions(
+    updates: QuestionUpdate[],
+  ): Promise<Question[]> {
+    const ids = updates.map((update) => update.id);
     const existingQuestions = await this.find({ id: In(ids) });
-    
+
     if (existingQuestions.length !== ids.length) {
       throw new NotFoundException(QuestionError.QUESTION_NOT_FOUND);
     }
-    
+
     return this.withTnx(async (manager) => {
       const updatedQuestions: Question[] = [];
-      
+
       for (const update of updates) {
-        const question = existingQuestions.find(q => q.id === update.id)!;
+        const question = existingQuestions.find((q) => q.id === update.id)!;
         const updatedQuestion = {
           ...question,
-          ...update.data
+          ...update.data,
         };
-        
-        const saved = await manager.save(this.repository.target, updatedQuestion);
+
+        const saved = await manager.save(
+          this.repository.target,
+          updatedQuestion,
+        );
         updatedQuestions.push(saved);
       }
-      
+
       return updatedQuestions;
     });
   }
-  
+
   async deleteMultipleQuestions(ids: string[]): Promise<boolean> {
     const existingQuestions = await this.find({ id: In(ids) });
-    
+
     if (existingQuestions.length !== ids.length) {
       throw new NotFoundException(QuestionError.QUESTION_NOT_FOUND);
     }
-    
+
     return this.withTnx(async (manager) => {
       await manager.softDelete(this.repository.target, { id: In(ids) });
       return true;

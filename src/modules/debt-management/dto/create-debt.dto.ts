@@ -1,4 +1,15 @@
-import { IsString, IsNotEmpty, IsOptional, IsEnum, IsNumber, IsDateString, IsObject, Min, Max, IsUUID } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsEnum,
+  IsNumber,
+  IsDateString,
+  IsObject,
+  Min,
+  Max,
+  IsUUID,
+} from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { DebtType } from '../enums/debt-type.enum';
 import { DebtStatus } from '../enums/debt-status.enum';
@@ -125,4 +136,4 @@ export class CreateDebtDto {
   @IsString()
   @IsOptional()
   notes?: string;
-} 
+}

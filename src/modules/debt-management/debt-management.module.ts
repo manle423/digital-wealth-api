@@ -13,10 +13,7 @@ import { JwtService } from '@nestjs/jwt';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature(
-      [UserDebt, DebtCategory],
-      MysqldbConnection.name
-    ),
+    TypeOrmModule.forFeature([UserDebt, DebtCategory], MysqldbConnection.name),
     LoggerModule,
     RedisModule,
   ],
@@ -27,10 +24,6 @@ import { JwtService } from '@nestjs/jwt';
     DebtCategoryRepository,
     JwtService,
   ],
-  exports: [
-    DebtManagementService,
-    UserDebtRepository,
-    DebtCategoryRepository,
-  ],
+  exports: [DebtManagementService, UserDebtRepository, DebtCategoryRepository],
 })
-export class DebtManagementModule {} 
+export class DebtManagementModule {}

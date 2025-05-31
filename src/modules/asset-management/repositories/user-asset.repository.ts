@@ -18,30 +18,36 @@ export class UserAssetRepository extends MysqldbRepository<UserAsset> {
   async findByUserId(userId: string): Promise<UserAsset[]> {
     return this.find(
       { userId, isActive: true },
-      { 
+      {
         relations: ['category'],
-        order: { createdAt: 'DESC' }
-      }
+        order: { createdAt: 'DESC' },
+      },
     );
   }
 
-  async findByUserIdAndCategoryId(userId: string, categoryId: string): Promise<UserAsset[]> {
+  async findByUserIdAndCategoryId(
+    userId: string,
+    categoryId: string,
+  ): Promise<UserAsset[]> {
     return this.find(
       { userId, categoryId, isActive: true },
-      { 
+      {
         relations: ['category'],
-        order: { createdAt: 'DESC' }
-      }
+        order: { createdAt: 'DESC' },
+      },
     );
   }
 
-  async findByUserIdAndType(userId: string, type: AssetType): Promise<UserAsset[]> {
+  async findByUserIdAndType(
+    userId: string,
+    type: AssetType,
+  ): Promise<UserAsset[]> {
     return this.find(
       { userId, type, isActive: true },
-      { 
+      {
         relations: ['category'],
-        order: { createdAt: 'DESC' }
-      }
+        order: { createdAt: 'DESC' },
+      },
     );
   }
 
@@ -56,12 +62,14 @@ export class UserAssetRepository extends MysqldbRepository<UserAsset> {
     return parseFloat(result?.total) || 0;
   }
 
-  async getAssetBreakdownByUserId(userId: string): Promise<{
-    categoryId: string;
-    categoryName: string;
-    totalValue: number;
-    assetCount: number;
-  }[]> {
+  async getAssetBreakdownByUserId(userId: string): Promise<
+    {
+      categoryId: string;
+      categoryName: string;
+      totalValue: number;
+      assetCount: number;
+    }[]
+  > {
     return this.repository
       .createQueryBuilder('asset')
       .leftJoin('asset.category', 'category')
@@ -69,7 +77,7 @@ export class UserAssetRepository extends MysqldbRepository<UserAsset> {
         'category.id as categoryId',
         'category.name as categoryName',
         'SUM(asset.currentValue) as totalValue',
-        'COUNT(asset.id) as assetCount'
+        'COUNT(asset.id) as assetCount',
       ])
       .where('asset.userId = :userId', { userId })
       .andWhere('asset.isActive = :isActive', { isActive: true })
@@ -78,21 +86,28 @@ export class UserAssetRepository extends MysqldbRepository<UserAsset> {
       .getRawMany();
   }
 
-  async getAssetsByValueRange(userId: string, minValue: number, maxValue: number): Promise<UserAsset[]> {
+  async getAssetsByValueRange(
+    userId: string,
+    minValue: number,
+    maxValue: number,
+  ): Promise<UserAsset[]> {
     return this.find(
-      { 
-        userId, 
+      {
+        userId,
         isActive: true,
-        currentValue: Between(minValue, maxValue)
+        currentValue: Between(minValue, maxValue),
       },
-      { 
+      {
         relations: ['category'],
-        order: { currentValue: 'DESC' }
-      }
+        order: { currentValue: 'DESC' },
+      },
     );
   }
 
-  async getRecentlyUpdatedAssets(userId: string, days: number = 30): Promise<UserAsset[]> {
+  async getRecentlyUpdatedAssets(
+    userId: string,
+    days: number = 30,
+  ): Promise<UserAsset[]> {
     const fromDate = new Date();
     fromDate.setDate(fromDate.getDate() - days);
 
@@ -112,22 +127,26 @@ export class UserAssetRepository extends MysqldbRepository<UserAsset> {
       .leftJoinAndSelect('asset.category', 'category')
       .where('asset.userId = :userId', { userId })
       .andWhere('asset.isActive = :isActive', { isActive: true })
-      .andWhere('asset.liquidityLevel = :liquidityLevel', { liquidityLevel: 'HIGH' })
+      .andWhere('asset.liquidityLevel = :liquidityLevel', {
+        liquidityLevel: 'HIGH',
+      })
       .orderBy('asset.currentValue', 'DESC')
       .getMany();
   }
 
-  async getAssetsByType(userId: string): Promise<{
-    type: AssetType;
-    totalValue: number;
-    assetCount: number;
-  }[]> {
+  async getAssetsByType(userId: string): Promise<
+    {
+      type: AssetType;
+      totalValue: number;
+      assetCount: number;
+    }[]
+  > {
     return this.repository
       .createQueryBuilder('asset')
       .select([
         'asset.type as type',
         'SUM(asset.currentValue) as totalValue',
-        'COUNT(asset.id) as assetCount'
+        'COUNT(asset.id) as assetCount',
       ])
       .where('asset.userId = :userId', { userId })
       .andWhere('asset.isActive = :isActive', { isActive: true })
@@ -135,4 +154,4 @@ export class UserAssetRepository extends MysqldbRepository<UserAsset> {
       .orderBy('totalValue', 'DESC')
       .getRawMany();
   }
-} 
+}

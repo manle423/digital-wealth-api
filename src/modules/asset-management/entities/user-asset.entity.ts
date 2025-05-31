@@ -13,8 +13,8 @@ export class UserAsset extends BaseEntity {
   @Column({ type: 'uuid', name: 'user_id' })
   userId: string;
 
-  @ManyToOne(() => AssetCategory, category => category.userAssets, { 
-    createForeignKeyConstraints: false 
+  @ManyToOne(() => AssetCategory, (category) => category.userAssets, {
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({ name: 'category_id', referencedColumnName: 'id' })
   category: AssetCategory;
@@ -31,14 +31,20 @@ export class UserAsset extends BaseEntity {
   @Column({
     type: 'enum',
     enum: AssetType,
-    default: AssetType.OTHER
+    default: AssetType.OTHER,
   })
   type: AssetType;
 
   @Column({ name: 'current_value', type: 'decimal', precision: 15, scale: 2 })
   currentValue: number;
 
-  @Column({ type: 'decimal', precision: 15, scale: 2, nullable: true, name: 'purchase_price' })
+  @Column({
+    type: 'decimal',
+    precision: 15,
+    scale: 2,
+    nullable: true,
+    name: 'purchase_price',
+  })
   purchasePrice: number;
 
   @Column({ nullable: true, name: 'purchase_date' })
@@ -50,16 +56,33 @@ export class UserAsset extends BaseEntity {
   @Column({ type: 'varchar', length: 10, nullable: true })
   currency: string;
 
-  @Column({ type: 'decimal', precision: 5, scale: 2, nullable: true, name: 'annual_return' })
+  @Column({
+    type: 'decimal',
+    precision: 5,
+    scale: 2,
+    nullable: true,
+    name: 'annual_return',
+  })
   annualReturn: number;
 
-  @Column({ type: 'decimal', precision: 15, scale: 2, nullable: true, name: 'market_value' })
+  @Column({
+    type: 'decimal',
+    precision: 15,
+    scale: 2,
+    nullable: true,
+    name: 'market_value',
+  })
   marketValue: number;
 
   @Column({ nullable: true, name: 'valuation_date' })
   valuationDate: Date;
 
-  @Column({ type: 'varchar', length: 50, nullable: true, name: 'liquidity_level' })
+  @Column({
+    type: 'varchar',
+    length: 50,
+    nullable: true,
+    name: 'liquidity_level',
+  })
   liquidityLevel: string;
 
   @Column({ type: 'json', nullable: true, name: 'additional_info' })
@@ -81,4 +104,4 @@ export class UserAsset extends BaseEntity {
 
   @Column({ type: 'text', nullable: true })
   notes: string;
-} 
+}

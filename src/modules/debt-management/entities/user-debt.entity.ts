@@ -14,8 +14,8 @@ export class UserDebt extends BaseEntity {
   @Column({ type: 'uuid', name: 'user_id' })
   userId: string;
 
-  @ManyToOne(() => DebtCategory, category => category.userDebts, { 
-    createForeignKeyConstraints: false 
+  @ManyToOne(() => DebtCategory, (category) => category.userDebts, {
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({ name: 'category_id', referencedColumnName: 'id' })
   category: DebtCategory;
@@ -33,7 +33,7 @@ export class UserDebt extends BaseEntity {
     type: 'enum',
     enum: DebtType,
     default: DebtType.PERSONAL_LOAN,
-    nullable: true
+    nullable: true,
   })
   type: DebtType;
 
@@ -41,7 +41,7 @@ export class UserDebt extends BaseEntity {
     type: 'enum',
     enum: DebtStatus,
     default: DebtStatus.ACTIVE,
-    nullable: true
+    nullable: true,
   })
   status: DebtStatus;
 
@@ -51,7 +51,13 @@ export class UserDebt extends BaseEntity {
   @Column({ type: 'decimal', precision: 15, scale: 2, name: 'current_balance' })
   currentBalance: number;
 
-  @Column({ type: 'decimal', precision: 5, scale: 2, nullable: true, name: 'interest_rate' })
+  @Column({
+    type: 'decimal',
+    precision: 5,
+    scale: 2,
+    nullable: true,
+    name: 'interest_rate',
+  })
   interestRate: number;
 
   @Column({ type: 'date', nullable: true, name: 'start_date' })
@@ -60,7 +66,13 @@ export class UserDebt extends BaseEntity {
   @Column({ type: 'date', nullable: true, name: 'due_date' })
   dueDate: Date;
 
-  @Column({ type: 'decimal', precision: 15, scale: 2, nullable: true, name: 'monthly_payment' })
+  @Column({
+    type: 'decimal',
+    precision: 15,
+    scale: 2,
+    nullable: true,
+    name: 'monthly_payment',
+  })
   monthlyPayment: number;
 
   @Column({ nullable: true })
@@ -72,13 +84,31 @@ export class UserDebt extends BaseEntity {
   @Column({ type: 'int', nullable: true, name: 'term_months' })
   termMonths: number;
 
-  @Column({ type: 'decimal', precision: 15, scale: 2, default: 0, name: 'total_paid' })
+  @Column({
+    type: 'decimal',
+    precision: 15,
+    scale: 2,
+    default: 0,
+    name: 'total_paid',
+  })
   totalPaid: number;
 
-  @Column({ type: 'decimal', precision: 15, scale: 2, default: 0, name: 'total_interest' })
+  @Column({
+    type: 'decimal',
+    precision: 15,
+    scale: 2,
+    default: 0,
+    name: 'total_interest',
+  })
   totalInterest: number;
 
-  @Column({ type: 'decimal', precision: 5, scale: 2, nullable: true, name: 'penalty_rate' })
+  @Column({
+    type: 'decimal',
+    precision: 5,
+    scale: 2,
+    nullable: true,
+    name: 'penalty_rate',
+  })
   penaltyRate: number;
 
   @Column({ type: 'date', nullable: true, name: 'last_payment_date' })
@@ -115,4 +145,4 @@ export class UserDebt extends BaseEntity {
 
   @Column({ default: true, name: 'is_active' })
   isActive: boolean;
-} 
+}

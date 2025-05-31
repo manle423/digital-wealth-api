@@ -8,4 +8,4 @@ export class OptionalJwtGuard extends JwtGuard {
     // Just return null/undefined which will result in req.user being undefined
     return user;
   }
-} 
+}

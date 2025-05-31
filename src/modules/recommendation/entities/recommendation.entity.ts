@@ -16,21 +16,21 @@ export class Recommendation extends BaseEntity {
 
   @Column({
     type: 'enum',
-    enum: RecommendationType
+    enum: RecommendationType,
   })
   type: RecommendationType;
 
   @Column({
     type: 'enum',
     enum: RecommendationPriority,
-    default: RecommendationPriority.MEDIUM
+    default: RecommendationPriority.MEDIUM,
   })
   priority: RecommendationPriority;
 
   @Column({
     type: 'enum',
     enum: RecommendationStatus,
-    default: RecommendationStatus.ACTIVE
+    default: RecommendationStatus.ACTIVE,
   })
   status: RecommendationStatus;
 
@@ -93,4 +93,4 @@ export class Recommendation extends BaseEntity {
     version?: string;
     [key: string]: any;
   };
-} 
+}

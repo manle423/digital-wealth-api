@@ -1,6 +1,6 @@
-import { Provider } from '@nestjs/common'
-import { ConfigService } from '@nestjs/config'
-import IORedis, { RedisOptions } from 'ioredis'
+import { Provider } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import IORedis, { RedisOptions } from 'ioredis';
 
 export const IORedisClientProvider: Provider = {
   provide: 'IOREDIS_CLIENT',
@@ -9,16 +9,16 @@ export const IORedisClientProvider: Provider = {
       host: configService.get('redis.host'),
       port: configService.get('redis.port'),
       password: configService.get('redis.pass'),
-    }
+    };
 
-    const client = new IORedis(options)
+    const client = new IORedis(options);
 
     await new Promise((resolve, reject) => {
-      client.once('connect', resolve)
-      client.once('error', reject)
-    })
+      client.once('connect', resolve);
+      client.once('error', reject);
+    });
 
-    return client
+    return client;
   },
   inject: [ConfigService],
-}
+};

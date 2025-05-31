@@ -1,5 +1,13 @@
-import { Type } from "class-transformer";
-import { IsInt, IsNotEmpty, IsOptional, IsUUID, Max, Min, ValidateNested } from "class-validator";
+import { Type } from 'class-transformer';
+import {
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsUUID,
+  Max,
+  Min,
+  ValidateNested,
+} from 'class-validator';
 
 export class UpdateAssetAllocationDto {
   @IsInt()
@@ -26,9 +34,9 @@ export class BatchUpdateAllocationDto {
   @IsUUID()
   @IsNotEmpty()
   riskProfileId: string;
-  
+
   @ValidateNested({ each: true })
   @Type(() => AllocationItemDto)
   @IsNotEmpty()
   allocations: AllocationItemDto[];
-} 
+}

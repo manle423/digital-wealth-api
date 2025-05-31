@@ -1,21 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 import { LoggerService } from '../logger/logger.service';
 
 @Injectable()
 export class GeminiService {
-  private genAI: GoogleGenerativeAI;
+  private genAI: GoogleGenAI;
 
   constructor(
     private readonly configService: ConfigService,
-    private readonly logger: LoggerService
+    private readonly logger: LoggerService,
   ) {
     const apiKey = this.configService.get<string>('GEMINI_API_KEY');
     if (!apiKey) {
       this.logger.warn('[GeminiService] GEMINI_API_KEY not configured');
     } else {
-      this.genAI = new GoogleGenerativeAI(apiKey);
+      this.genAI = new GoogleGenAI({ apiKey });
       this.logger.info('[GeminiService] Initialized successfully');
     }
   }
@@ -26,28 +26,33 @@ export class GeminiService {
         throw new Error('Gemini API not configured');
       }
 
-      this.logger.info('[generateFinancialAdvice] Generating advice with Gemini');
+      this.logger.info(
+        '[generateFinancialAdvice] Generating advice with Gemini',
+      );
 
-      // Use gemini-2.0-flash-lite for free tier - most cost effective
-      const model = this.genAI.getGenerativeModel({ 
-        model: "gemini-2.0-flash-lite",
-        generationConfig: {
+      // Use gemini-2.0-flash-001 model
+      const response = await this.genAI.models.generateContent({
+        model: 'gemini-2.0-flash-001',
+        contents: prompt,
+        config: {
           temperature: 0.7,
           topP: 0.9,
           maxOutputTokens: 1000, // Keep within reasonable limits
         },
       });
 
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const text = response.text();
+      const text = response.text;
 
-      this.logger.info('[generateFinancialAdvice] Successfully generated advice');
+      this.logger.info(
+        '[generateFinancialAdvice] Successfully generated advice',
+      );
       return text;
-
     } catch (error) {
-      this.logger.error('[generateFinancialAdvice] Error generating advice', error);
-      
+      this.logger.error(
+        '[generateFinancialAdvice] Error generating advice',
+        error,
+      );
+
       // Fallback to local advice if API fails
       return this.generateLocalFallbackAdvice();
     }
@@ -81,14 +86,18 @@ Dựa trên thông tin tài chính của bạn, đây là một số gợi ý c�
         return false;
       }
 
-      const model = this.genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
-      const result = await model.generateContent("Test connection");
-      const response = await result.response;
-      
-      return !!response.text();
+      const response = await this.genAI.models.generateContent({
+        model: 'gemini-2.0-flash-001',
+        contents: 'Test connection',
+      });
+
+      return !!response.text;
     } catch (error) {
-      this.logger.error('[testConnection] Gemini connection test failed', error);
+      this.logger.error(
+        '[testConnection] Gemini connection test failed',
+        error,
+      );
       return false;
     }
   }
-} 
+}

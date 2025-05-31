@@ -5,4 +5,4 @@ export class DeleteQuestionCategoriesDto {
   @IsUUID('4', { each: true })
   @ArrayMinSize(1)
   ids: string[];
-} 
+}

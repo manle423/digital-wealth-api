@@ -6,7 +6,10 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { AuthError } from '../enum/error.enum';
-import { extractTokenFromRequest, verifyAccessToken } from '../utils/token.utils';
+import {
+  extractTokenFromRequest,
+  verifyAccessToken,
+} from '../utils/token.utils';
 
 @Injectable()
 export class JwtGuard implements CanActivate {

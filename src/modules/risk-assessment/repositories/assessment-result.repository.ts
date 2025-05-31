@@ -13,22 +13,28 @@ export class AssessmentResultRepository extends MysqldbRepository<AssessmentResu
   ) {
     super(repository);
   }
-  
+
   async findUserAssessments(userId: string): Promise<AssessmentResult[]> {
-    return this.find({
-      userId,
-    }, {
-      order: { createdAt: 'DESC' }
-    });
+    return this.find(
+      {
+        userId,
+      },
+      {
+        order: { createdAt: 'DESC' },
+      },
+    );
   }
-  
+
   async findLatestUserAssessment(userId: string): Promise<AssessmentResult> {
-    const results = await this.find({
-      userId,
-    }, {
-      order: { createdAt: 'DESC' },
-      take: 1
-    });
+    const results = await this.find(
+      {
+        userId,
+      },
+      {
+        order: { createdAt: 'DESC' },
+        take: 1,
+      },
+    );
     return results[0];
   }
 }

@@ -20,11 +20,17 @@ export class QuestionCategoryRepository extends MysqldbRepository<QuestionCatego
 
   async findAllCategories(
     query?: Partial<GetQuestionCategoriesDto>,
-    pagination?: Partial<IPagination>
+    pagination?: Partial<IPagination>,
   ): Promise<[QuestionCategory[], number]> {
-    const { name, isActive, sortBy = 'order', sortDirection = SortDirection.ASC } = query || {};
+    const {
+      name,
+      isActive,
+      sortBy = 'order',
+      sortDirection = SortDirection.ASC,
+    } = query || {};
 
-    const qb = this.repository.createQueryBuilder('category')
+    const qb = this.repository
+      .createQueryBuilder('category')
       .leftJoinAndSelect('category.questions', 'questions');
 
     if (isActive !== undefined) {
@@ -50,9 +56,11 @@ export class QuestionCategoryRepository extends MysqldbRepository<QuestionCatego
     return results;
   }
 
-  async updateMultipleCategories(updates: QuestionCategoryUpdate[]): Promise<QuestionCategory[]> {
+  async updateMultipleCategories(
+    updates: QuestionCategoryUpdate[],
+  ): Promise<QuestionCategory[]> {
     // First check if all categories exist
-    const ids = updates.map(update => update.id);
+    const ids = updates.map((update) => update.id);
     const existingCategories = await this.find({ id: In(ids) });
 
     if (existingCategories.length !== ids.length) {
@@ -65,14 +73,17 @@ export class QuestionCategoryRepository extends MysqldbRepository<QuestionCatego
 
       // Process each update with existing category as base
       for (const update of updates) {
-        const category = existingCategories.find(c => c.id === update.id)!;
+        const category = existingCategories.find((c) => c.id === update.id)!;
 
         const updatedCategory = {
           ...category,
-          ...update.data
+          ...update.data,
         };
 
-        const saved = await manager.save(this.repository.target, updatedCategory);
+        const saved = await manager.save(
+          this.repository.target,
+          updatedCategory,
+        );
         updatedCategories.push(saved);
       }
 
@@ -95,4 +106,4 @@ export class QuestionCategoryRepository extends MysqldbRepository<QuestionCatego
       return true;
     });
   }
-} 
+}

@@ -1,4 +1,15 @@
-import { IsOptional, IsString, IsBoolean, IsInt, IsUUID, Min, IsNotEmpty, IsArray, ValidateNested, ArrayMinSize } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsBoolean,
+  IsInt,
+  IsUUID,
+  Min,
+  IsNotEmpty,
+  IsArray,
+  ValidateNested,
+  ArrayMinSize,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class UpdateQuestionCategoryDto {
@@ -43,4 +54,4 @@ export class UpdateMultipleQuestionCategoriesDto {
   @Type(() => QuestionCategoryUpdate)
   @ArrayMinSize(1)
   categories: QuestionCategoryUpdate[];
-} 
+}

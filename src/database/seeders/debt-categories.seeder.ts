@@ -7,7 +7,7 @@ export const debtCategories = [
     description: 'Nợ thẻ tín dụng và số dư',
     icon: 'credit-card',
     isActive: true,
-    order: 1
+    order: 1,
   },
   {
     name: 'Vay cá nhân',
@@ -15,7 +15,7 @@ export const debtCategories = [
     description: 'Các khoản vay cá nhân và nợ tín chấp',
     icon: 'user-circle',
     isActive: true,
-    order: 2
+    order: 2,
   },
   {
     name: 'Vay mua nhà',
@@ -23,7 +23,7 @@ export const debtCategories = [
     description: 'Vay thế chấp mua nhà và bất động sản',
     icon: 'home',
     isActive: true,
-    order: 3
+    order: 3,
   },
   {
     name: 'Vay mua xe',
@@ -31,7 +31,7 @@ export const debtCategories = [
     description: 'Vay mua xe và các khoản vay phương tiện',
     icon: 'car',
     isActive: true,
-    order: 4
+    order: 4,
   },
   {
     name: 'Vay học tập',
@@ -39,7 +39,7 @@ export const debtCategories = [
     description: 'Vay du học và tài trợ giáo dục',
     icon: 'graduation-cap',
     isActive: true,
-    order: 5
+    order: 5,
   },
   {
     name: 'Vay kinh doanh',
@@ -47,7 +47,7 @@ export const debtCategories = [
     description: 'Vay kinh doanh và tài trợ thương mại',
     icon: 'briefcase',
     isActive: true,
-    order: 6
+    order: 6,
   },
   {
     name: 'Nợ y tế',
@@ -55,7 +55,7 @@ export const debtCategories = [
     description: 'Viện phí và chi phí y tế',
     icon: 'heart',
     isActive: true,
-    order: 7
+    order: 7,
   },
   {
     name: 'Nợ thuế',
@@ -63,7 +63,7 @@ export const debtCategories = [
     description: 'Nghĩa vụ thuế và nợ với nhà nước',
     icon: 'receipt',
     isActive: true,
-    order: 8
+    order: 8,
   },
   {
     name: 'Nợ khác',
@@ -71,6 +71,6 @@ export const debtCategories = [
     description: 'Các khoản nợ và nghĩa vụ khác',
     icon: 'ellipsis-h',
     isActive: true,
-    order: 9
-  }
-] as Partial<DebtCategory>[]; 
+    order: 9,
+  },
+] as Partial<DebtCategory>[];

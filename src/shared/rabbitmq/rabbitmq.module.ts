@@ -1,7 +1,10 @@
-import { Global, Module } from '@nestjs/common'
-import { defaultNackErrorHandler, RabbitMQModule } from '@golevelup/nestjs-rabbitmq'
-import { ConfigModule, ConfigService } from '@nestjs/config'
-import { RabbitmqService } from './rabbitmq.service'
+import { Global, Module } from '@nestjs/common';
+import {
+  defaultNackErrorHandler,
+  RabbitMQModule,
+} from '@golevelup/nestjs-rabbitmq';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { RabbitmqService } from './rabbitmq.service';
 
 @Global()
 @Module({
@@ -16,34 +19,40 @@ import { RabbitmqService } from './rabbitmq.service'
             name: configService.get<string>('rabbitmq.exchange'),
             type: 'topic',
             options: {
-              durable: true
-            }
+              durable: true,
+            },
           },
         ],
         handlers: {
           sendWelcomeMail: {
             exchange: configService.get<string>('rabbitmq.exchange'),
-            routingKey: configService.get<string>('rabbitmq.sendWelcomeMailRoutingKey'),
+            routingKey: configService.get<string>(
+              'rabbitmq.sendWelcomeMailRoutingKey',
+            ),
             queue: configService.get<string>('rabbitmq.customerQueue'),
             errorHandler: defaultNackErrorHandler,
             queueOptions: {
               durable: true,
-              autoDelete: false
+              autoDelete: false,
             },
           },
           sendOtpMail: {
             exchange: configService.get<string>('rabbitmq.exchange'),
-            routingKey: configService.get<string>('rabbitmq.sendOtpMailRoutingKey'),
+            routingKey: configService.get<string>(
+              'rabbitmq.sendOtpMailRoutingKey',
+            ),
             queue: configService.get<string>('rabbitmq.customerQueue'),
             errorHandler: defaultNackErrorHandler,
             queueOptions: {
               durable: true,
-              autoDelete: false
+              autoDelete: false,
             },
           },
           calculateMetrics: {
             exchange: configService.get<string>('rabbitmq.exchange'),
-            routingKey: configService.get<string>('rabbitmq.calculateMetricsRoutingKey'),
+            routingKey: configService.get<string>(
+              'rabbitmq.calculateMetricsRoutingKey',
+            ),
             queue: configService.get<string>('rabbitmq.customerQueue'),
             errorHandler: defaultNackErrorHandler,
             queueOptions: {
@@ -51,10 +60,10 @@ import { RabbitmqService } from './rabbitmq.service'
             },
           },
         },
-        connectionInitOptions: { 
+        connectionInitOptions: {
           wait: true,
           timeout: 20000,
-          reject: true
+          reject: true,
         },
         channels: {
           'default-channel': {
@@ -74,4 +83,4 @@ import { RabbitmqService } from './rabbitmq.service'
   providers: [RabbitmqService],
   exports: [RabbitMQModule, RabbitmqService],
 })
-export class RabbitmqModule { }
+export class RabbitmqModule {}

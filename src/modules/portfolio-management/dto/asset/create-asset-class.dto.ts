@@ -1,6 +1,16 @@
-import { IsArray, IsBoolean, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Min, ValidateNested } from "class-validator";
-import { Type } from "class-transformer";
-import { Language } from "@/shared/enums/language.enum";
+import {
+  IsArray,
+  IsBoolean,
+  IsEnum,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  Min,
+  ValidateNested,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+import { Language } from '@/shared/enums/language.enum';
 
 export class CreateAssetClassDto {
   @IsString()
@@ -29,7 +39,7 @@ export class CreateAssetClassDto {
   @IsOptional()
   @Type(() => Number)
   order?: number;
-  
+
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;
@@ -43,7 +53,7 @@ export class CreateAssetClassTranslationDto {
   @IsString()
   @IsNotEmpty()
   name: string;
-  
+
   @IsString()
   @IsOptional()
   description?: string;
@@ -55,4 +65,4 @@ export class CreateMultipleAssetClassesDto {
   @ValidateNested({ each: true })
   @Type(() => CreateAssetClassDto)
   assetClasses: CreateAssetClassDto[];
-} 
+}

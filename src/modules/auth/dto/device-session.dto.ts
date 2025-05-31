@@ -14,4 +14,4 @@ export class DeviceSessionDto {
   isTrusted: boolean;
   trustedAt?: Date;
   createdAt: Date;
-} 
+}

@@ -16,7 +16,9 @@ export class FinancialMetricRepository extends MysqldbRepository<FinancialMetric
     super(repository);
   }
 
-  async create(metricData: DeepPartial<FinancialMetric>): Promise<FinancialMetric> {
+  async create(
+    metricData: DeepPartial<FinancialMetric>,
+  ): Promise<FinancialMetric> {
     const metric = this.repository.create(metricData);
     return this.repository.save(metric);
   }
@@ -30,7 +32,10 @@ export class FinancialMetricRepository extends MysqldbRepository<FinancialMetric
       .getMany();
   }
 
-  async findByUserIdAndType(userId: string, type: MetricType): Promise<FinancialMetric[]> {
+  async findByUserIdAndType(
+    userId: string,
+    type: MetricType,
+  ): Promise<FinancialMetric[]> {
     return this.repository
       .createQueryBuilder('metric')
       .where('metric.userId = :userId', { userId })
@@ -39,7 +44,10 @@ export class FinancialMetricRepository extends MysqldbRepository<FinancialMetric
       .getMany();
   }
 
-  async findLatestByUserIdAndType(userId: string, type: MetricType): Promise<FinancialMetric | null> {
+  async findLatestByUserIdAndType(
+    userId: string,
+    type: MetricType,
+  ): Promise<FinancialMetric | null> {
     return this.repository
       .createQueryBuilder('metric')
       .where('metric.userId = :userId', { userId })
@@ -52,14 +60,14 @@ export class FinancialMetricRepository extends MysqldbRepository<FinancialMetric
   async findByUserIdAndDateRange(
     userId: string,
     startDate: Date,
-    endDate: Date
+    endDate: Date,
   ): Promise<FinancialMetric[]> {
     return this.repository
       .createQueryBuilder('metric')
       .where('metric.userId = :userId', { userId })
       .andWhere('metric.calculationDate BETWEEN :startDate AND :endDate', {
         startDate,
-        endDate
+        endDate,
       })
       .orderBy('metric.calculationDate', 'DESC')
       .getMany();
@@ -69,7 +77,7 @@ export class FinancialMetricRepository extends MysqldbRepository<FinancialMetric
     userId: string,
     type: MetricType,
     startDate: Date,
-    endDate: Date
+    endDate: Date,
   ): Promise<FinancialMetric[]> {
     return this.repository
       .createQueryBuilder('metric')
@@ -77,13 +85,16 @@ export class FinancialMetricRepository extends MysqldbRepository<FinancialMetric
       .andWhere('metric.type = :type', { type })
       .andWhere('metric.calculationDate BETWEEN :startDate AND :endDate', {
         startDate,
-        endDate
+        endDate,
       })
       .orderBy('metric.calculationDate', 'ASC')
       .getMany();
   }
 
-  async findByCategory(userId: string, category: string): Promise<FinancialMetric[]> {
+  async findByCategory(
+    userId: string,
+    category: string,
+  ): Promise<FinancialMetric[]> {
     return this.repository
       .createQueryBuilder('metric')
       .where('metric.userId = :userId', { userId })
@@ -93,19 +104,22 @@ export class FinancialMetricRepository extends MysqldbRepository<FinancialMetric
       .getMany();
   }
 
-  async getMetricTrend(userId: string, type: MetricType, months: number = 12): Promise<{
-    date: Date;
-    value: number;
-  }[]> {
+  async getMetricTrend(
+    userId: string,
+    type: MetricType,
+    months: number = 12,
+  ): Promise<
+    {
+      date: Date;
+      value: number;
+    }[]
+  > {
     const fromDate = new Date();
     fromDate.setMonth(fromDate.getMonth() - months);
 
     return this.repository
       .createQueryBuilder('metric')
-      .select([
-        'metric.calculationDate as date',
-        'metric.value as value'
-      ])
+      .select(['metric.calculationDate as date', 'metric.value as value'])
       .where('metric.userId = :userId', { userId })
       .andWhere('metric.type = :type', { type })
       .andWhere('metric.calculationDate >= :fromDate', { fromDate })
@@ -124,7 +138,10 @@ export class FinancialMetricRepository extends MysqldbRepository<FinancialMetric
       .execute();
   }
 
-  async deleteOldMetrics(userId: string, keepCount: number = 100): Promise<void> {
+  async deleteOldMetrics(
+    userId: string,
+    keepCount: number = 100,
+  ): Promise<void> {
     const metrics = await this.repository
       .createQueryBuilder('metric')
       .where('metric.userId = :userId', { userId })
@@ -133,7 +150,7 @@ export class FinancialMetricRepository extends MysqldbRepository<FinancialMetric
       .getMany();
 
     if (metrics.length > 0) {
-      const idsToDelete = metrics.map(m => m.id);
+      const idsToDelete = metrics.map((m) => m.id);
       await this.repository
         .createQueryBuilder()
         .delete()
@@ -143,19 +160,21 @@ export class FinancialMetricRepository extends MysqldbRepository<FinancialMetric
     }
   }
 
-  async getCurrentMetricsSummary(userId: string): Promise<{
-    type: MetricType;
-    value: number;
-    category: string;
-    calculationDate: Date;
-  }[]> {
+  async getCurrentMetricsSummary(userId: string): Promise<
+    {
+      type: MetricType;
+      value: number;
+      category: string;
+      calculationDate: Date;
+    }[]
+  > {
     return this.repository
       .createQueryBuilder('metric')
       .select([
         'metric.type as type',
         'metric.value as value',
         'metric.category as category',
-        'metric.calculationDate as calculationDate'
+        'metric.calculationDate as calculationDate',
       ])
       .where('metric.userId = :userId', { userId })
       .andWhere('metric.isCurrent = :isCurrent', { isCurrent: true })
@@ -163,4 +182,4 @@ export class FinancialMetricRepository extends MysqldbRepository<FinancialMetric
       .addOrderBy('metric.type', 'ASC')
       .getRawMany();
   }
-} 
+}

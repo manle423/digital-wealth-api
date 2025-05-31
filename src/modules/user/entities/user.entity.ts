@@ -18,11 +18,11 @@ export class User extends BaseEntity {
   @Column({
     type: 'enum',
     enum: UserRole,
-    default: UserRole.CUSTOMER
+    default: UserRole.CUSTOMER,
   })
   role: UserRole;
 
-  @OneToOne(() => UserDetail, (userDetail) => userDetail.user) 
+  @OneToOne(() => UserDetail, (userDetail) => userDetail.user)
   userDetail: UserDetail;
 
   @OneToMany(() => UserAuth, (userAuth) => userAuth.user)

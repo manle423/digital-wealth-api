@@ -39,22 +39,58 @@ export class NetWorthSnapshot extends BaseEntity {
     percentage: number;
   }[];
 
-  @Column({ type: 'decimal', precision: 15, scale: 2, nullable: true, name: 'liquid_assets' })
+  @Column({
+    type: 'decimal',
+    precision: 15,
+    scale: 2,
+    nullable: true,
+    name: 'liquid_assets',
+  })
   liquidAssets: number;
 
-  @Column({ type: 'decimal', precision: 15, scale: 2, nullable: true, name: 'investment_assets' })
+  @Column({
+    type: 'decimal',
+    precision: 15,
+    scale: 2,
+    nullable: true,
+    name: 'investment_assets',
+  })
   investmentAssets: number;
 
-  @Column({ type: 'decimal', precision: 15, scale: 2, nullable: true, name: 'real_estate_assets' })
+  @Column({
+    type: 'decimal',
+    precision: 15,
+    scale: 2,
+    nullable: true,
+    name: 'real_estate_assets',
+  })
   realEstateAssets: number;
 
-  @Column({ type: 'decimal', precision: 15, scale: 2, nullable: true, name: 'personal_assets' })
+  @Column({
+    type: 'decimal',
+    precision: 15,
+    scale: 2,
+    nullable: true,
+    name: 'personal_assets',
+  })
   personalAssets: number;
 
-  @Column({ type: 'decimal', precision: 15, scale: 2, nullable: true, name: 'short_term_debts' })
+  @Column({
+    type: 'decimal',
+    precision: 15,
+    scale: 2,
+    nullable: true,
+    name: 'short_term_debts',
+  })
   shortTermDebts: number;
 
-  @Column({ type: 'decimal', precision: 15, scale: 2, nullable: true, name: 'long_term_debts' })
+  @Column({
+    type: 'decimal',
+    precision: 15,
+    scale: 2,
+    nullable: true,
+    name: 'long_term_debts',
+  })
   longTermDebts: number;
 
   @Column({ type: 'text', nullable: true })
@@ -62,4 +98,4 @@ export class NetWorthSnapshot extends BaseEntity {
 
   @Column({ default: false, name: 'is_manual' })
   isManual: boolean;
-} 
+}

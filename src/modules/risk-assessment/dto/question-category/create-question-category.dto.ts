@@ -1,4 +1,14 @@
-import { IsNotEmpty, IsOptional, IsString, IsBoolean, IsInt, Min, IsArray, ValidateNested, ArrayMinSize } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsBoolean,
+  IsInt,
+  Min,
+  IsArray,
+  ValidateNested,
+  ArrayMinSize,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateQuestionCategoryDto {
@@ -35,4 +45,4 @@ export class CreateMultipleQuestionCategoriesDto {
   @Type(() => CreateQuestionCategoryDto)
   @ArrayMinSize(1)
   categories: CreateQuestionCategoryDto[];
-} 
+}

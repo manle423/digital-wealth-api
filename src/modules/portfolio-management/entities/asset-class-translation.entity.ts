@@ -1,12 +1,12 @@
-import { BaseEntity } from "@/shared/mysqldb/types/base-entity.type";
-import { Column, Entity, JoinColumn, ManyToOne } from "typeorm";
-import { Language } from "@/shared/enums/language.enum";
-import { AssetClass } from "./asset-class.entity";
+import { BaseEntity } from '@/shared/mysqldb/types/base-entity.type';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Language } from '@/shared/enums/language.enum';
+import { AssetClass } from './asset-class.entity';
 
 @Entity('asset_class_translations')
 export class AssetClassTranslation extends BaseEntity {
-  @ManyToOne(() => AssetClass, assetClass => assetClass.translations, { 
-    createForeignKeyConstraints: false
+  @ManyToOne(() => AssetClass, (assetClass) => assetClass.translations, {
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({ name: 'asset_class_id', referencedColumnName: 'id' })
   assetClass: AssetClass;

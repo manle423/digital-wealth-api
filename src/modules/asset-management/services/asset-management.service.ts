@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { UserAsset } from '../entities/user-asset.entity';
 import { AssetCategory } from '../entities/asset-category.entity';
 import { LoggerService } from '@/shared/logger/logger.service';
@@ -19,10 +23,13 @@ export class AssetManagementService {
     private readonly userAssetRepository: UserAssetRepository,
     private readonly assetCategoryRepository: AssetCategoryRepository,
     private readonly logger: LoggerService,
-    private readonly redisService: RedisService
+    private readonly redisService: RedisService,
   ) {}
 
-  async getUserAssets(userId: string, query?: GetAssetsDto): Promise<{
+  async getUserAssets(
+    userId: string,
+    query?: GetAssetsDto,
+  ): Promise<{
     assets: UserAsset[];
     total: number;
     summary: {
@@ -38,7 +45,7 @@ export class AssetManagementService {
       const queryHash = query ? this.hashQuery(query) : 'default';
       const cacheKey = `${RedisKeyPrefix.USER_ASSETS_LIST}:${userId}:${queryHash}`;
       const cached = await this.redisService.get(cacheKey);
-      
+
       if (cached) {
         this.logger.debug('[getUserAssets] Cache hit', { cacheKey });
         return JSON.parse(cached);
@@ -65,12 +72,16 @@ export class AssetManagementService {
           totalValue,
           totalAssets: assets.length,
           byCategory,
-          byType
-        }
+          byType,
+        },
       };
 
-      await this.redisService.set(cacheKey, JSON.stringify(result), RedisKeyTtl.FIFTEEN_MINUTES);
-      
+      await this.redisService.set(
+        cacheKey,
+        JSON.stringify(result),
+        RedisKeyTtl.FIFTEEN_MINUTES,
+      );
+
       return result;
     } catch (error) {
       this.logger.error('[getUserAssets] Error getting user assets', error);
@@ -84,7 +95,7 @@ export class AssetManagementService {
 
       const asset = await this.userAssetRepository.findOne(
         { id: assetId, userId, isActive: true },
-        { relations: ['category'] }
+        { relations: ['category'] },
       );
 
       if (!asset) {
@@ -98,12 +109,17 @@ export class AssetManagementService {
     }
   }
 
-  async createAsset(userId: string, createAssetDto: CreateAssetDto): Promise<UserAsset> {
+  async createAsset(
+    userId: string,
+    createAssetDto: CreateAssetDto,
+  ): Promise<UserAsset> {
     try {
       this.logger.info('[createAsset]', { userId, createAssetDto });
 
       // Verify category exists
-      const category = await this.assetCategoryRepository.findById(createAssetDto.categoryId);
+      const category = await this.assetCategoryRepository.findById(
+        createAssetDto.categoryId,
+      );
       if (!category) {
         throw new NotFoundException('Asset category not found');
       }
@@ -116,11 +132,16 @@ export class AssetManagementService {
       asset.type = createAssetDto.type || AssetType.OTHER;
       asset.currentValue = createAssetDto.currentValue;
       asset.purchasePrice = createAssetDto.purchasePrice;
-      asset.purchaseDate = createAssetDto.purchaseDate ? new Date(createAssetDto.purchaseDate) : null;
+      asset.purchaseDate = createAssetDto.purchaseDate
+        ? new Date(createAssetDto.purchaseDate)
+        : null;
       asset.currency = createAssetDto.currency || 'VND';
       asset.annualReturn = createAssetDto.annualReturn;
-      asset.marketValue = createAssetDto.marketValue || createAssetDto.currentValue;
-      asset.valuationDate = createAssetDto.valuationDate ? new Date(createAssetDto.valuationDate) : new Date();
+      asset.marketValue =
+        createAssetDto.marketValue || createAssetDto.currentValue;
+      asset.valuationDate = createAssetDto.valuationDate
+        ? new Date(createAssetDto.valuationDate)
+        : new Date();
       asset.liquidityLevel = createAssetDto.liquidityLevel || 'MEDIUM';
       asset.additionalInfo = createAssetDto.additionalInfo;
       asset.notes = createAssetDto.notes;
@@ -138,7 +159,11 @@ export class AssetManagementService {
     }
   }
 
-  async updateAsset(userId: string, assetId: string, updateAssetDto: UpdateAssetDto): Promise<UserAsset> {
+  async updateAsset(
+    userId: string,
+    assetId: string,
+    updateAssetDto: UpdateAssetDto,
+  ): Promise<UserAsset> {
     try {
       this.logger.info('[updateAsset]', { userId, assetId, updateAssetDto });
 
@@ -146,7 +171,9 @@ export class AssetManagementService {
 
       // Update fields
       if (updateAssetDto.categoryId) {
-        const category = await this.assetCategoryRepository.findById(updateAssetDto.categoryId);
+        const category = await this.assetCategoryRepository.findById(
+          updateAssetDto.categoryId,
+        );
         if (!category) {
           throw new NotFoundException('Asset category not found');
         }
@@ -155,7 +182,7 @@ export class AssetManagementService {
 
       Object.assign(asset, {
         ...updateAssetDto,
-        lastUpdated: new Date()
+        lastUpdated: new Date(),
       });
 
       const updatedAsset = await this.userAssetRepository.save(asset);
@@ -175,7 +202,7 @@ export class AssetManagementService {
       this.logger.info('[deleteAsset]', { userId, assetId });
 
       const asset = await this.getAssetById(userId, assetId);
-      
+
       // Soft delete
       asset.isActive = false;
       await this.userAssetRepository.save(asset);
@@ -188,12 +215,20 @@ export class AssetManagementService {
     }
   }
 
-  async updateAssetValue(userId: string, assetId: string, updateValueDto: UpdateAssetValueDto): Promise<UserAsset> {
+  async updateAssetValue(
+    userId: string,
+    assetId: string,
+    updateValueDto: UpdateAssetValueDto,
+  ): Promise<UserAsset> {
     try {
-      this.logger.info('[updateAssetValue]', { userId, assetId, updateValueDto });
+      this.logger.info('[updateAssetValue]', {
+        userId,
+        assetId,
+        updateValueDto,
+      });
 
       const asset = await this.getAssetById(userId, assetId);
-      
+
       asset.currentValue = updateValueDto.currentValue;
       if (updateValueDto.marketValue) {
         asset.marketValue = updateValueDto.marketValue;
@@ -203,12 +238,12 @@ export class AssetManagementService {
       }
       asset.lastUpdated = new Date();
       asset.valuationDate = new Date();
-      
+
       const updatedAsset = await this.userAssetRepository.save(asset);
-      
+
       // Clear caches
       await this.clearUserAssetCaches(userId);
-      
+
       return updatedAsset[0] as UserAsset;
     } catch (error) {
       this.logger.error('[updateAssetValue] Error updating asset value', error);
@@ -222,56 +257,77 @@ export class AssetManagementService {
 
       const cacheKey = `${RedisKeyPrefix.USER_TOTAL_ASSETS}:${userId}`;
       const cached = await this.redisService.get(cacheKey);
-      
+
       if (cached) {
         this.logger.debug('[getTotalAssetValue] Cache hit', { cacheKey });
         return parseFloat(cached);
       }
 
-      const totalValue = await this.userAssetRepository.getTotalValueByUserId(userId);
-      
-      await this.redisService.set(cacheKey, totalValue.toString(), RedisKeyTtl.THIRTY_MINUTES);
-      
+      const totalValue =
+        await this.userAssetRepository.getTotalValueByUserId(userId);
+
+      await this.redisService.set(
+        cacheKey,
+        totalValue.toString(),
+        RedisKeyTtl.THIRTY_MINUTES,
+      );
+
       return totalValue;
     } catch (error) {
-      this.logger.error('[getTotalAssetValue] Error calculating total asset value', error);
+      this.logger.error(
+        '[getTotalAssetValue] Error calculating total asset value',
+        error,
+      );
       throw error;
     }
   }
 
-  async getAssetBreakdown(userId: string): Promise<{
-    categoryId: string;
-    categoryName: string;
-    totalValue: number;
-    percentage: number;
-    assetCount: number;
-  }[]> {
+  async getAssetBreakdown(userId: string): Promise<
+    {
+      categoryId: string;
+      categoryName: string;
+      totalValue: number;
+      percentage: number;
+      assetCount: number;
+    }[]
+  > {
     try {
       this.logger.info('[getAssetBreakdown]', { userId });
 
       const cacheKey = `${RedisKeyPrefix.ASSET_BREAKDOWN}:${userId}`;
       const cached = await this.redisService.get(cacheKey);
-      
+
       if (cached) {
         this.logger.debug('[getAssetBreakdown] Cache hit', { cacheKey });
         return JSON.parse(cached);
       }
 
-      const breakdown = await this.userAssetRepository.getAssetBreakdownByUserId(userId);
+      const breakdown =
+        await this.userAssetRepository.getAssetBreakdownByUserId(userId);
       const totalValue = await this.getTotalAssetValue(userId);
-      
-      const result = breakdown.map(item => ({
+
+      const result = breakdown.map((item) => ({
         ...item,
         totalValue: parseFloat(item.totalValue.toString()),
         assetCount: parseInt(item.assetCount.toString()),
-        percentage: totalValue > 0 ? (parseFloat(item.totalValue.toString()) / totalValue) * 100 : 0
+        percentage:
+          totalValue > 0
+            ? (parseFloat(item.totalValue.toString()) / totalValue) * 100
+            : 0,
       }));
 
-      await this.redisService.set(cacheKey, JSON.stringify(result), RedisKeyTtl.THIRTY_MINUTES);
-      
+      await this.redisService.set(
+        cacheKey,
+        JSON.stringify(result),
+        RedisKeyTtl.THIRTY_MINUTES,
+      );
+
       return result;
     } catch (error) {
-      this.logger.error('[getAssetBreakdown] Error getting asset breakdown', error);
+      this.logger.error(
+        '[getAssetBreakdown] Error getting asset breakdown',
+        error,
+      );
       throw error;
     }
   }
@@ -282,19 +338,26 @@ export class AssetManagementService {
 
       const cacheKey = `${RedisKeyPrefix.ASSET_CATEGORIES}`;
       const cached = await this.redisService.get(cacheKey);
-      
+
       if (cached) {
         this.logger.debug('[getAssetCategories] Cache hit', { cacheKey });
         return JSON.parse(cached);
       }
 
       const categories = await this.assetCategoryRepository.findAllActive();
-      
-      await this.redisService.set(cacheKey, JSON.stringify(categories), RedisKeyTtl.ONE_DAY);
-      
+
+      await this.redisService.set(
+        cacheKey,
+        JSON.stringify(categories),
+        RedisKeyTtl.ONE_DAY,
+      );
+
       return categories;
     } catch (error) {
-      this.logger.error('[getAssetCategories] Error getting asset categories', error);
+      this.logger.error(
+        '[getAssetCategories] Error getting asset categories',
+        error,
+      );
       throw error;
     }
   }
@@ -310,13 +373,22 @@ export class AssetManagementService {
     }
   }
 
-  async getRecentlyUpdatedAssets(userId: string, days: number = 30): Promise<UserAsset[]> {
+  async getRecentlyUpdatedAssets(
+    userId: string,
+    days: number = 30,
+  ): Promise<UserAsset[]> {
     try {
       this.logger.info('[getRecentlyUpdatedAssets]', { userId, days });
 
-      return await this.userAssetRepository.getRecentlyUpdatedAssets(userId, days);
+      return await this.userAssetRepository.getRecentlyUpdatedAssets(
+        userId,
+        days,
+      );
     } catch (error) {
-      this.logger.error('[getRecentlyUpdatedAssets] Error getting recently updated assets', error);
+      this.logger.error(
+        '[getRecentlyUpdatedAssets] Error getting recently updated assets',
+        error,
+      );
       throw error;
     }
   }
@@ -333,49 +405,62 @@ export class AssetManagementService {
       category.order = createAssetCategoryDto.order || 0;
 
       const savedCategory = await this.assetCategoryRepository.create(category);
-      
+
       // Clear categories cache
       await this.redisService.del(`${RedisKeyPrefix.ASSET_CATEGORIES}`);
-      
-      return savedCategory;
 
+      return savedCategory;
     } catch (error) {
-      this.logger.error('[createAssetCategory] Error creating asset category', error);
+      this.logger.error(
+        '[createAssetCategory] Error creating asset category',
+        error,
+      );
       handleDatabaseError(error, 'AssetManagementService.createAssetCategory');
     }
   }
 
   // Helper methods
   private hashQuery(query: GetAssetsDto): string {
-    return Buffer.from(JSON.stringify(query)).toString('base64').substring(0, 16);
+    return Buffer.from(JSON.stringify(query))
+      .toString('base64')
+      .substring(0, 16);
   }
 
   private applyFilters(assets: UserAsset[], query: GetAssetsDto): UserAsset[] {
     let filtered = assets;
 
     if (query.categoryId) {
-      filtered = filtered.filter(asset => asset.categoryId === query.categoryId);
+      filtered = filtered.filter(
+        (asset) => asset.categoryId === query.categoryId,
+      );
     }
     if (query.type) {
-      filtered = filtered.filter(asset => asset.type === query.type);
+      filtered = filtered.filter((asset) => asset.type === query.type);
     }
     if (query.liquidityLevel) {
-      filtered = filtered.filter(asset => asset.liquidityLevel === query.liquidityLevel);
+      filtered = filtered.filter(
+        (asset) => asset.liquidityLevel === query.liquidityLevel,
+      );
     }
     if (query.minValue !== undefined) {
-      filtered = filtered.filter(asset => asset.currentValue >= query.minValue);
+      filtered = filtered.filter(
+        (asset) => asset.currentValue >= query.minValue,
+      );
     }
     if (query.maxValue !== undefined) {
-      filtered = filtered.filter(asset => asset.currentValue <= query.maxValue);
+      filtered = filtered.filter(
+        (asset) => asset.currentValue <= query.maxValue,
+      );
     }
     if (query.currency) {
-      filtered = filtered.filter(asset => asset.currency === query.currency);
+      filtered = filtered.filter((asset) => asset.currency === query.currency);
     }
     if (query.search) {
       const searchLower = query.search.toLowerCase();
-      filtered = filtered.filter(asset => 
-        asset.name.toLowerCase().includes(searchLower) ||
-        asset.description?.toLowerCase().includes(searchLower)
+      filtered = filtered.filter(
+        (asset) =>
+          asset.name.toLowerCase().includes(searchLower) ||
+          asset.description?.toLowerCase().includes(searchLower),
       );
     }
 
@@ -395,7 +480,10 @@ export class AssetManagementService {
     });
   }
 
-  private applyPagination(assets: UserAsset[], query: GetAssetsDto): UserAsset[] {
+  private applyPagination(
+    assets: UserAsset[],
+    query: GetAssetsDto,
+  ): UserAsset[] {
     if (!query.page || !query.limit) return assets;
 
     const startIndex = (query.page - 1) * query.limit;
@@ -413,20 +501,27 @@ export class AssetManagementService {
         `${RedisKeyPrefix.FINANCIAL_METRICS}:${userId}`,
       ];
 
-      await Promise.all(keysToDelete.map(async (pattern) => {
-        if (pattern.includes('*')) {
-          // For wildcard patterns, use delWithPrefix
-          const prefix = pattern.replace(':*', '');
-          await this.redisService.delWithPrefix(prefix);
-        } else {
-          // For exact keys, use del
-          await this.redisService.del(pattern);
-        }
-      }));
-      
-      this.logger.debug('[clearUserAssetCaches] Cleared all asset caches', { userId });
+      await Promise.all(
+        keysToDelete.map(async (pattern) => {
+          if (pattern.includes('*')) {
+            // For wildcard patterns, use delWithPrefix
+            const prefix = pattern.replace(':*', '');
+            await this.redisService.delWithPrefix(prefix);
+          } else {
+            // For exact keys, use del
+            await this.redisService.del(pattern);
+          }
+        }),
+      );
+
+      this.logger.debug('[clearUserAssetCaches] Cleared all asset caches', {
+        userId,
+      });
     } catch (error) {
-      this.logger.error(`[clearUserAssetCaches] Error clearing caches: ${error.message}`, { userId });
+      this.logger.error(
+        `[clearUserAssetCaches] Error clearing caches: ${error.message}`,
+        { userId },
+      );
     }
   }
-} 
+}

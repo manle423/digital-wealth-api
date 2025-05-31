@@ -5,11 +5,8 @@ import { LoggerModule } from '../logger/logger.module';
 
 @Global()
 @Module({
-  imports: [
-    ConfigModule,
-    LoggerModule,
-  ],
+  imports: [ConfigModule, LoggerModule],
   providers: [GeminiService],
   exports: [GeminiService],
 })
-export class GeminiModule {} 
+export class GeminiModule {}

@@ -25,4 +25,4 @@ export interface EmailBasePayload {
   to: string;
   subject: string;
   template: string;
-} 
+}

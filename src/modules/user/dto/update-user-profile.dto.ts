@@ -1,4 +1,13 @@
-import { IsArray, IsBoolean, IsDate, IsEnum, IsNumber, IsObject, IsOptional, IsString } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsDate,
+  IsEnum,
+  IsNumber,
+  IsObject,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 
 export enum InvestmentExperience {
@@ -18,7 +27,7 @@ export enum TimeHorizon {
 export enum RiskTolerance {
   CONSERVATIVE = 'CONSERVATIVE',
   MODERATE = 'MODERATE',
-  AGGRESSIVE = 'AGGRESSIVE'
+  AGGRESSIVE = 'AGGRESSIVE',
 }
 
 export class InvestmentPreferencesDto {
@@ -80,7 +89,7 @@ export class UserDetailDto {
   @Transform(({ value }) => {
     if (typeof value === 'string') {
       return {
-        monthlyExpenses: Number(value)
+        monthlyExpenses: Number(value),
       };
     }
     return value;
@@ -108,4 +117,4 @@ export class UpdateUserProfileDto {
   @IsObject()
   @Type(() => UserDetailDto)
   userDetail?: UserDetailDto;
-} 
+}

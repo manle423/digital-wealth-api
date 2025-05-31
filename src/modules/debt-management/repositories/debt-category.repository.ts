@@ -23,13 +23,15 @@ export class DebtCategoryRepository extends MysqldbRepository<DebtCategory> {
 
   async findById(categoryId: string): Promise<DebtCategory | null> {
     return this.findOne({
-      id: categoryId, isActive: true
+      id: categoryId,
+      isActive: true,
     });
   }
 
   async findByCodeName(codeName: string): Promise<DebtCategory | null> {
     return this.findOne({
-      codeName, isActive: true
+      codeName,
+      isActive: true,
     });
   }
 
@@ -40,12 +42,16 @@ export class DebtCategoryRepository extends MysqldbRepository<DebtCategory> {
 
   async exists(categoryId: string): Promise<boolean> {
     const count = await this.count({
-      id: categoryId, isActive: true
+      id: categoryId,
+      isActive: true,
     });
     return count > 0;
   }
 
-  async isCodeNameUnique(codeName: string, excludeId?: string): Promise<boolean> {
+  async isCodeNameUnique(
+    codeName: string,
+    excludeId?: string,
+  ): Promise<boolean> {
     const queryBuilder = this.repository
       .createQueryBuilder('category')
       .where('category.codeName = :codeName', { codeName })
@@ -58,4 +64,4 @@ export class DebtCategoryRepository extends MysqldbRepository<DebtCategory> {
     const count = await queryBuilder.getCount();
     return count === 0;
   }
-} 
+}

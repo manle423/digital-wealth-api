@@ -1,12 +1,12 @@
-import { BaseEntity } from "@/shared/mysqldb/types/base-entity.type";
-import { Column, Entity, JoinColumn, ManyToOne } from "typeorm";
-import { Question } from "./question.entity";
-import { Language } from "@/shared/enums/language.enum";
+import { BaseEntity } from '@/shared/mysqldb/types/base-entity.type';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Question } from './question.entity';
+import { Language } from '@/shared/enums/language.enum';
 
 @Entity('question_translations')
 export class QuestionTranslation extends BaseEntity {
-  @ManyToOne(() => Question, question => question.translations, { 
-    createForeignKeyConstraints: false
+  @ManyToOne(() => Question, (question) => question.translations, {
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({ name: 'question_id', referencedColumnName: 'id' })
   question: Question;

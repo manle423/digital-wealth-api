@@ -33,7 +33,7 @@ export class NetWorthController {
   @Get('history')
   async getNetWorthHistory(
     @CurrentUser() user: any,
-    @Query('months', new ParseIntPipe({ optional: true })) months?: number
+    @Query('months', new ParseIntPipe({ optional: true })) months?: number,
   ) {
     return await this.netWorthService.getNetWorthHistory(user.sub, months);
   }
@@ -42,4 +42,4 @@ export class NetWorthController {
   async createSnapshot(@CurrentUser() user: any) {
     return await this.netWorthService.createSnapshot(user.sub, true);
   }
-} 
+}

@@ -6,4 +6,4 @@ export class UpdateAssetDto extends PartialType(CreateAssetDto) {
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;
-} 
+}

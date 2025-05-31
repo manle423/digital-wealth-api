@@ -1,8 +1,8 @@
-import { Global, Module } from '@nestjs/common'
-import { MailerModule } from '@nestjs-modules/mailer'
-import { GmailService } from './gmail.service'
-import { ConfigService } from '@nestjs/config'
-import { LoggerModule } from '@/shared/logger/logger.module'
+import { Global, Module } from '@nestjs/common';
+import { MailerModule } from '@nestjs-modules/mailer';
+import { GmailService } from './gmail.service';
+import { ConfigService } from '@nestjs/config';
+import { LoggerModule } from '@/shared/logger/logger.module';
 
 @Global()
 @Module({
@@ -29,4 +29,4 @@ import { LoggerModule } from '@/shared/logger/logger.module'
   providers: [GmailService],
   exports: [GmailService],
 })
-export class GmailModule { }
+export class GmailModule {}

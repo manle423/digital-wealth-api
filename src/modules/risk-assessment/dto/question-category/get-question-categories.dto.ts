@@ -19,4 +19,4 @@ export class GetQuestionCategoriesDto extends PaginationDto {
   @IsOptional()
   @IsEnum(SortDirection)
   sortDirection?: SortDirection = SortDirection.ASC;
-} 
+}

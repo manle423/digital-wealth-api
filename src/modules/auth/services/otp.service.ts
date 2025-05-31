@@ -36,11 +36,12 @@ export class OtpService {
     // Kiểm tra cache cho số lần retry
     const retryCacheKey = `${RedisKeyPrefix.OTP_RETRY}:${email}:${type}`;
     const retryData = await this.redisService.get(retryCacheKey);
-    
+
     if (retryData) {
       const { count, lastRetryAt } = JSON.parse(retryData);
       if (count >= this.MAX_RETRY_COUNT) {
-        const waitUntil = new Date(lastRetryAt).getTime() + this.RETRY_WAIT_MINUTES * 60000;
+        const waitUntil =
+          new Date(lastRetryAt).getTime() + this.RETRY_WAIT_MINUTES * 60000;
         if (waitUntil > Date.now()) {
           throw new UnauthorizedException(AuthError.TOO_MANY_ATTEMPTS);
         }
@@ -73,7 +74,7 @@ export class OtpService {
         count: userOtp.retryCount,
         lastRetryAt: userOtp.lastRetryAt.toISOString(),
       }),
-      RedisKeyTtl.FIFTEEN_MINUTES
+      RedisKeyTtl.FIFTEEN_MINUTES,
     );
 
     // Đẩy email vào queue
@@ -91,11 +92,7 @@ export class OtpService {
     await this.rabbitmqService.push(RoutingKey.sendOtpMail, emailData);
   }
 
-  async verifyOtp(
-    email: string,
-    otp: string,
-    type: OtpType,
-  ): Promise<UserOtp> {
+  async verifyOtp(email: string, otp: string, type: OtpType): Promise<UserOtp> {
     this.logger.info('[verifyOtp]', { email, type });
 
     const userOtp = await this.userOtpRepository.findOne(
@@ -163,4 +160,4 @@ export class OtpService {
         return 'default-otp';
     }
   }
-} 
+}

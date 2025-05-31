@@ -15,7 +15,7 @@ export class FinancialAnalysisService {
     private readonly assetManagementService: AssetManagementService,
     private readonly netWorthService: NetWorthService,
     private readonly logger: LoggerService,
-    private readonly redisService: RedisService
+    private readonly redisService: RedisService,
   ) {}
 
   async getMetrics(userId: string): Promise<FinancialMetric[]> {
@@ -24,7 +24,7 @@ export class FinancialAnalysisService {
 
       const cacheKey = `${RedisKeyPrefix.FINANCIAL_METRICS}:${userId}`;
       const cached = await this.redisService.get(cacheKey);
-      
+
       if (cached) {
         return JSON.parse(cached);
       }
@@ -38,73 +38,111 @@ export class FinancialAnalysisService {
 
   async calculateAllMetrics(userId: string): Promise<FinancialMetric[]> {
     try {
-      this.logger.info('[calculateAllMetrics] Force recalculating metrics', { userId });
+      this.logger.info('[calculateAllMetrics] Force recalculating metrics', {
+        userId,
+      });
 
       const cacheKey = `${RedisKeyPrefix.FINANCIAL_METRICS}:${userId}`;
-      
+
       // Clear existing cache
       await this.redisService.del(cacheKey);
 
       // Get base data
       const [netWorthData, assetData] = await Promise.all([
         this.netWorthService.calculateCurrentNetWorth(userId),
-        this.assetManagementService.getUserAssets(userId)
+        this.assetManagementService.getUserAssets(userId),
       ]);
 
       const metrics: Partial<FinancialMetric>[] = [];
 
       // Calculate various metrics
-      metrics.push(await this.calculateLiquidityRatio(userId, netWorthData, assetData));
+      metrics.push(
+        await this.calculateLiquidityRatio(userId, netWorthData, assetData),
+      );
       metrics.push(await this.calculateDebtToAssetRatio(userId, netWorthData));
-      metrics.push(await this.calculateInvestmentRatio(userId, netWorthData, assetData));
+      metrics.push(
+        await this.calculateInvestmentRatio(userId, netWorthData, assetData),
+      );
       metrics.push(await this.calculateNetWorthMetric(userId, netWorthData));
       metrics.push(await this.calculateDiversificationIndex(userId, assetData));
 
       // Save all metrics
       const savedMetrics = await Promise.all(
-        metrics.map(metric => this.financialMetricRepository.create(metric))
+        metrics.map((metric) => this.financialMetricRepository.create(metric)),
       );
 
       // Cache the new results
-      await this.redisService.set(cacheKey, JSON.stringify(savedMetrics), RedisKeyTtl.ONE_HOUR);
+      await this.redisService.set(
+        cacheKey,
+        JSON.stringify(savedMetrics),
+        RedisKeyTtl.ONE_HOUR,
+      );
 
       return savedMetrics;
     } catch (error) {
-      this.logger.error('[calculateAllMetrics] Error calculating metrics', error);
+      this.logger.error(
+        '[calculateAllMetrics] Error calculating metrics',
+        error,
+      );
       throw error;
     }
   }
 
-  async getMetricsByType(userId: string, type: MetricType): Promise<FinancialMetric[]> {
+  async getMetricsByType(
+    userId: string,
+    type: MetricType,
+  ): Promise<FinancialMetric[]> {
     try {
       this.logger.info('[getMetricsByType]', { userId, type });
 
-      return await this.financialMetricRepository.findByUserIdAndType(userId, type);
+      return await this.financialMetricRepository.findByUserIdAndType(
+        userId,
+        type,
+      );
     } catch (error) {
-      this.logger.error('[getMetricsByType] Error getting metrics by type', error);
+      this.logger.error(
+        '[getMetricsByType] Error getting metrics by type',
+        error,
+      );
       throw error;
     }
   }
 
-  async getLatestMetric(userId: string, type: MetricType): Promise<FinancialMetric | null> {
+  async getLatestMetric(
+    userId: string,
+    type: MetricType,
+  ): Promise<FinancialMetric | null> {
     try {
       this.logger.info('[getLatestMetric]', { userId, type });
 
-      return await this.financialMetricRepository.findLatestByUserIdAndType(userId, type);
+      return await this.financialMetricRepository.findLatestByUserIdAndType(
+        userId,
+        type,
+      );
     } catch (error) {
       this.logger.error('[getLatestMetric] Error getting latest metric', error);
       throw error;
     }
   }
 
-  async getMetricTrend(userId: string, type: MetricType, months: number = 12): Promise<{
-    date: Date;
-    value: number;
-  }[]> {
+  async getMetricTrend(
+    userId: string,
+    type: MetricType,
+    months: number = 12,
+  ): Promise<
+    {
+      date: Date;
+      value: number;
+    }[]
+  > {
     try {
       this.logger.info('[getMetricTrend]', { userId, type, months });
 
-      return await this.financialMetricRepository.getMetricTrend(userId, type, months);
+      return await this.financialMetricRepository.getMetricTrend(
+        userId,
+        type,
+        months,
+      );
     } catch (error) {
       this.logger.error('[getMetricTrend] Error getting metric trend', error);
       throw error;
@@ -138,7 +176,7 @@ export class FinancialAnalysisService {
 
       const cacheKey = `${RedisKeyPrefix.FINANCIAL_SUMMARY}:${userId}`;
       const cached = await this.redisService.get(cacheKey);
-      
+
       if (cached) {
         return JSON.parse(cached);
       }
@@ -148,30 +186,33 @@ export class FinancialAnalysisService {
         debtToAssetRatio,
         investmentRatio,
         diversificationIndex,
-        netWorthData
+        netWorthData,
       ] = await Promise.all([
         this.getLatestMetric(userId, MetricType.LIQUIDITY_RATIO),
         this.getLatestMetric(userId, MetricType.DEBT_TO_ASSET_RATIO),
         this.getLatestMetric(userId, MetricType.INVESTMENT_RATIO),
         this.getLatestMetric(userId, MetricType.DIVERSIFICATION_INDEX),
-        this.netWorthService.calculateCurrentNetWorth(userId)
+        this.netWorthService.calculateCurrentNetWorth(userId),
       ]);
 
       const summary = {
         liquidity: {
           liquidityRatio: liquidityRatio?.value || 0,
           emergencyFundRatio: 0, // TODO: Calculate emergency fund ratio
-          status: this.evaluateLiquidityStatus(liquidityRatio?.value || 0)
+          status: this.evaluateLiquidityStatus(liquidityRatio?.value || 0),
         },
         debt: {
           debtToAssetRatio: debtToAssetRatio?.value || 0,
           debtToIncomeRatio: 0, // TODO: Calculate debt to income ratio
-          status: this.evaluateDebtStatus(debtToAssetRatio?.value || 0)
+          status: this.evaluateDebtStatus(debtToAssetRatio?.value || 0),
         },
         investment: {
           investmentRatio: investmentRatio?.value || 0,
           diversificationIndex: diversificationIndex?.value || 0,
-          status: this.evaluateInvestmentStatus(investmentRatio?.value || 0, diversificationIndex?.value || 0)
+          status: this.evaluateInvestmentStatus(
+            investmentRatio?.value || 0,
+            diversificationIndex?.value || 0,
+          ),
         },
         overall: {
           netWorth: netWorthData.netWorth,
@@ -179,36 +220,52 @@ export class FinancialAnalysisService {
             liquidityRatio: liquidityRatio?.value || 0,
             debtToAssetRatio: debtToAssetRatio?.value || 0,
             investmentRatio: investmentRatio?.value || 0,
-            diversificationIndex: diversificationIndex?.value || 0
+            diversificationIndex: diversificationIndex?.value || 0,
           }),
-          status: 'FAIR' as 'EXCELLENT' | 'GOOD' | 'FAIR' | 'POOR'
-        }
+          status: 'FAIR' as 'EXCELLENT' | 'GOOD' | 'FAIR' | 'POOR',
+        },
       };
 
       // Determine overall status based on financial health score
-      if (summary.overall.financialHealthScore >= 80) summary.overall.status = 'EXCELLENT';
-      else if (summary.overall.financialHealthScore >= 60) summary.overall.status = 'GOOD';
-      else if (summary.overall.financialHealthScore >= 40) summary.overall.status = 'FAIR';
+      if (summary.overall.financialHealthScore >= 80)
+        summary.overall.status = 'EXCELLENT';
+      else if (summary.overall.financialHealthScore >= 60)
+        summary.overall.status = 'GOOD';
+      else if (summary.overall.financialHealthScore >= 40)
+        summary.overall.status = 'FAIR';
       else summary.overall.status = 'POOR';
 
-      await this.redisService.set(cacheKey, JSON.stringify(summary), RedisKeyTtl.THIRTY_MINUTES);
+      await this.redisService.set(
+        cacheKey,
+        JSON.stringify(summary),
+        RedisKeyTtl.THIRTY_MINUTES,
+      );
 
       return summary;
     } catch (error) {
-      this.logger.error('[getFinancialSummary] Error getting financial summary', error);
+      this.logger.error(
+        '[getFinancialSummary] Error getting financial summary',
+        error,
+      );
       throw error;
     }
   }
 
-  private async calculateLiquidityRatio(userId: string, netWorthData: any, assetData: any): Promise<Partial<FinancialMetric>> {
-    const liquidAssets = await this.assetManagementService.getLiquidAssets(userId);
+  private async calculateLiquidityRatio(
+    userId: string,
+    netWorthData: any,
+    assetData: any,
+  ): Promise<Partial<FinancialMetric>> {
+    const liquidAssets =
+      await this.assetManagementService.getLiquidAssets(userId);
     const totalLiquidValue = liquidAssets.reduce((sum, asset) => {
       const value = Number(asset?.currentValue || 0);
       return sum + (isNaN(value) ? 0 : value);
     }, 0);
-    
+
     const totalAssets = Number(netWorthData.totalAssets || 0);
-    const liquidityRatio = totalAssets > 0 ? (totalLiquidValue / totalAssets) * 100 : 0;
+    const liquidityRatio =
+      totalAssets > 0 ? (totalLiquidValue / totalAssets) * 100 : 0;
 
     return {
       userId,
@@ -220,15 +277,21 @@ export class FinancialAnalysisService {
         formula: '(Liquid Assets / Total Assets) * 100',
         inputs: {
           liquidAssets: totalLiquidValue,
-          totalAssets: totalAssets
-        }
+          totalAssets: totalAssets,
+        },
       },
-      isCurrent: true
+      isCurrent: true,
     };
   }
 
-  private async calculateDebtToAssetRatio(userId: string, netWorthData: any): Promise<Partial<FinancialMetric>> {
-    const debtToAssetRatio = netWorthData.totalAssets > 0 ? (netWorthData.totalDebts / netWorthData.totalAssets) * 100 : 0;
+  private async calculateDebtToAssetRatio(
+    userId: string,
+    netWorthData: any,
+  ): Promise<Partial<FinancialMetric>> {
+    const debtToAssetRatio =
+      netWorthData.totalAssets > 0
+        ? (netWorthData.totalDebts / netWorthData.totalAssets) * 100
+        : 0;
 
     return {
       userId,
@@ -240,32 +303,37 @@ export class FinancialAnalysisService {
         formula: '(Total Debts / Total Assets) * 100',
         inputs: {
           totalDebts: netWorthData.totalDebts,
-          totalAssets: netWorthData.totalAssets
-        }
+          totalAssets: netWorthData.totalAssets,
+        },
       },
-      isCurrent: true
+      isCurrent: true,
     };
   }
 
-  private async calculateInvestmentRatio(userId: string, netWorthData: any, assetData: any): Promise<Partial<FinancialMetric>> {
-    const investmentTypes = [
-      'STOCK',
-      'BOND',
-      'MUTUAL_FUND',
-      'ETF',
-      'CRYPTO'
-    ];
-    
-    const investmentAssets = assetData.assets.filter((asset: any) => 
-      investmentTypes.includes(asset.type) || 
-      asset.category?.name?.toLowerCase().includes('investment') ||
-      asset.category?.name?.toLowerCase().includes('stock') ||
-      asset.category?.name?.toLowerCase().includes('bond') ||
-      asset.category?.name?.toLowerCase().includes('fund')
+  private async calculateInvestmentRatio(
+    userId: string,
+    netWorthData: any,
+    assetData: any,
+  ): Promise<Partial<FinancialMetric>> {
+    const investmentTypes = ['STOCK', 'BOND', 'MUTUAL_FUND', 'ETF', 'CRYPTO'];
+
+    const investmentAssets = assetData.assets.filter(
+      (asset: any) =>
+        investmentTypes.includes(asset.type) ||
+        asset.category?.name?.toLowerCase().includes('investment') ||
+        asset.category?.name?.toLowerCase().includes('stock') ||
+        asset.category?.name?.toLowerCase().includes('bond') ||
+        asset.category?.name?.toLowerCase().includes('fund'),
     );
-    
-    const totalInvestmentValue = investmentAssets.reduce((sum: number, asset: any) => sum + (Number(asset.currentValue) || 0), 0);
-    const investmentRatio = netWorthData.totalAssets > 0 ? (totalInvestmentValue / netWorthData.totalAssets) * 100 : 0;
+
+    const totalInvestmentValue = investmentAssets.reduce(
+      (sum: number, asset: any) => sum + (Number(asset.currentValue) || 0),
+      0,
+    );
+    const investmentRatio =
+      netWorthData.totalAssets > 0
+        ? (totalInvestmentValue / netWorthData.totalAssets) * 100
+        : 0;
 
     return {
       userId,
@@ -277,14 +345,17 @@ export class FinancialAnalysisService {
         formula: '(Investment Assets / Total Assets) * 100',
         inputs: {
           investmentAssets: totalInvestmentValue,
-          totalAssets: netWorthData.totalAssets
-        }
+          totalAssets: netWorthData.totalAssets,
+        },
       },
-      isCurrent: true
+      isCurrent: true,
     };
   }
 
-  private async calculateNetWorthMetric(userId: string, netWorthData: any): Promise<Partial<FinancialMetric>> {
+  private async calculateNetWorthMetric(
+    userId: string,
+    netWorthData: any,
+  ): Promise<Partial<FinancialMetric>> {
     return {
       userId,
       type: MetricType.NET_WORTH,
@@ -295,24 +366,27 @@ export class FinancialAnalysisService {
         formula: 'Total Assets - Total Debts',
         inputs: {
           totalAssets: netWorthData.totalAssets,
-          totalDebts: netWorthData.totalDebts
-        }
+          totalDebts: netWorthData.totalDebts,
+        },
       },
-      isCurrent: true
+      isCurrent: true,
     };
   }
 
-  private async calculateDiversificationIndex(userId: string, assetData: any): Promise<Partial<FinancialMetric>> {
+  private async calculateDiversificationIndex(
+    userId: string,
+    assetData: any,
+  ): Promise<Partial<FinancialMetric>> {
     const categories = assetData.summary.byCategory;
     const totalValue = assetData.summary.totalValue;
-    
+
     // Calculate Herfindahl-Hirschman Index for diversification
     let hhi = 0;
     categories.forEach((category: any) => {
       const percentage = category.totalValue / totalValue;
       hhi += percentage * percentage;
     });
-    
+
     // Convert to diversification index (0-100, higher is better)
     const diversificationIndex = totalValue > 0 ? (1 - hhi) * 100 : 0;
 
@@ -326,26 +400,33 @@ export class FinancialAnalysisService {
         formula: '(1 - HHI) * 100',
         inputs: {
           hhi,
-          categoriesCount: categories.length
-        }
+          categoriesCount: categories.length,
+        },
       },
-      isCurrent: true
+      isCurrent: true,
     };
   }
 
-  private evaluateLiquidityStatus(liquidityRatio: number): 'GOOD' | 'FAIR' | 'POOR' {
+  private evaluateLiquidityStatus(
+    liquidityRatio: number,
+  ): 'GOOD' | 'FAIR' | 'POOR' {
     if (liquidityRatio >= 20) return 'GOOD';
     if (liquidityRatio >= 10) return 'FAIR';
     return 'POOR';
   }
 
-  private evaluateDebtStatus(debtToAssetRatio: number): 'GOOD' | 'FAIR' | 'POOR' {
+  private evaluateDebtStatus(
+    debtToAssetRatio: number,
+  ): 'GOOD' | 'FAIR' | 'POOR' {
     if (debtToAssetRatio <= 30) return 'GOOD';
     if (debtToAssetRatio <= 50) return 'FAIR';
     return 'POOR';
   }
 
-  private evaluateInvestmentStatus(investmentRatio: number, diversificationIndex: number): 'GOOD' | 'FAIR' | 'POOR' {
+  private evaluateInvestmentStatus(
+    investmentRatio: number,
+    diversificationIndex: number,
+  ): 'GOOD' | 'FAIR' | 'POOR' {
     const avgScore = (investmentRatio + diversificationIndex) / 2;
     if (avgScore >= 60) return 'GOOD';
     if (avgScore >= 30) return 'FAIR';
@@ -360,11 +441,18 @@ export class FinancialAnalysisService {
   }): number {
     // Weight different metrics
     const liquidityScore = Math.min(metrics.liquidityRatio * 2, 100) * 0.25; // 25% weight
-    const debtScore = Math.max(100 - metrics.debtToAssetRatio * 2, 0) * 0.30; // 30% weight
+    const debtScore = Math.max(100 - metrics.debtToAssetRatio * 2, 0) * 0.3; // 30% weight
     const investmentScore = Math.min(metrics.investmentRatio, 100) * 0.25; // 25% weight
-    const diversificationScore = metrics.diversificationIndex * 0.20; // 20% weight
+    const diversificationScore = metrics.diversificationIndex * 0.2; // 20% weight
 
-    return Number((liquidityScore + debtScore + investmentScore + diversificationScore).toFixed(2));
+    return Number(
+      (
+        liquidityScore +
+        debtScore +
+        investmentScore +
+        diversificationScore
+      ).toFixed(2),
+    );
   }
 
   private async clearFinancialCaches(userId: string): Promise<void> {
@@ -374,11 +462,16 @@ export class FinancialAnalysisService {
         `${RedisKeyPrefix.FINANCIAL_SUMMARY}:${userId}`,
       ];
 
-      await Promise.all(keysToDelete.map(key => this.redisService.del(key)));
+      await Promise.all(keysToDelete.map((key) => this.redisService.del(key)));
 
-      this.logger.debug('[clearFinancialCaches] Cleared financial caches', { userId });
+      this.logger.debug('[clearFinancialCaches] Cleared financial caches', {
+        userId,
+      });
     } catch (error) {
-      this.logger.error(`[clearFinancialCaches] Error clearing caches: ${error.message}`, { userId });
+      this.logger.error(
+        `[clearFinancialCaches] Error clearing caches: ${error.message}`,
+        { userId },
+      );
     }
   }
-} 
+}

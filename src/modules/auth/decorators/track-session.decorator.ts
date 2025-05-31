@@ -6,7 +6,7 @@ export const SessionInfo = createParamDecorator(
   (data: unknown, ctx: ExecutionContext) => {
     const request = ctx.switchToHttp().getRequest<Request>();
     const user = request.user as any;
-    
+
     return {
       sessionId: user?.sessionId,
       userId: user?.sub,
@@ -22,4 +22,4 @@ export const CurrentUser = createParamDecorator(
     const request = ctx.switchToHttp().getRequest<Request>();
     return request.user;
   },
-); 
+);

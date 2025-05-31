@@ -12,13 +12,18 @@ import { SessionValidationMiddleware } from './middleware/session-validation.mid
   imports: [UserModule],
   controllers: [AuthController],
   providers: [
-    AuthService, 
-    JwtService, 
-    OtpService, 
-    UserAuthService, 
+    AuthService,
+    JwtService,
+    OtpService,
+    UserAuthService,
     SessionTrackerService,
-    SessionValidationMiddleware
+    SessionValidationMiddleware,
   ],
-  exports: [SessionTrackerService, SessionValidationMiddleware, UserAuthService, JwtService],
+  exports: [
+    SessionTrackerService,
+    SessionValidationMiddleware,
+    UserAuthService,
+    JwtService,
+  ],
 })
 export class AuthModule {}

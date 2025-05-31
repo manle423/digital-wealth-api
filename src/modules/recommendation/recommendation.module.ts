@@ -22,11 +22,7 @@ import { JwtService } from '@nestjs/jwt';
     RedisModule,
   ],
   controllers: [RecommendationController],
-  providers: [
-    RecommendationRepository,
-    RecommendationService,
-    JwtService,
-  ],
+  providers: [RecommendationRepository, RecommendationService, JwtService],
   exports: [RecommendationService],
 })
-export class RecommendationModule {} 
+export class RecommendationModule {}

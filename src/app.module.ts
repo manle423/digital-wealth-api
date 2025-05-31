@@ -42,7 +42,7 @@ import { GeminiModule } from './shared/gemini/gemini.module';
     DebtManagementModule,
     RecommendationModule,
     FinancialAnalysisModule,
-    NetWorthModule
+    NetWorthModule,
   ],
   controllers: [],
   providers: [],
@@ -53,10 +53,10 @@ export class AppModule implements NestModule {
       .apply(SessionValidationMiddleware)
       .exclude(
         'auth/login',
-        'auth/register', 
+        'auth/register',
         'auth/refresh',
         'auth/forgot-password',
-        'auth/reset-password'
+        'auth/reset-password',
       )
       .forRoutes('*');
   }

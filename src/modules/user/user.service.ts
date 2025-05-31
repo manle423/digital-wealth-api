@@ -67,7 +67,7 @@ export class UserService {
       });
 
       const savedUser = savedUsers[0];
-      
+
       const welcomeEmailData: IWelcomeEmailData = {
         to: savedUser.email,
         name: savedUser.name,
@@ -75,12 +75,15 @@ export class UserService {
         template: 'welcome',
         data: {
           name: savedUser.name,
-          email: savedUser.email
-        }
+          email: savedUser.email,
+        },
       };
 
       // Push welcome email message to queue
-      await this.rabbitmqService.push(RoutingKey.sendWelcomeMail, welcomeEmailData);
+      await this.rabbitmqService.push(
+        RoutingKey.sendWelcomeMail,
+        welcomeEmailData,
+      );
 
       const { password, ...result } = savedUser;
       return result;
@@ -149,14 +152,18 @@ export class UserService {
           // Ensure riskTolerance is a number
           riskTolerance: dto.userDetail.riskTolerance || 1,
           // Handle investment preferences
-          investmentPreferences: typeof dto.userDetail.investmentPreferences === 'string' 
-            ? { monthlyExpenses: Number(dto.userDetail.investmentPreferences) }
-            : dto.userDetail.investmentPreferences || {}
+          investmentPreferences:
+            typeof dto.userDetail.investmentPreferences === 'string'
+              ? {
+                  monthlyExpenses: Number(dto.userDetail.investmentPreferences),
+                }
+              : dto.userDetail.investmentPreferences || {},
         };
 
         // Remove any undefined values
-        Object.keys(userDetailData).forEach(key => 
-          userDetailData[key] === undefined && delete userDetailData[key]
+        Object.keys(userDetailData).forEach(
+          (key) =>
+            userDetailData[key] === undefined && delete userDetailData[key],
         );
 
         if (!userDetail) {
@@ -164,17 +171,15 @@ export class UserService {
           await this.userDetailRepository.save({
             userId,
             ...userDetailData,
-            riskTolerance: userDetailData.riskTolerance || 1 // Ensure default value
+            riskTolerance: userDetailData.riskTolerance || 1, // Ensure default value
           } as DeepPartial<UserDetail>);
         } else {
           // Update existing user detail
-          await this.userDetailRepository.update(
-            { userId }, 
-            {
-              ...userDetailData,
-              riskTolerance: userDetailData.riskTolerance || userDetail.riskTolerance || 1
-            } as DeepPartial<UserDetail>
-          );
+          await this.userDetailRepository.update({ userId }, {
+            ...userDetailData,
+            riskTolerance:
+              userDetailData.riskTolerance || userDetail.riskTolerance || 1,
+          } as DeepPartial<UserDetail>);
         }
       }
 
@@ -184,13 +189,16 @@ export class UserService {
       // Get updated user with detail
       const updatedUser = await this.userRepository.findOne(
         { id: userId },
-        { relations: ['userDetail'] }
+        { relations: ['userDetail'] },
       );
 
       const { password, ...result } = updatedUser;
       return result;
     } catch (error) {
-      this.logger.error('[updateUserProfile] Error updating user profile', error);
+      this.logger.error(
+        '[updateUserProfile] Error updating user profile',
+        error,
+      );
       throw error;
     }
   }
@@ -198,9 +206,9 @@ export class UserService {
   // Helper method to convert risk tolerance string to number
   private convertRiskToleranceToNumber(riskTolerance: string): number {
     const riskToleranceMap = {
-      'CONSERVATIVE': 1,
-      'MODERATE': 2,
-      'AGGRESSIVE': 3
+      CONSERVATIVE: 1,
+      MODERATE: 2,
+      AGGRESSIVE: 3,
     };
     return riskToleranceMap[riskTolerance] || 1;
   }
@@ -212,7 +220,7 @@ export class UserService {
       // Kiểm tra cache
       const cacheKey = `${RedisKeyPrefix.USER_PROFILE}:${userId}`;
       const cachedProfile = await this.redisService.get(cacheKey);
-      
+
       if (cachedProfile) {
         this.logger.debug(`Cache hit: ${cacheKey}`);
         return JSON.parse(cachedProfile);
@@ -221,7 +229,7 @@ export class UserService {
       // Nếu không có cache, truy vấn database
       const user = await this.userRepository.findOne(
         { id: userId },
-        { relations: ['userDetail'] }
+        { relations: ['userDetail'] },
       );
 
       if (!user) {
@@ -229,17 +237,20 @@ export class UserService {
       }
 
       const { password, ...result } = user;
-      
+
       // Lưu kết quả vào cache
       await this.redisService.set(
-        cacheKey, 
-        JSON.stringify(result), 
-        RedisKeyTtl.ONE_HOUR
+        cacheKey,
+        JSON.stringify(result),
+        RedisKeyTtl.ONE_HOUR,
       );
-      
+
       return result;
     } catch (error) {
-      this.logger.error('[getUserProfileComplete] Error getting complete user profile', error);
+      this.logger.error(
+        '[getUserProfileComplete] Error getting complete user profile',
+        error,
+      );
       throw error;
     }
   }
@@ -257,18 +268,27 @@ export class UserService {
         `${RedisKeyPrefix.FINANCIAL_METRICS}:${userId}`,
       ];
 
-      await Promise.all(keysToDelete.map(key => this.redisService.del(key)));
-      
-      this.logger.debug('[clearUserCache] Cleared all user caches', { userId, email });
+      await Promise.all(keysToDelete.map((key) => this.redisService.del(key)));
+
+      this.logger.debug('[clearUserCache] Cleared all user caches', {
+        userId,
+        email,
+      });
     } catch (error) {
-      this.logger.error(`[clearUserCache] Error clearing user cache: ${error.message}`, { userId, email });
+      this.logger.error(
+        `[clearUserCache] Error clearing user cache: ${error.message}`,
+        { userId, email },
+      );
       // Không throw error để không ảnh hưởng đến luồng chính
     }
   }
 
   async updatePassword(userId: string, hashedPassword: string) {
     this.logger.info('[updatePassword]', { userId });
-    return this.userRepository.update({id: userId}, { password: hashedPassword });
+    return this.userRepository.update(
+      { id: userId },
+      { password: hashedPassword },
+    );
   }
 
   async getUserFinanceProfile(userId: string) {
@@ -278,25 +298,28 @@ export class UserService {
       // Check cache first
       const cacheKey = `${RedisKeyPrefix.FINANCIAL_SUMMARY_BY_AI}:${userId}`;
       const cachedData = await this.redisService.get(cacheKey);
-      
+
       if (cachedData) {
         this.logger.debug('[getUserFinanceProfile] Cache hit', { userId });
         return JSON.parse(cachedData);
       }
 
-      this.logger.debug('[getUserFinanceProfile] Cache miss, fetching data', { userId });
+      this.logger.debug('[getUserFinanceProfile] Cache miss, fetching data', {
+        userId,
+      });
 
       // Get user basic info and details
       const [user, userDetail] = await Promise.all([
         this.userRepository.findOne({ id: userId }),
-        this.userDetailRepository.findOne({ userId })
+        this.userDetailRepository.findOne({ userId }),
       ]);
 
       if (!user) {
         throw new NotFoundException(AuthError.USER_NOT_FOUND);
       }
 
-      const riskTolerance = await this.riskAssessmentService.getUserAssessmentHistory(userId);
+      const riskTolerance =
+        await this.riskAssessmentService.getUserAssessmentHistory(userId);
 
       // Get financial data from all financial modules
       const [
@@ -304,30 +327,39 @@ export class UserService {
         financialMetrics,
         assetBreakdown,
         debtBreakdown,
-        liquidAssets
+        liquidAssets,
       ] = await Promise.all([
         this.netWorthService.getNetWorthSummary(userId).catch(() => ({
-          current: { totalAssets: 0, totalDebts: 0, netWorth: 0, liquidAssets: 0 },
+          current: {
+            totalAssets: 0,
+            totalDebts: 0,
+            netWorth: 0,
+            liquidAssets: 0,
+          },
           trend: { change: 0, changePercentage: 0, trend: 'STABLE' as const },
-          breakdown: { assets: [], debts: [] }
+          breakdown: { assets: [], debts: [] },
         })),
         this.financialAnalysisService.getFinancialSummary(userId).catch(() => ({
           overallScore: 0,
-          metrics: []
+          metrics: [],
         })),
         this.assetManagementService.getAssetBreakdown(userId).catch(() => []),
         this.debtManagementService.getDebtBreakdown(userId).catch(() => []),
-        this.assetManagementService.getLiquidAssets(userId).catch(() => [])
+        this.assetManagementService.getLiquidAssets(userId).catch(() => []),
       ]);
 
       // Calculate age from dateOfBirth
-      const age = userDetail?.dateOfBirth 
-        ? new Date().getFullYear() - new Date(userDetail.dateOfBirth).getFullYear()
+      const age = userDetail?.dateOfBirth
+        ? new Date().getFullYear() -
+          new Date(userDetail.dateOfBirth).getFullYear()
         : null;
 
       // Calculate monthly income and expenses
-      const monthlyIncome = userDetail?.annualIncome ? Math.round(userDetail.annualIncome / 12) : 0;
-      const monthlyExpenses = userDetail?.investmentPreferences?.monthlyExpenses || 0;
+      const monthlyIncome = userDetail?.annualIncome
+        ? Math.round(userDetail.annualIncome / 12)
+        : 0;
+      const monthlyExpenses =
+        userDetail?.investmentPreferences?.monthlyExpenses || 0;
       const monthlySavings = monthlyIncome - monthlyExpenses;
 
       // Prepare comprehensive financial data
@@ -338,12 +370,13 @@ export class UserService {
           email: user.email,
           age: age,
           occupation: userDetail?.occupation || 'Chưa cập nhật',
-          investmentExperience: userDetail?.investmentExperience || 'Mới bắt đầu',
+          investmentExperience:
+            userDetail?.investmentExperience || 'Mới bắt đầu',
         },
 
         riskAssessment: {
           history: riskTolerance,
-          current: riskTolerance[riskTolerance.length - 1]
+          current: riskTolerance[riskTolerance.length - 1],
         },
 
         // Financial overview
@@ -351,50 +384,73 @@ export class UserService {
           monthlyIncome: monthlyIncome,
           monthlyExpenses: monthlyExpenses,
           monthlySavings: monthlySavings,
-          savingsRate: monthlyIncome > 0 ? Math.round((monthlySavings / monthlyIncome) * 100) : 0,
+          savingsRate:
+            monthlyIncome > 0
+              ? Math.round((monthlySavings / monthlyIncome) * 100)
+              : 0,
           totalAssets: netWorthSummary.current.totalAssets,
           totalDebts: netWorthSummary.current.totalDebts,
           netWorth: netWorthSummary.current.netWorth,
           liquidAssets: netWorthSummary.current.liquidAssets,
-          emergencyFundMonths: monthlyExpenses > 0 ? Math.round(netWorthSummary.current.liquidAssets / monthlyExpenses) : 0
+          emergencyFundMonths:
+            monthlyExpenses > 0
+              ? Math.round(
+                  netWorthSummary.current.liquidAssets / monthlyExpenses,
+                )
+              : 0,
         },
 
         // Asset breakdown
         assets: {
           breakdown: assetBreakdown,
-          liquid: liquidAssets.slice(0, 5).map(asset => ({
+          liquid: liquidAssets.slice(0, 5).map((asset) => ({
             name: asset.name,
             type: asset.type,
             value: asset.currentValue,
-            category: asset.category?.name
+            category: asset.category?.name,
           })),
-          totalCategories: assetBreakdown.length
+          totalCategories: assetBreakdown.length,
         },
 
         // Debt breakdown
         debts: {
           breakdown: debtBreakdown,
           totalCategories: debtBreakdown.length,
-          debtToAssetRatio: netWorthSummary.current.totalAssets > 0 
-            ? Math.round((netWorthSummary.current.totalDebts / netWorthSummary.current.totalAssets) * 100)
-            : 0
+          debtToAssetRatio:
+            netWorthSummary.current.totalAssets > 0
+              ? Math.round(
+                  (netWorthSummary.current.totalDebts /
+                    netWorthSummary.current.totalAssets) *
+                    100,
+                )
+              : 0,
         },
 
         // Financial health metrics
         healthMetrics: {
-          overallScore: (financialMetrics as any)?.overall?.score || (financialMetrics as any)?.overallScore || 0,
+          overallScore:
+            (financialMetrics as any)?.overall?.score ||
+            (financialMetrics as any)?.overallScore ||
+            0,
           trend: netWorthSummary.trend,
-          liquidityRatio: netWorthSummary.current.totalAssets > 0 
-            ? Math.round((netWorthSummary.current.liquidAssets / netWorthSummary.current.totalAssets) * 100)
-            : 0
+          liquidityRatio:
+            netWorthSummary.current.totalAssets > 0
+              ? Math.round(
+                  (netWorthSummary.current.liquidAssets /
+                    netWorthSummary.current.totalAssets) *
+                    100,
+                )
+              : 0,
         },
 
         // Investment preferences
         preferences: {
           goals: userDetail?.investmentPreferences?.investmentGoals || [],
-          preferredTypes: userDetail?.investmentPreferences?.preferredInvestmentTypes || [],
-          timeHorizon: userDetail?.investmentPreferences?.timeHorizon || 'Chưa xác định'
-        }
+          preferredTypes:
+            userDetail?.investmentPreferences?.preferredInvestmentTypes || [],
+          timeHorizon:
+            userDetail?.investmentPreferences?.timeHorizon || 'Chưa xác định',
+        },
       };
 
       // Create prompt for Gemini AI
@@ -405,7 +461,10 @@ export class UserService {
       try {
         aiAdvice = await this.geminiService.generateFinancialAdvice(aiPrompt);
       } catch (error) {
-        this.logger.error('[getUserFinanceProfile] Error getting AI advice', error);
+        this.logger.error(
+          '[getUserFinanceProfile] Error getting AI advice',
+          error,
+        );
         aiAdvice = this.generateBasicAdvice(financialProfile);
       }
 
@@ -416,7 +475,7 @@ export class UserService {
           advice: {
             aiGenerated: aiAdvice,
             generatedAt: new Date().toISOString(),
-            source: 'gemini-ai'
+            source: 'gemini-ai',
           },
           summary: {
             netWorth: netWorthSummary.current.netWorth,
@@ -425,28 +484,41 @@ export class UserService {
             liquidAssets: netWorthSummary.current.liquidAssets,
             monthlyIncome: monthlyIncome,
             monthlySavings: monthlySavings,
-            financialHealthScore: (financialMetrics as any)?.overall?.score || (financialMetrics as any)?.overallScore || 0
-          }
+            financialHealthScore:
+              (financialMetrics as any)?.overall?.score ||
+              (financialMetrics as any)?.overallScore ||
+              0,
+          },
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
 
       await this.redisService.set(
         cacheKey,
         JSON.stringify(response),
-        RedisKeyTtl.THIRTY_DAYS
+        RedisKeyTtl.THIRTY_DAYS,
       );
 
       return response;
-
     } catch (error) {
-      this.logger.error('[getUserFinanceProfile] Error getting finance profile', error);
+      this.logger.error(
+        '[getUserFinanceProfile] Error getting finance profile',
+        error,
+      );
       throw error;
     }
   }
 
   private createFinancialAdvicePrompt(profile: any): string {
-    const { user, financial, assets, debts, healthMetrics, preferences, riskAssessment } = profile;
+    const {
+      user,
+      financial,
+      assets,
+      debts,
+      healthMetrics,
+      preferences,
+      riskAssessment,
+    } = profile;
 
     return `
 Bạn là chuyên gia tư vấn tài chính hàng đầu tại Việt Nam. Hãy phân tích và đưa ra lời khuyên chi tiết cho khách hàng sau:
@@ -471,10 +543,10 @@ ${riskAssessment?.current?.summary ? `- Đề xuất phân bổ: ${riskAssessmen
 - Quỹ khẩn cấp: ${financial.emergencyFundMonths} tháng chi tiêu
 
 **CƠ CẤU TÀI SÂN:** ${assets.totalCategories} loại tài sản
-${assets.breakdown.map(asset => `- ${asset.categoryName}: ${asset.totalValue?.toLocaleString('vi-VN')} VND (${asset.percentage}%)`).join('\n')}
+${assets.breakdown.map((asset) => `- ${asset.categoryName}: ${asset.totalValue?.toLocaleString('vi-VN')} VND (${asset.percentage}%)`).join('\n')}
 
 **CƠ CẤU NỢ:** ${debts.totalCategories} loại nợ, tỷ lệ nợ/tài sản: ${debts.debtToAssetRatio}%
-${debts.breakdown.map(debt => `- ${debt.categoryName}: ${debt.totalValue?.toLocaleString('vi-VN')} VND (${debt.percentage}%)`).join('\n')}
+${debts.breakdown.map((debt) => `- ${debt.categoryName}: ${debt.totalValue?.toLocaleString('vi-VN')} VND (${debt.percentage}%)`).join('\n')}
 
 **MỤC TIÊU ĐẦU TƯ:**
 - Thời gian đầu tư: ${preferences.timeHorizon}
@@ -498,7 +570,7 @@ Hãy trả lời bằng tiếng Việt, cụ thể và thực tế với thị t
     const age = user.age || 30;
 
     let advice = `🎯 **PHÂN TÍCH TÀI CHÍNH CÁ NHÂN**\n\n`;
-    
+
     // Đánh giá tỷ lệ tiết kiệm
     if (savingsRate >= 30) {
       advice += `✅ **Tỷ lệ tiết kiệm ${savingsRate}% rất xuất sắc!** Bạn đang trên đường xây dựng sự giàu có bền vững.\n\n`;
@@ -512,7 +584,7 @@ Hãy trả lời bằng tiếng Việt, cụ thể và thực tế với thị t
 
     // Gợi ý theo độ tuổi
     advice += `📊 **GỢI Ý ĐẦU TƯ THEO ĐỘ TUỔI (${age} tuổi)**\n\n`;
-    
+
     if (age < 30) {
       advice += `🚀 **Ở tuổi ${age}, bạn có thể chấp nhận rủi ro cao:**\n`;
       advice += `• 70% cổ phiếu tăng trưởng\n• 20% trái phiếu\n• 10% tiền mặt dự phòng\n\n`;
@@ -542,7 +614,7 @@ Hãy trả lời bằng tiếng Việt, cụ thể và thực tế với thị t
         `${RedisKeyPrefix.FINANCIAL_SUMMARY_BY_AI}:${userId}`,
       ];
 
-      await Promise.all(keysToDelete.map(key => this.redisService.del(key)));
+      await Promise.all(keysToDelete.map((key) => this.redisService.del(key)));
     } catch (error) {
       this.logger.error('[deleteCache] Error deleting cache', error);
       throw error;

@@ -17,9 +17,9 @@ export class Question extends BaseEntity {
   @Column({ type: 'varchar', length: 50, nullable: true })
   category: string;
 
-  @ManyToOne(() => QuestionCategory, category => category.questions, { 
-    nullable: true, 
-    createForeignKeyConstraints: false 
+  @ManyToOne(() => QuestionCategory, (category) => category.questions, {
+    nullable: true,
+    createForeignKeyConstraints: false,
   })
   @JoinColumn({ name: 'question_category_id', referencedColumnName: 'id' })
   questionCategory: QuestionCategory;
@@ -27,7 +27,7 @@ export class Question extends BaseEntity {
   @Column({ type: 'uuid', nullable: true, name: 'question_category_id' })
   questionCategoryId: string;
 
-  @OneToMany(() => QuestionTranslation, translation => translation.question)
+  @OneToMany(() => QuestionTranslation, (translation) => translation.question)
   translations: QuestionTranslation[];
 
   @Column({ type: 'json' })
@@ -36,4 +36,4 @@ export class Question extends BaseEntity {
     textEn: string;
     value: number;
   }[];
-} 
+}

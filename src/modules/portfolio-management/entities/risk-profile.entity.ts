@@ -9,19 +9,22 @@ export class RiskProfile extends BaseEntity {
   @Column({
     type: 'enum',
     enum: RiskProfileType,
-    unique: true
+    unique: true,
   })
   type: RiskProfileType;
-  
+
   @Column({ type: 'int', name: 'min_score' })
   minScore: number;
-  
+
   @Column({ type: 'int', name: 'max_score' })
   maxScore: number;
-  
-  @OneToMany(() => AssetAllocation, allocation => allocation.riskProfile)
+
+  @OneToMany(() => AssetAllocation, (allocation) => allocation.riskProfile)
   allocations: AssetAllocation[];
 
-  @OneToMany(() => RiskProfileTranslation, translation => translation.riskProfile)
+  @OneToMany(
+    () => RiskProfileTranslation,
+    (translation) => translation.riskProfile,
+  )
   translations: RiskProfileTranslation[];
-} 
+}

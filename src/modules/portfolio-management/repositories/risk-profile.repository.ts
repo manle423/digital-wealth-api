@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, LessThanOrEqual, MoreThanOrEqual, DeleteResult } from 'typeorm';
+import {
+  Repository,
+  LessThanOrEqual,
+  MoreThanOrEqual,
+  DeleteResult,
+} from 'typeorm';
 import { RiskProfile } from '../entities/risk-profile.entity';
 import { MysqldbRepository } from '@/shared/mysqldb/mysqldb.repository';
 import { MysqldbConnection } from '@/shared/mysqldb/connections/db.connection';
@@ -19,20 +24,26 @@ export class RiskProfileRepository extends MysqldbRepository<RiskProfile> {
   }
 
   async findByType(type: RiskProfileType): Promise<RiskProfile | null> {
-    return this.findOne({
-      type,
-    }, {
-      relations: ['translations']
-    });
+    return this.findOne(
+      {
+        type,
+      },
+      {
+        relations: ['translations'],
+      },
+    );
   }
 
   async findByScore(score: number): Promise<RiskProfile | null> {
-    return this.findOne({
-      minScore: LessThanOrEqual(score),
-      maxScore: MoreThanOrEqual(score)
-    }, {
-      relations: ['translations']
-    });
+    return this.findOne(
+      {
+        minScore: LessThanOrEqual(score),
+        maxScore: MoreThanOrEqual(score),
+      },
+      {
+        relations: ['translations'],
+      },
+    );
   }
 
   async getAllWithAllocations(): Promise<RiskProfile[]> {
@@ -42,9 +53,9 @@ export class RiskProfileRepository extends MysqldbRepository<RiskProfile> {
         relations: ['allocations', 'allocations.assetClass', 'translations'],
         order: {
           minScore: 'ASC',
-          allocations: { assetClass: { order: 'ASC' } }
-        }
-      }
+          allocations: { assetClass: { order: 'ASC' } },
+        },
+      },
     );
   }
 
@@ -60,11 +71,16 @@ export class RiskProfileRepository extends MysqldbRepository<RiskProfile> {
    */
   async findAllProfiles(
     query?: Partial<GetRiskProfilesDto>,
-    pagination?: Partial<IPagination>
+    pagination?: Partial<IPagination>,
   ): Promise<[RiskProfile[], number]> {
-    const { types, sortBy = 'minScore', sortDirection = SortDirection.ASC } = query || {};
+    const {
+      types,
+      sortBy = 'minScore',
+      sortDirection = SortDirection.ASC,
+    } = query || {};
 
-    const qb = this.repository.createQueryBuilder('profile')
+    const qb = this.repository
+      .createQueryBuilder('profile')
       .leftJoinAndSelect('profile.translations', 'translations');
 
     if (types && types.length > 0) {
@@ -84,4 +100,4 @@ export class RiskProfileRepository extends MysqldbRepository<RiskProfile> {
 
     return results;
   }
-} 
+}

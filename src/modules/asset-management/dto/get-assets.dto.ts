@@ -52,4 +52,4 @@ export class UpdateAssetValueDto {
   @IsOptional()
   @IsString()
   notes?: string;
-} 
+}

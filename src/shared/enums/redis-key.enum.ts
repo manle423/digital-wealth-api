@@ -6,7 +6,7 @@ export enum RedisKeyPrefix {
   ASSET_CLASS = 'asset:class',
   ASSET_ALLOCATION = 'asset:allocation',
   ASSESSMENT = 'assessment',
-  
+
   // User Management
   USER = 'user',
   USER_PROFILE = 'user:profile',
@@ -15,7 +15,7 @@ export enum RedisKeyPrefix {
   USER_ID = 'user:id',
   OTP_RETRY = 'otp:retry',
   SESSION = 'session',
-  
+
   // Asset Management
   USER_ASSETS = 'user:assets',
   USER_ASSETS_LIST = 'user:assets:list',
@@ -23,7 +23,7 @@ export enum RedisKeyPrefix {
   USER_TOTAL_ASSETS = 'user:assets:total',
   ASSET_CATEGORIES = 'asset:categories',
   ASSET_BREAKDOWN = 'user:assets:breakdown',
-  
+
   // Debt Management
   USER_DEBTS = 'user:debts',
   USER_DEBTS_LIST = 'user:debts:list',
@@ -34,14 +34,14 @@ export enum RedisKeyPrefix {
   DEBT_CATEGORIES = 'debt:categories',
   DEBT_OVERDUE = 'user:debts:overdue',
   DEBT_UPCOMING = 'user:debts:upcoming',
-  
+
   // Net Worth & Financial Analysis
   NET_WORTH = 'user:networth',
   NET_WORTH_HISTORY = 'user:networth:history',
   FINANCIAL_METRICS = 'user:financial:metrics',
   FINANCIAL_SUMMARY = 'user:financial:summary',
   FINANCIAL_SUMMARY_BY_AI = 'user:financial:summary:ai',
-  
+
   // Recommendations
   RECOMMENDATIONS = 'user:recommendations',
 }
@@ -63,5 +63,5 @@ export enum RedisKeyTtl {
   THREE_DAYS = 259200,
   SEVEN_DAYS = 604800,
   FIFTEEN_DAYS = 1296000,
-  THIRTY_DAYS = 2592000
+  THIRTY_DAYS = 2592000,
 }

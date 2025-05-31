@@ -9,4 +9,4 @@ export class SubmitFeedbackDto {
   @Min(1)
   @Max(5)
   rating?: number;
-} 
+}

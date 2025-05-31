@@ -24,21 +24,19 @@ import { OptionalJwtGuard } from '../auth/guards/optional-jwt.guard';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      AssessmentResult,
-      Question,
-      QuestionCategory,
-      QuestionTranslation,
-    ], MysqldbConnection.name),
+    TypeOrmModule.forFeature(
+      [AssessmentResult, Question, QuestionCategory, QuestionTranslation],
+      MysqldbConnection.name,
+    ),
     forwardRef(() => UserModule),
     LoggerModule,
-    PortfolioManagementModule
+    PortfolioManagementModule,
   ],
   controllers: [
     AdminQuestionCategoryController,
     AdminQuestionController,
     PublicQuestionController,
-    PublicAssessmentController
+    PublicAssessmentController,
   ],
   providers: [
     RiskAssessmentService,
@@ -53,4 +51,4 @@ import { OptionalJwtGuard } from '../auth/guards/optional-jwt.guard';
   ],
   exports: [RiskAssessmentService],
 })
-export class RiskAssessmentModule {} 
+export class RiskAssessmentModule {}

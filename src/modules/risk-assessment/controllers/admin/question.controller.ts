@@ -20,9 +20,7 @@ import { QuestionService } from '@/modules/risk-assessment/services/question.ser
 @Controller('admin/risk-assessment/questions')
 @UseGuards(JwtGuard, AdminGuard)
 export class AdminQuestionController {
-  constructor(
-    private readonly questionService: QuestionService,
-  ) {}
+  constructor(private readonly questionService: QuestionService) {}
 
   @Get()
   async getQuestions(@Query() query: GetQuestionsDto) {
@@ -35,24 +33,18 @@ export class AdminQuestionController {
   }
 
   @Post()
-  async createQuestions(
-    @Body() dto: CreateMultipleQuestionsDto,
-  ) {
+  async createQuestions(@Body() dto: CreateMultipleQuestionsDto) {
     return this.questionService.createQuestions(dto.questions);
   }
 
   @Put()
-  async updateQuestions(
-    @Body() dto: UpdateMultipleQuestionsDto,
-  ) {
+  async updateQuestions(@Body() dto: UpdateMultipleQuestionsDto) {
     return this.questionService.updateQuestions(dto.questions);
   }
 
   @Delete()
-  async deleteQuestions(
-    @Body() dto: DeleteQuestionsDto,
-  ) {
+  async deleteQuestions(@Body() dto: DeleteQuestionsDto) {
     const result = await this.questionService.deleteQuestions(dto.ids);
     return { success: result };
   }
-} 
+}

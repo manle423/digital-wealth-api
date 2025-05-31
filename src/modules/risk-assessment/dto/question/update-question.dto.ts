@@ -1,4 +1,13 @@
-import { IsArray, IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID, ValidateNested } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUUID,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 class UpdateQuestionOptionDto {
@@ -64,4 +73,4 @@ export class UpdateMultipleQuestionsDto {
   @ValidateNested({ each: true })
   @Type(() => QuestionUpdate)
   questions: QuestionUpdate[];
-} 
+}

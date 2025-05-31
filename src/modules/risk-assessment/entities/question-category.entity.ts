@@ -22,6 +22,6 @@ export class QuestionCategory extends BaseEntity {
   @Column({ nullable: true, name: 'image_url' })
   imageUrl: string;
 
-  @OneToMany(() => Question, question => question.questionCategory)
+  @OneToMany(() => Question, (question) => question.questionCategory)
   questions: Question[];
-} 
+}

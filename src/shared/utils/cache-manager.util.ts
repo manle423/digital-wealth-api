@@ -17,13 +17,13 @@ export class CacheManager {
         // User specific caches
         `${RedisKeyPrefix.USER_PROFILE}:${userId}`,
         `${RedisKeyPrefix.USER_DETAIL}:${userId}`,
-        
+
         // Asset related caches
         `${RedisKeyPrefix.USER_ASSETS_LIST}:${userId}:*`,
         `${RedisKeyPrefix.USER_ASSETS_SUMMARY}:${userId}`,
         `${RedisKeyPrefix.USER_TOTAL_ASSETS}:${userId}`,
         `${RedisKeyPrefix.ASSET_BREAKDOWN}:${userId}`,
-        
+
         // Debt related caches
         `${RedisKeyPrefix.USER_DEBTS_LIST}:${userId}:*`,
         `${RedisKeyPrefix.USER_DEBTS_SUMMARY}:${userId}`,
@@ -31,7 +31,7 @@ export class CacheManager {
         `${RedisKeyPrefix.DEBT_BREAKDOWN}:${userId}`,
         `${RedisKeyPrefix.DEBT_OVERDUE}:${userId}`,
         `${RedisKeyPrefix.DEBT_UPCOMING}:${userId}:*`,
-        
+
         // Financial analysis caches
         `${RedisKeyPrefix.NET_WORTH}:${userId}`,
         `${RedisKeyPrefix.NET_WORTH_HISTORY}:${userId}`,
@@ -43,18 +43,26 @@ export class CacheManager {
         patterns.push(`${RedisKeyPrefix.USER_EMAIL}:${email}`);
       }
 
-      await Promise.all(patterns.map(async (pattern) => {
-        if (pattern.includes('*')) {
-          const prefix = pattern.replace(':*', '');
-          await this.redisService.delWithPrefix(prefix);
-        } else {
-          await this.redisService.del(pattern);
-        }
-      }));
+      await Promise.all(
+        patterns.map(async (pattern) => {
+          if (pattern.includes('*')) {
+            const prefix = pattern.replace(':*', '');
+            await this.redisService.delWithPrefix(prefix);
+          } else {
+            await this.redisService.del(pattern);
+          }
+        }),
+      );
 
-      this.logger.debug('[CacheManager] Cleared all user caches', { userId, email });
+      this.logger.debug('[CacheManager] Cleared all user caches', {
+        userId,
+        email,
+      });
     } catch (error) {
-      this.logger.error(`[CacheManager] Error clearing user caches: ${error.message}`, { userId, email });
+      this.logger.error(
+        `[CacheManager] Error clearing user caches: ${error.message}`,
+        { userId, email },
+      );
     }
   }
 
@@ -75,7 +83,10 @@ export class CacheManager {
       await this.clearCachePatterns(patterns);
       this.logger.debug('[CacheManager] Cleared asset caches', { userId });
     } catch (error) {
-      this.logger.error(`[CacheManager] Error clearing asset caches: ${error.message}`, { userId });
+      this.logger.error(
+        `[CacheManager] Error clearing asset caches: ${error.message}`,
+        { userId },
+      );
     }
   }
 
@@ -98,7 +109,10 @@ export class CacheManager {
       await this.clearCachePatterns(patterns);
       this.logger.debug('[CacheManager] Cleared debt caches', { userId });
     } catch (error) {
-      this.logger.error(`[CacheManager] Error clearing debt caches: ${error.message}`, { userId });
+      this.logger.error(
+        `[CacheManager] Error clearing debt caches: ${error.message}`,
+        { userId },
+      );
     }
   }
 
@@ -112,10 +126,14 @@ export class CacheManager {
         RedisKeyPrefix.DEBT_CATEGORIES,
       ];
 
-      await Promise.all(prefixes.map(prefix => this.redisService.del(prefix)));
+      await Promise.all(
+        prefixes.map((prefix) => this.redisService.del(prefix)),
+      );
       this.logger.debug('[CacheManager] Cleared category caches');
     } catch (error) {
-      this.logger.error(`[CacheManager] Error clearing category caches: ${error.message}`);
+      this.logger.error(
+        `[CacheManager] Error clearing category caches: ${error.message}`,
+      );
     }
   }
 
@@ -130,10 +148,14 @@ export class CacheManager {
         RedisKeyPrefix.ASSET_ALLOCATION,
       ];
 
-      await Promise.all(prefixes.map(prefix => this.redisService.delWithPrefix(prefix)));
+      await Promise.all(
+        prefixes.map((prefix) => this.redisService.delWithPrefix(prefix)),
+      );
       this.logger.debug('[CacheManager] Cleared portfolio caches');
     } catch (error) {
-      this.logger.error(`[CacheManager] Error clearing portfolio caches: ${error.message}`);
+      this.logger.error(
+        `[CacheManager] Error clearing portfolio caches: ${error.message}`,
+      );
     }
   }
 
@@ -147,10 +169,14 @@ export class CacheManager {
         RedisKeyPrefix.QUESTION_CATEGORY,
       ];
 
-      await Promise.all(prefixes.map(prefix => this.redisService.delWithPrefix(prefix)));
+      await Promise.all(
+        prefixes.map((prefix) => this.redisService.delWithPrefix(prefix)),
+      );
       this.logger.debug('[CacheManager] Cleared question caches');
     } catch (error) {
-      this.logger.error(`[CacheManager] Error clearing question caches: ${error.message}`);
+      this.logger.error(
+        `[CacheManager] Error clearing question caches: ${error.message}`,
+      );
     }
   }
 
@@ -158,14 +184,16 @@ export class CacheManager {
    * Helper method to clear cache patterns
    */
   private async clearCachePatterns(patterns: string[]): Promise<void> {
-    await Promise.all(patterns.map(async (pattern) => {
-      if (pattern.includes('*')) {
-        const prefix = pattern.replace(':*', '');
-        await this.redisService.delWithPrefix(prefix);
-      } else {
-        await this.redisService.del(pattern);
-      }
-    }));
+    await Promise.all(
+      patterns.map(async (pattern) => {
+        if (pattern.includes('*')) {
+          const prefix = pattern.replace(':*', '');
+          await this.redisService.delWithPrefix(prefix);
+        } else {
+          await this.redisService.del(pattern);
+        }
+      }),
+    );
   }
 
   /**
@@ -179,6 +207,8 @@ export class CacheManager {
    * Hash query object for cache key
    */
   static hashQuery(query: any): string {
-    return Buffer.from(JSON.stringify(query || {})).toString('base64').substring(0, 16);
+    return Buffer.from(JSON.stringify(query || {}))
+      .toString('base64')
+      .substring(0, 16);
   }
-} 
+}

@@ -7,7 +7,7 @@ export const assetCategories = [
     description: 'Cổ phiếu, trái phiếu, quỹ đầu tư',
     icon: 'trending-up',
     isActive: true,
-    order: 1
+    order: 1,
   },
   {
     name: 'Bất động sản',
@@ -15,7 +15,7 @@ export const assetCategories = [
     description: 'Nhà đất, căn hộ, đất nền',
     icon: 'home',
     isActive: true,
-    order: 2
+    order: 2,
   },
   {
     name: 'Tiền mặt & Tiết kiệm',
@@ -23,7 +23,7 @@ export const assetCategories = [
     description: 'Tiền mặt, tài khoản tiết kiệm, sổ tiết kiệm',
     icon: 'dollar-sign',
     isActive: true,
-    order: 3
+    order: 3,
   },
   {
     name: 'Tài sản cá nhân',
@@ -31,7 +31,7 @@ export const assetCategories = [
     description: 'Xe cộ, trang sức, đồ cổ',
     icon: 'user',
     isActive: true,
-    order: 4
+    order: 4,
   },
   {
     name: 'Kinh doanh',
@@ -39,7 +39,7 @@ export const assetCategories = [
     description: 'Doanh nghiệp, thiết bị kinh doanh',
     icon: 'briefcase',
     isActive: true,
-    order: 5
+    order: 5,
   },
   {
     name: 'Bảo hiểm & Hưu trí',
@@ -47,7 +47,7 @@ export const assetCategories = [
     description: 'Bảo hiểm nhân thọ, quỹ hưu trí',
     icon: 'shield',
     isActive: true,
-    order: 6
+    order: 6,
   },
   {
     name: 'Hàng hóa & Ngoại tệ',
@@ -55,7 +55,7 @@ export const assetCategories = [
     description: 'Vàng, bạc, ngoại tệ, hàng hóa',
     icon: 'globe',
     isActive: true,
-    order: 7
+    order: 7,
   },
   {
     name: 'Khác',
@@ -63,6 +63,6 @@ export const assetCategories = [
     description: 'Các tài sản khác',
     icon: 'more-horizontal',
     isActive: true,
-    order: 8
-  }
-] as Partial<AssetCategory>[]; 
+    order: 8,
+  },
+] as Partial<AssetCategory>[];

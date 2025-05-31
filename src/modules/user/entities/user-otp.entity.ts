@@ -1,11 +1,6 @@
-import {
-  Entity,
-  Column,
-  ManyToOne,
-  JoinColumn,
-} from 'typeorm'
-import { User } from './user.entity'
-import { BaseEntity } from '@/shared/mysqldb/types/base-entity.type'
+import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { User } from './user.entity';
+import { BaseEntity } from '@/shared/mysqldb/types/base-entity.type';
 import { OtpType } from '../enums/otp-type.enum';
 import { OtpStatus } from '../enums/otp-status.enum';
 
@@ -47,5 +42,4 @@ export class UserOtp extends BaseEntity {
 
   @Column({ name: 'verified_at', type: 'timestamp', nullable: true })
   verifiedAt: Date;
-
 }

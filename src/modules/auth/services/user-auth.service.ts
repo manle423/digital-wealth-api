@@ -19,7 +19,10 @@ export class UserAuthService {
     deviceInfo: DeviceInfoDto,
     req: Request,
   ) {
-    this.logger.info('[createOrUpdateSession]', { userId, deviceId: deviceInfo.deviceId });
+    this.logger.info('[createOrUpdateSession]', {
+      userId,
+      deviceId: deviceInfo.deviceId,
+    });
 
     // Tìm session hiện tại của device
     let userAuth = await this.userAuthRepository.findOne({
@@ -41,7 +44,7 @@ export class UserAuthService {
       userAuth.appVersion = deviceInfo.appVersion || userAuth.appVersion;
       userAuth.ipAddress = ipAddress;
       userAuth.location = location;
-      
+
       this.logger.info('[updateSession]', { sessionId: userAuth.sessionId });
     } else {
       // Tạo session mới
@@ -60,22 +63,22 @@ export class UserAuthService {
       userAuth.lastAccessAt = new Date();
       userAuth.isActive = true;
       userAuth.isTrusted = false;
-      
+
       this.logger.info('[createSession]', { sessionId });
     }
 
     const savedUserAuthArray = await this.userAuthRepository.save(userAuth);
-    const savedUserAuth = savedUserAuthArray[0] as UserAuth
+    const savedUserAuth = savedUserAuthArray[0] as UserAuth;
     return savedUserAuth;
   }
 
   async updateLastAccess(sessionId: string, req: Request): Promise<void> {
     const ipAddress = this.getClientIp(req);
-    
+
     await this.userAuthRepository.repository
       .createQueryBuilder()
       .update()
-      .set({ 
+      .set({
         lastAccessAt: new Date(),
         ipAddress,
       })
@@ -86,7 +89,7 @@ export class UserAuthService {
 
   async deactivateSession(userId: string, deviceId: string): Promise<void> {
     this.logger.info('[deactivateSession]', { userId, deviceId });
-    
+
     await this.userAuthRepository.repository
       .createQueryBuilder()
       .update()
@@ -99,7 +102,7 @@ export class UserAuthService {
 
   async deactivateSessionBySessionId(sessionId: string): Promise<void> {
     this.logger.info('[deactivateSessionBySessionId]', { sessionId });
-    
+
     await this.userAuthRepository.repository
       .createQueryBuilder()
       .update()
@@ -109,7 +112,10 @@ export class UserAuthService {
       .execute();
   }
 
-  async deactivateAllSessions(userId: string, exceptDeviceId?: string): Promise<void> {
+  async deactivateAllSessions(
+    userId: string,
+    exceptDeviceId?: string,
+  ): Promise<void> {
     this.logger.info('[deactivateAllSessions]', { userId, exceptDeviceId });
 
     const queryBuilder = this.userAuthRepository.repository
@@ -127,14 +133,17 @@ export class UserAuthService {
   }
 
   async getActiveSessions(userId: string): Promise<UserAuth[]> {
-    return this.userAuthRepository.find({
-      userId,
-      isActive: true,
-    }, {
-      order: {
-        lastAccessAt: 'DESC',
+    return this.userAuthRepository.find(
+      {
+        userId,
+        isActive: true,
       },
-    });
+      {
+        order: {
+          lastAccessAt: 'DESC',
+        },
+      },
+    );
   }
 
   async getSessionBySessionId(sessionId: string): Promise<UserAuth | null> {
@@ -146,7 +155,7 @@ export class UserAuthService {
 
   async trustDevice(userId: string, deviceId: string): Promise<void> {
     this.logger.info('[trustDevice]', { userId, deviceId });
-    
+
     await this.userAuthRepository.repository
       .createQueryBuilder()
       .update()
@@ -162,7 +171,7 @@ export class UserAuthService {
 
   async untrustDevice(userId: string, deviceId: string): Promise<void> {
     this.logger.info('[untrustDevice]', { userId, deviceId });
-    
+
     await this.userAuthRepository.repository
       .createQueryBuilder()
       .update()
@@ -193,14 +202,17 @@ export class UserAuthService {
     return session?.isTrusted || false;
   }
 
-  async validateLogoutPermission(sessionId: string, targetDeviceId: string): Promise<{
+  async validateLogoutPermission(
+    sessionId: string,
+    targetDeviceId: string,
+  ): Promise<{
     canLogout: boolean;
     isCurrentDevice: boolean;
     currentSession: UserAuth | null;
   }> {
     const currentSession = await this.getSessionBySessionId(sessionId);
     const isCurrentDevice = currentSession?.deviceId === targetDeviceId;
-    
+
     // User luôn có thể logout device hiện tại của mình
     if (isCurrentDevice) {
       return {
@@ -209,7 +221,7 @@ export class UserAuthService {
         currentSession,
       };
     }
-    
+
     // Để logout device khác, device hiện tại phải trusted
     const canLogout = currentSession?.isTrusted || false;
 
@@ -222,8 +234,8 @@ export class UserAuthService {
 
   private getClientIp(req: Request): string {
     return (
-      req.headers['x-forwarded-for'] as string ||
-      req.headers['x-real-ip'] as string ||
+      (req.headers['x-forwarded-for'] as string) ||
+      (req.headers['x-real-ip'] as string) ||
       req.connection?.remoteAddress ||
       req.socket?.remoteAddress ||
       req.ip ||
@@ -234,9 +246,13 @@ export class UserAuthService {
   private async getLocationFromIp(ip: string): Promise<string> {
     // Placeholder for IP geolocation service
     // You can integrate with services like MaxMind, IPStack, etc.
-    if (ip === 'unknown' || ip.startsWith('127.') || ip.startsWith('192.168.')) {
+    if (
+      ip === 'unknown' ||
+      ip.startsWith('127.') ||
+      ip.startsWith('192.168.')
+    ) {
       return 'Local';
     }
     return 'Unknown Location';
   }
-} 
+}

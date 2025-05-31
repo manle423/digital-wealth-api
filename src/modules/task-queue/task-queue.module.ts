@@ -5,17 +5,8 @@ import { MetricsConsumer } from './consumers/metrics.consumer';
 import { FinancialAnalysisModule } from '../financial-analysis/financial-analysis.module';
 
 @Module({
-  imports: [
-    RabbitmqModule,
-    FinancialAnalysisModule
-  ],
-  providers: [
-    NotificationConsumer,
-    MetricsConsumer,
-  ],
-  exports: [
-    NotificationConsumer,
-    MetricsConsumer,
-  ],
+  imports: [RabbitmqModule, FinancialAnalysisModule],
+  providers: [NotificationConsumer, MetricsConsumer],
+  exports: [NotificationConsumer, MetricsConsumer],
 })
 export class TaskQueueModule {}

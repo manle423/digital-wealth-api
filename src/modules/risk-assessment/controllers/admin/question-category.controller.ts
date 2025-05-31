@@ -1,4 +1,14 @@
-import { Body, Controller, Delete, Get, UseGuards, Query, Post, Put, Param } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  UseGuards,
+  Query,
+  Post,
+  Put,
+  Param,
+} from '@nestjs/common';
 import { QuestionCategoryService } from '@/modules/risk-assessment/services/question-category.service';
 import { QuestionCategory } from '@/modules/risk-assessment/entities/question-category.entity';
 import { JwtGuard } from '@/modules/auth/guards/jwt.guard';
@@ -29,18 +39,25 @@ export class AdminQuestionCategoryController {
   }
 
   @Post()
-  async createCategories(@Body() createDto: CreateMultipleQuestionCategoriesDto): Promise<QuestionCategory[]> {
+  async createCategories(
+    @Body() createDto: CreateMultipleQuestionCategoriesDto,
+  ): Promise<QuestionCategory[]> {
     return this.categoryService.createMultiple(createDto);
   }
 
   @Put()
-  async updateCategories(@Body() updateDto: UpdateMultipleQuestionCategoriesDto): Promise<QuestionCategory[]> {
+  async updateCategories(
+    @Body() updateDto: UpdateMultipleQuestionCategoriesDto,
+  ): Promise<QuestionCategory[]> {
     return this.categoryService.updateMultiple(updateDto);
   }
 
   @Delete()
-  async deleteCategories(@Body() deleteDto: DeleteQuestionCategoriesDto): Promise<{ success: boolean }> {
-    return this.categoryService.removeMultiple(deleteDto)
-      .then(result => ({ success: result }));
+  async deleteCategories(
+    @Body() deleteDto: DeleteQuestionCategoriesDto,
+  ): Promise<{ success: boolean }> {
+    return this.categoryService
+      .removeMultiple(deleteDto)
+      .then((result) => ({ success: result }));
   }
-} 
+}

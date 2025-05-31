@@ -24,4 +24,4 @@ export class DeviceInfoDto {
   @IsString()
   @IsOptional()
   appVersion?: string;
-} 
+}

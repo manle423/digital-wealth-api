@@ -22,6 +22,6 @@ export class DebtCategory extends BaseEntity {
   @Column({ type: 'int', default: 0 })
   order: number;
 
-  @OneToMany(() => UserDebt, debt => debt.category)
+  @OneToMany(() => UserDebt, (debt) => debt.category)
   userDebts: UserDebt[];
-} 
+}

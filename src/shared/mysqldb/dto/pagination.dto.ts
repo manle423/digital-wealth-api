@@ -1,17 +1,23 @@
 import { Type } from 'class-transformer';
-import { IsEnum, IsOptional, IsPositive, IsString, ValidateIf } from 'class-validator';
+import {
+  IsEnum,
+  IsOptional,
+  IsPositive,
+  IsString,
+  ValidateIf,
+} from 'class-validator';
 import { SortDirection } from '@/shared/mysqldb/enums/sort-direction.enum';
 
 export class PaginationDto {
   @ValidateIf((req) => req.page)
   @Type(() => Number)
   @IsPositive()
-  page?: number = 1
+  page?: number = 1;
 
   @ValidateIf((req) => req.page)
   @Type(() => Number)
   @IsPositive()
-  limit?: number = 10
+  limit?: number = 10;
 
   @IsOptional()
   @IsString()
@@ -20,4 +26,4 @@ export class PaginationDto {
   @IsOptional()
   @IsEnum(SortDirection)
   sortDirection?: SortDirection = SortDirection.ASC;
-} 
+}

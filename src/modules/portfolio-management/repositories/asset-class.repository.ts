@@ -18,11 +18,14 @@ export class AssetClassRepository extends MysqldbRepository<AssetClass> {
   }
 
   async findActive(): Promise<AssetClass[]> {
-    return this.find({
-      isActive: true
-    }, {
-      order: { order: 'ASC' }
-    });
+    return this.find(
+      {
+        isActive: true,
+      },
+      {
+        order: { order: 'ASC' },
+      },
+    );
   }
 
   /**
@@ -33,15 +36,21 @@ export class AssetClassRepository extends MysqldbRepository<AssetClass> {
    */
   async findAllAssetClasses(
     query?: Partial<GetAssetClassesDto>,
-    pagination?: Partial<IPagination>
+    pagination?: Partial<IPagination>,
   ): Promise<[AssetClass[], number]> {
-    const { isActive, sortBy = 'order', sortDirection = SortDirection.ASC } = query || {};
+    const {
+      isActive,
+      sortBy = 'order',
+      sortDirection = SortDirection.ASC,
+    } = query || {};
 
     const qb = this.repository.createQueryBuilder('assetClass');
 
     if (isActive !== undefined) {
       const booleanValue = isActive === 'false' ? false : true;
-      qb.andWhere('assetClass.isActive = :isActive', { isActive: booleanValue });
+      qb.andWhere('assetClass.isActive = :isActive', {
+        isActive: booleanValue,
+      });
     }
 
     qb.orderBy(`assetClass.${sortBy}`, sortDirection);
@@ -61,4 +70,4 @@ export class AssetClassRepository extends MysqldbRepository<AssetClass> {
   async deleteById(id: string): Promise<DeleteResult> {
     return this.delete({ id });
   }
-} 
+}

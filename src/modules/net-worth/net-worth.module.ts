@@ -20,11 +20,7 @@ import { JwtService } from '@nestjs/jwt';
     RedisModule,
   ],
   controllers: [NetWorthController],
-  providers: [
-    NetWorthSnapshotRepository,
-    NetWorthService,
-    JwtService,
-  ],
+  providers: [NetWorthSnapshotRepository, NetWorthService, JwtService],
   exports: [NetWorthService],
 })
-export class NetWorthModule {} 
+export class NetWorthModule {}

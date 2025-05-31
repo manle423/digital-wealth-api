@@ -21,28 +21,42 @@ export class FinancialAnalysisJobService {
   @Cron(CronExpression.EVERY_DAY_AT_1AM)
   async calculateDailyMetrics(): Promise<void> {
     try {
-      this.logger.info('[calculateDailyMetrics] Starting daily metric calculations');
+      this.logger.info(
+        '[calculateDailyMetrics] Starting daily metric calculations',
+      );
 
       const activeUsers = await this.userRepository.findActiveUsers();
-      this.logger.info(`[calculateDailyMetrics] Found ${activeUsers.length} active users`);
+      this.logger.info(
+        `[calculateDailyMetrics] Found ${activeUsers.length} active users`,
+      );
 
       let queuedCount = 0;
 
       for (const user of activeUsers) {
         try {
           await this.rabbitmqService.push(RoutingKey.calculateMetrics, {
-            userId: user.id
+            userId: user.id,
           });
           queuedCount++;
-          this.logger.debug(`[calculateDailyMetrics] Queued metrics calculation for user ${user.id}`);
+          this.logger.debug(
+            `[calculateDailyMetrics] Queued metrics calculation for user ${user.id}`,
+          );
         } catch (error) {
-          this.logger.error(`[calculateDailyMetrics] Error queueing metrics calculation for user ${user.id}`, error);
+          this.logger.error(
+            `[calculateDailyMetrics] Error queueing metrics calculation for user ${user.id}`,
+            error,
+          );
         }
       }
 
-      this.logger.info(`[calculateDailyMetrics] Queued metrics calculation for ${queuedCount} users`);
+      this.logger.info(
+        `[calculateDailyMetrics] Queued metrics calculation for ${queuedCount} users`,
+      );
     } catch (error) {
-      this.logger.error('[calculateDailyMetrics] Error in daily metric calculations', error);
+      this.logger.error(
+        '[calculateDailyMetrics] Error in daily metric calculations',
+        error,
+      );
     }
   }
 
@@ -72,14 +86,21 @@ export class FinancialAnalysisJobService {
    */
   async calculateMetricsForUser(userId: string): Promise<void> {
     try {
-      this.logger.info(`[calculateMetricsForUser] Queueing metrics calculation for user ${userId}`);
+      this.logger.info(
+        `[calculateMetricsForUser] Queueing metrics calculation for user ${userId}`,
+      );
       await this.rabbitmqService.push(RoutingKey.calculateMetrics, {
-        userId
+        userId,
       });
-      this.logger.info(`[calculateMetricsForUser] Successfully queued metrics calculation for user ${userId}`);
+      this.logger.info(
+        `[calculateMetricsForUser] Successfully queued metrics calculation for user ${userId}`,
+      );
     } catch (error) {
-      this.logger.error(`[calculateMetricsForUser] Error queueing metrics calculation for user ${userId}`, error);
+      this.logger.error(
+        `[calculateMetricsForUser] Error queueing metrics calculation for user ${userId}`,
+        error,
+      );
       throw error;
     }
   }
-} 
+}
