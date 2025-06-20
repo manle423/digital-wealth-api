@@ -203,12 +203,13 @@ export class NetWorthService {
       if (snapshots.length === 1) {
         const current = await this.calculateCurrentNetWorth(userId);
         const change = current.netWorth - currentNetWorth;
-        const changePercentage =
-          currentNetWorth !== 0 ? (change / currentNetWorth) * 100 : 0;
+        const changePercentage = Math.abs(
+          currentNetWorth !== 0 ? (change / Math.abs(currentNetWorth)) * 100 : 0,
+        );
 
         let trend: 'UP' | 'DOWN' | 'STABLE' = 'STABLE';
-        if (changePercentage > 1) trend = 'UP';
-        else if (changePercentage < -1) trend = 'DOWN';
+        if (change > 0 && changePercentage > 1) trend = 'UP';
+        else if (change < 0 && changePercentage > 1) trend = 'DOWN';
 
         return {
           currentNetWorth: current.netWorth,
@@ -220,12 +221,13 @@ export class NetWorthService {
       }
 
       const change = currentNetWorth - previousNetWorth;
-      const changePercentage =
-        previousNetWorth !== 0 ? (change / previousNetWorth) * 100 : 0;
+      const changePercentage = Math.abs(
+        previousNetWorth !== 0 ? (change / Math.abs(previousNetWorth)) * 100 : 0,
+      );
 
       let trend: 'UP' | 'DOWN' | 'STABLE' = 'STABLE';
-      if (changePercentage > 1) trend = 'UP';
-      else if (changePercentage < -1) trend = 'DOWN';
+      if (change > 0 && changePercentage > 1) trend = 'UP';
+      else if (change < 0 && changePercentage > 1) trend = 'DOWN';
 
       return {
         currentNetWorth,
