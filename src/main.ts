@@ -35,7 +35,7 @@ async function bootstrap() {
 
   const appHost = process.env.HOST;
   const appPort = process.env.PORT;
-  const appEnv = process.env.ENV;
+  const appEnv = process.env.NODE_ENV;
 
   await app.listen(appPort);
 
