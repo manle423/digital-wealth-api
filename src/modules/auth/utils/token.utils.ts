@@ -33,20 +33,23 @@ export async function generateTokens(
 }
 
 export function setCookies(res: Response, tokens: ITokens): void {
+  const isProduction = process.env.NODE_ENV === 'production';
+
   res.cookie('accessToken', tokens.accessToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax', // 'none' để cross-site gửi cookie
     expires: new Date(tokens.accessTokenExpiresAt),
   });
 
   res.cookie('refreshToken', tokens.refreshToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
     expires: new Date(tokens.refreshTokenExpiresAt),
   });
 }
+
 
 export function clearCookies(res: Response): void {
   res.cookie('accessToken', '', {
