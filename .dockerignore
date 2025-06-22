@@ -12,9 +12,9 @@ yarn-error.log
 dist
 build
 
-# Environment files
-.env
-.env.*
+# # Environment files
+# .env
+# .env.*
 
 # IDE files
 .idea
@@ -36,3 +36,5 @@ logs
 Dockerfile
 docker-compose.yml
 .dockerignore 
+
+docs/

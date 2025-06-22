@@ -1,32 +1,42 @@
 version: '3'
 
 services:
-  # api:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #   container_name: dw_api
-  #   ports:
-  #     - "3333:3333"
-  #   env_file:
-  #     - .env
-  #   environment:
-  #     - REDIS_HOST=dw_redis
-  #     - REDIS_PORT=6379
-  #     - RABBITMQ_URL=amqp://admin:admin@dw_rabbitmq:5672
-  #     - RABBITMQ_EXCHANGE=${RABBITMQ_EXCHANGE:-digital_wealth}
-  #   restart: unless-stopped
-  #   depends_on:
-  #     - redis
-  #     - rabbitmq
-  #   networks:
-  #     - app-network
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dw_api
+    ports:
+      - "3333:3333"
+    env_file:
+      - .env
+    environment:
+      # Override database connection to point to host machine's MySQL
+      - DATABASE_HOST=host.docker.internal
+      # Redis and RabbitMQ connections within docker network
+      - REDIS_HOST=dw_redis
+      - REDIS_PORT=6379
+      # RabbitMQ staging configuration
+      - RABBITMQ_URL=amqp://admin:admin@dw_rabbitmq:5672
+      # - RABBITMQ_EXCHANGE=common-exchange-staging
+      # - CUSTOMER_QUEUE=customer-queue-staging
+      # - SEND_WELCOME_MAIL_ROUTING_KEY=send-welcome-mail-staging
+      # - SEND_OTP_MAIL_ROUTING_KEY=send-otp-mail-staging
+      # - CALCULATE_METRICS_ROUTING_KEY=calculate-metrics
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    depends_on:
+      - redis
+      - rabbitmq
+    networks:
+      - app-network
 
   redis:
     image: redis:latest
     container_name: dw_redis
     ports:
-      - "6380:6379"
+      - "6379:6379"
     volumes:
       - redis_data:/data
     restart: unless-stopped
@@ -38,8 +48,8 @@ services:
     image: rabbitmq:3-management
     container_name: dw_rabbitmq
     ports:
-      - "5673:5672"
-      - "15673:15672"
+      - "5672:5672"
+      - "15672:15672"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     environment:
@@ -59,22 +69,6 @@ services:
     networks:
       - app-network
     restart: unless-stopped
-
-  # mysql:
-  #   image: mysql:latest
-  #   container_name: dw_mysql
-  #   ports:
-  #     - "${DATABASE_PORT}:3306"
-  #   environment:
-  #     - MYSQL_ROOT_PASSWORD=${DATABASE_ROOT_PASSWORD}
-  #     - MYSQL_DATABASE=${DATABASE_NAME}
-  #     - MYSQL_USER=${DATABASE_USER}
-  #     - MYSQL_PASSWORD=${DATABASE_PASSWORD}
-  #   volumes:
-  #     - mysql_data:/var/lib/mysql
-  #   restart: unless-stopped
-  #   networks:
-  #     - app-network
 
 networks:
   app-network:
