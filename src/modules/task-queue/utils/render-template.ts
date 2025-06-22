@@ -16,25 +16,32 @@ export function renderTemplate(
   folderNames: string[] = ['email', 'notification'],
 ): string {
   try {
-    // Try to find the template in each folder
-    for (const folderName of folderNames) {
-      const templatePath = path.resolve(
-        process.cwd(),
-        'src/modules/task-queue/templates',
-        folderName,
-        'views',
-        `${templateName}.template.hbs`,
-      );
+    // Define possible base paths to search for templates
+    const basePaths = [
+      path.resolve(process.cwd(), 'dist/modules/task-queue/templates'),
+      path.resolve(process.cwd(), 'src/modules/task-queue/templates'),
+    ];
 
-      if (fs.existsSync(templatePath)) {
-        // Register any custom helpers if needed
-        Handlebars.registerHelper('eq', function (a, b) {
-          return a === b;
-        });
+    // Try to find the template in each base path and folder combination
+    for (const basePath of basePaths) {
+      for (const folderName of folderNames) {
+        const templatePath = path.resolve(
+          basePath,
+          folderName,
+          'views',
+          `${templateName}.template.hbs`,
+        );
 
-        const templateSource = fs.readFileSync(templatePath, 'utf-8');
-        const template = Handlebars.compile(templateSource);
-        return template(data);
+        if (fs.existsSync(templatePath)) {
+          // Register any custom helpers if needed
+          Handlebars.registerHelper('eq', function (a, b) {
+            return a === b;
+          });
+
+          const templateSource = fs.readFileSync(templatePath, 'utf-8');
+          const template = Handlebars.compile(templateSource);
+          return template(data);
+        }
       }
     }
 
