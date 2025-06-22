@@ -1,0 +1,43 @@
+name: Deploy API to Production
+
+on:
+  push:
+    branches:
+      - production
+  pull_request:
+    branches:
+      - production
+
+jobs:
+  deploy:
+    name: Deploy api
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v3
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.DROPLET_HOST }} >> ~/.ssh/known_hosts
+
+      - name: SSH and deploy
+        run: |
+          ssh ${{ secrets.DROPLET_USER }}@${{ secrets.DROPLET_HOST }} << 'EOF'
+            set -e
+
+            cd ~/src/dw/digital-wealth-api
+            
+            git fetch origin
+            git checkout production
+            git pull origin production
+            docker compose build api
+
+            cd ~/src/dw
+            docker compose up -d api
+
+            echo "✅ Deployment complete"
+          EOF
