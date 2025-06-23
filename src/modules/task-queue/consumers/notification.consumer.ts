@@ -98,7 +98,6 @@ export class NotificationConsumer {
         emailContent,
       );
 
-      return { success: true, message: 'Welcome email sent successfully' };
     } catch (error) {
       this.logger.error('Failed to process welcome email message', {
         error,
@@ -159,7 +158,6 @@ export class NotificationConsumer {
         emailContent,
       );
 
-      return { success: true, message: 'OTP email sent successfully' };
     } catch (error) {
       this.logger.error('Failed to process OTP email message', {
         error,
