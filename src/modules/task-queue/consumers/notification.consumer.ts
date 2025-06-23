@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { RabbitRPC } from '@golevelup/nestjs-rabbitmq';
+import { RabbitSubscribe } from '@golevelup/nestjs-rabbitmq';
 import { LoggerService } from '@/shared/logger/logger.service';
 import {
   IWelcomeEmailData,
@@ -48,7 +48,7 @@ export class NotificationConsumer {
     }
   }
 
-  @RabbitRPC({
+  @RabbitSubscribe({
     exchange: 'common-exchange-staging',
     routingKey: 'send-welcome-mail-staging',
     queue: 'customer-queue-staging',
@@ -108,7 +108,7 @@ export class NotificationConsumer {
     }
   }
 
-  @RabbitRPC({
+  @RabbitSubscribe({
     exchange: 'common-exchange-staging',
     routingKey: 'send-otp-mail-staging',
     queue: 'customer-queue-staging',
