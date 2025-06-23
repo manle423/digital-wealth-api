@@ -11,16 +11,16 @@ import { LoggerModule } from '@/shared/logger/logger.module';
     MailerModule.forRootAsync({
       useFactory: (configService: ConfigService) => ({
         transport: {
-          host: configService.get('gmail.host'),
-          port: configService.get('gmail.port'),
-          secure: configService.get('gmail.secure'),
+          host: configService.get('email.gmail.host'),
+          port: configService.get('email.gmail.port'),
+          secure: configService.get('email.gmail.secure'),
           auth: {
-            user: configService.get('gmail.auth.user'),
-            pass: configService.get('gmail.auth.pass'),
+            user: configService.get('email.gmail.auth.user'),
+            pass: configService.get('email.gmail.auth.pass'),
           },
         },
         defaults: {
-          from: configService.get('gmail.auth.from'),
+          from: configService.get('email.gmail.auth.from'),
         },
       }),
       inject: [ConfigService],

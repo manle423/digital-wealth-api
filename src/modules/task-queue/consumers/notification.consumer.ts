@@ -7,15 +7,46 @@ import {
 } from '../interfaces/notification.interface';
 import { renderTemplate } from '@/modules/task-queue/utils/render-template';
 import { GmailService } from '@/shared/email/gmail.service';
+import { ResendService } from '@/shared/email/resend.service';
 import { ConfigService } from '@nestjs/config';
+import { SendGridService } from '@/shared/email/sendgrid.service';
 
 @Injectable()
 export class NotificationConsumer {
   constructor(
     private readonly logger: LoggerService,
+    private readonly resendService: ResendService,
     private readonly gmailService: GmailService,
     private readonly configService: ConfigService,
+    private readonly sendGridService: SendGridService,
   ) {}
+
+  private async sendEmailWithFallback(to: string, subject: string, html: string) {
+    try {
+      // Thử gửi bằng Resend trước
+      await this.resendService.sendEmail(to, subject, html);
+      return;
+    } catch (resendError) {
+      this.logger.warn('Failed to send email via Resend, falling back to Gmail', {
+        error: resendError,
+        to,
+        subject,
+      });
+
+      try {
+        // Nếu Resend thất bại, thử gửi bằng Gmail
+        await this.gmailService.sendEmail(to, subject, html);
+      } catch (gmailError) {
+        this.logger.error('Failed to send email via both Resend and Gmail', {
+          resendError,
+          gmailError,
+          to,
+          subject,
+        });
+        throw gmailError;
+      }
+    }
+  }
 
   @RabbitRPC({
     name: 'sendWelcomeMail',
@@ -58,8 +89,8 @@ export class NotificationConsumer {
         ['email'],
       );
 
-      // Gửi email sử dụng GmailService
-      await this.gmailService.sendEmail(
+      // Gửi email với cơ chế fallback
+      await this.sendEmailWithFallback(
         message.data.email,
         'Welcome to Digital Wealth',
         emailContent,
@@ -117,7 +148,8 @@ export class NotificationConsumer {
         ['email'],
       );
 
-      await this.gmailService.sendEmail(
+      // Gửi email với cơ chế fallback
+      await this.sendEmailWithFallback(
         message.data.email,
         message.subject,
         emailContent,

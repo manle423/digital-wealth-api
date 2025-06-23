@@ -19,6 +19,7 @@ import { NetWorthModule } from './modules/net-worth/net-worth.module';
 import { RecommendationModule } from './modules/recommendation/recommendation.module';
 import { FinancialAnalysisModule } from './modules/financial-analysis/financial-analysis.module';
 import { GeminiModule } from './shared/gemini/gemini.module';
+import { ResendModule } from './shared/email/resend.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { GeminiModule } from './shared/gemini/gemini.module';
     PortfolioManagementModule,
     TaskQueueModule,
     GmailModule,
+    ResendModule,
     AssetManagementModule,
     DebtManagementModule,
     RecommendationModule,
