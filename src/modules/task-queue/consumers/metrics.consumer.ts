@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { RabbitRPC } from '@golevelup/nestjs-rabbitmq';
+import { RabbitSubscribe } from '@golevelup/nestjs-rabbitmq';
 import { LoggerService } from '@/shared/logger/logger.service';
 import { FinancialAnalysisService } from '@/modules/financial-analysis/services/financial-analysis.service';
 
@@ -14,7 +14,7 @@ export class MetricsConsumer {
     private readonly financialAnalysisService: FinancialAnalysisService,
   ) {}
 
-  @RabbitRPC({
+  @RabbitSubscribe({
     exchange: 'common-exchange-staging',
     routingKey: 'calculate-metrics',
     queue: 'customer-queue-staging',
@@ -51,7 +51,6 @@ export class MetricsConsumer {
       // Calculate metrics
       await this.financialAnalysisService.calculateAllMetrics(message.userId);
 
-      return { success: true, message: 'Metrics calculated successfully' };
     } catch (error) {
       this.logger.error(
         '[handleCalculateMetrics] Failed to process metrics calculation',
