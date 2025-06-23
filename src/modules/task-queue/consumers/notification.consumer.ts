@@ -19,7 +19,7 @@ export class NotificationConsumer {
     private readonly gmailService: GmailService,
     private readonly configService: ConfigService,
     private readonly sendGridService: SendGridService,
-  ) {}
+  ) { }
 
   private async sendEmailWithFallback(to: string, subject: string, html: string) {
     try {
@@ -49,7 +49,9 @@ export class NotificationConsumer {
   }
 
   @RabbitRPC({
-    name: 'sendWelcomeMail',
+    exchange: 'common-exchange-staging',
+    routingKey: 'send-welcome-mail-staging',
+    queue: 'customer-queue-staging',
   })
   async handleWelcomeEmail(rawMessage: string) {
     try {
@@ -107,7 +109,9 @@ export class NotificationConsumer {
   }
 
   @RabbitRPC({
-    name: 'sendOtpMail',
+    exchange: 'common-exchange-staging',
+    routingKey: 'send-otp-mail-staging',
+    queue: 'customer-queue-staging',
   })
   async handleOtpEmail(rawMessage: string) {
     try {

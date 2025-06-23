@@ -15,7 +15,9 @@ export class MetricsConsumer {
   ) {}
 
   @RabbitRPC({
-    name: 'calculateMetrics',
+    exchange: 'common-exchange-staging',
+    routingKey: 'calculate-metrics',
+    queue: 'customer-queue-staging',
   })
   async handleCalculateMetrics(rawMessage: string) {
     try {
